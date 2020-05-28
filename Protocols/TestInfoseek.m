@@ -60,7 +60,7 @@ informative odor, then after a delay, reward outcome at the same side port.
 
 ----------------------------------------------------------------------------
 %}
-function TestInfoSeek6
+function TestInfoSeek
 
 
 global BpodSystem
@@ -108,6 +108,8 @@ end
 %% VALVE AND OTHER PINS
 
 latchValves = [2 3 4 5 19 20 21 22]; % 1:4 go to left, 5:8 go to right!
+latchModule = 'Serial5';
+teensyModule = 'Serial3';
 buzzerModule = 'TeensyDO2';
 buzzerPin = 19;
 LEDModule = 'TeensyDO2';
@@ -309,16 +311,16 @@ infoSide = S.GUI.InfoSide;
 % 
 % if infoSide == 0
 %     for i = 1:4
-%         ModuleWrite('TeensyD0',[latchValves(i) 1]);
+%         ModuleWrite(latchModule,[latchValves(i) 1]);
 %         pause(100/1000);
-%         ModuleWrite('TeensyD0',[latchValves(i) 0]);
+%         ModuleWrite(latchModule,[latchValves(i) 0]);
 %         pause(100/1000);
 %     end
 % else
 %     for i = 5:8
-%         ModuleWrite('TeensyD0',[latchValves(i) 1]);
+%         ModuleWrite(latchModule,[latchValves(i) 1]);
 %         pause(100/1000);
-%         ModuleWrite('TeensyD0',[latchValves(i) 0]);
+%         ModuleWrite(latchModule,[latchValves(i) 0]);
 %         pause(100/1000);
 %     end
 % end
@@ -541,7 +543,7 @@ elseif LeftRewardDrops == 1
 else
    sma = SetGlobalTimer(sma,'TimerID',3,'Duration',0,'OnsetDelay',0,...
        'Channel','Valve1','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
-   sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);    
+   sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 end
 
 if RightRewardDrops > 1
