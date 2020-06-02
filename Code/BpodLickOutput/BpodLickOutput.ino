@@ -11,6 +11,25 @@
 #include <Wire.h>
 #include "Adafruit_MPR121.h"
 
+#ifndef _BV
+#define _BV(bit) (1 << (bit)) 
+#endif
+
+byte out = 15;
+byte opCode = 0;
+int buzzer = 6;
+int irqpin = 2;
+
+Adafruit_MPR121 cap = Adafruit_MPR121();
+// Keeps track of the last pins touched
+// so we know when buttons are 'released'
+uint16_t lasttouched = 0;
+uint16_t currtouched = 0;
+
+uint8_t touchChannels[] = {11,7}; // left and right lick sensor pins
+uint8_t touchPin;
+int ntouchChannels = (sizeof(touchChannels)/sizeof(uint8_t));
+
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 char moduleName[] = "DIO"; // Name of module for manual override UI and state machine assembler
@@ -31,7 +50,7 @@ byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 
 
 // Variables
-byte opCode = 0;
+//byte opCode = 0;
 byte channel = 0;
 byte state = 0;
 byte thisEvent = 0;
