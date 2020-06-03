@@ -90,6 +90,23 @@ void setup()
 void loop()
 {
   currentTime = micros();
+
+  // this doesn't work because bytes only go up to 255-->need many bytes to read
+//  if (Serial1COM.available()) {
+//    opCode = Serial1COM.readByte();
+//    if (opCode == 255) {
+//      returnModuleInfo();
+//    } else if (opCode == 'B') {
+//      channel = Serial1COM.readByte(); 
+//      state = Serial1COM.readByte();
+//      tone(buzzer,channel,state);
+//    } else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
+//        state = Serial1COM.readByte(); 
+//        digitalWrite(opCode,state); 
+//    } 
+//  }
+
+    
   if (Serial1COM.available()) {
     opCode = Serial1COM.readByte();
     if (opCode == 255) {

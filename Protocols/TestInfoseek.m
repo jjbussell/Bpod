@@ -12,6 +12,10 @@
 % lick sensors (IRQ, SCL, SDA) 
 % FOR SCOPE, BNCs: 1 IN = sync, 1 OUT = trig, 1 out for odor
 
+% additional components handled by teensy shield module, DIOLicks
+% send 2 bytes, pin + state, to turn output on and off
+% send 2 bytes, 254 or 253 and 1 to turn on buzzer
+
 %{
 
 how to read scope SYNC in signal?? (outside of trial structure)? no events
