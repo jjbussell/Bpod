@@ -17,7 +17,7 @@
 
 byte out = 15;
 byte opCode = 0;
-int buzzer = 6;
+int buzzer = 20;
 int irqpin = 2;
 
 Adafruit_MPR121 cap = Adafruit_MPR121();
@@ -88,7 +88,13 @@ void loop()
     opCode = Serial1COM.readByte();
     if (opCode == 255) {
       returnModuleInfo();
-    } else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
+    }else if (opCode == 254){
+      tone(buzzer,4000,200);
+      state = Serial1COM.readByte();
+    }else if (opCode == 253){
+      tone(buzzer,4500,50);
+      state = Serial1COM.readByte();
+    }else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
     } else if (opCode == 'E') {
