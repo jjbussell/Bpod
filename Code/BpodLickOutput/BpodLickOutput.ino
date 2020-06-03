@@ -3,8 +3,10 @@
 
 */
 // DIO Module interfaces the Bpod state machine with TTL signals on Arduino digital pins.
-// Pins 2-7 are configured as input channels, pins 19-23 are configured as output channels.
-// A 2-byte serial message from the state machine sets the state of the output lines: [Channel (19-23), State(0 or 1)].
+// Pin 2 is a multi-electrode lick sensor, pin 20 is a buzzer, pins 3-17 are configured as output channels.
+// A 2-byte serial message from the state machine sets the state of the output lines: [Channel (3-17), State(0 or 1)].
+
+// OLD
 // A 3-byte serial message from the state machine enables or disables input lines: ['E' Channel (2-7), State (0 = disabled, 1 = enabled)]
 
 #include "ArCOM.h" // Import serial communication wrapper
@@ -39,8 +41,8 @@ char* eventNames[] = {"Lick_Left", "Lick_Right", "Lick_Center"};
 #define OutputOffset 3
 #define nInputChannels 3
 #define nOutputChannels 15
-uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
-                                  // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
+//uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
+//                                  // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
 // Constants
 //#define InputChRangeHigh InputOffset+nInputChannels
@@ -53,14 +55,14 @@ byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 byte opCode = 0;
 byte channel = 0;
 byte state = 0;
-byte thisEvent = 0;
-boolean readThisChannel = false; // For implementing refractory period (see variable above)
-byte inputChState[nInputChannels] = {0}; // Current state of each input channel
-byte lastInputChState[nInputChannels] = {0}; // Last known state of each input channel
-byte inputsEnabled[nInputChannels] = {0}; // For each input channel, enabled or disabled
-uint32_t inputChSwitchTime[nInputChannels] = {0}; // Time of last detected logic transition
-byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
-byte nEvents = 0; // Number of events captured in the current cycle
+//byte thisEvent = 0;
+//boolean readThisChannel = false; // For implementing refractory period (see variable above)
+//byte inputChState[nInputChannels] = {0}; // Current state of each input channel
+//byte lastInputChState[nInputChannels] = {0}; // Last known state of each input channel
+//byte inputsEnabled[nInputChannels] = {0}; // For each input channel, enabled or disabled
+//uint32_t inputChSwitchTime[nInputChannels] = {0}; // Time of last detected logic transition
+//byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
+//byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
 
 void setup()
