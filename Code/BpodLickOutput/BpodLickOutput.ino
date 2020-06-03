@@ -25,7 +25,7 @@ Adafruit_MPR121 cap = Adafruit_MPR121();
 uint16_t lasttouched = 0;
 uint16_t currtouched = 0;
 
-uint8_t touchChannels[] = {11,7}; // left and right lick sensor pins
+uint8_t touchChannels[] = {1,4,7}; // left, center, and right lick sensor pins
 uint8_t touchPin;
 int ntouchChannels = (sizeof(touchChannels)/sizeof(uint8_t));
 
