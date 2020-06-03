@@ -15,6 +15,7 @@
 % additional components handled by teensy shield module, DIOLicks
 % send 2 bytes, pin + state, to turn output on and off
 % send 2 bytes, 254 or 253 and 1 to turn on buzzer
+% licks come as an event with number of sensor?
 
 %{
 
