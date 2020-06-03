@@ -120,12 +120,6 @@ void loop()
 //      Serial.print(i); Serial.println(" touched");
         Serial1COM.writeByte(byte(i));
     }
-    // if it *was* touched and now *isnt*, alert!
-    // comment out so only one report per lick
-//    if (!(currtouched & _BV(touchPin)) && (lasttouched & _BV(touchPin)) ) {
-////      Serial.print(i); Serial.println(" released");
-//      Serial1COM.writeByte(byte(i));
-//    }
   }
 
   // reset our state
