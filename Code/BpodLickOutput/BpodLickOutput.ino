@@ -169,7 +169,7 @@ void returnModuleInfo() {
   Serial1COM.writeCharArray(moduleName, sizeof(moduleName)-1); // Module name
   Serial1COM.writeByte(1); // 1 if more info follows, 0 if not
   Serial1COM.writeByte('#'); // Op code for: Number of behavior events this module can generate
-  Serial1COM.writeByte(nInputChannels*2); // 2 states for each input channel
+  Serial1COM.writeByte(nInputChannels); // 2 states for each input channel
   Serial1COM.writeByte(1); // 1 if more info follows, 0 if not
   Serial1COM.writeByte('E'); // Op code for: Behavior event names
   Serial1COM.writeByte(nEventNames);
