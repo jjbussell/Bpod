@@ -76,6 +76,9 @@ void setup()
   for (int i = OutputOffset; i < OutputChRangeHigh; i++) {
     pinMode(i, OUTPUT);
   }
+  if (!cap.begin(0x5A)) {
+    while (1);
+  }  
 }
 
 void loop()
