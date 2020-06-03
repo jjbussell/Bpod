@@ -16,7 +16,6 @@
 #endif
 
 byte out = 15;
-byte opCode = 0;
 int buzzer = 20;
 int irqpin = 2;
 
@@ -32,7 +31,7 @@ int ntouchChannels = (sizeof(touchChannels)/sizeof(uint8_t));
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIO"; // Name of module for manual override UI and state machine assembler
+char moduleName[] = "DIOLicks"; // Name of module for manual override UI and state machine assembler
 char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
@@ -50,7 +49,7 @@ byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 
 
 // Variables
-//byte opCode = 0;
+byte opCode = 0;
 byte channel = 0;
 byte state = 0;
 byte thisEvent = 0;
@@ -76,6 +75,10 @@ void setup()
   for (int i = OutputOffset; i < OutputChRangeHigh; i++) {
     pinMode(i, OUTPUT);
   }
+
+  pinMode(irqpin,INPUT);
+  digitalWrite(irqpin, HIGH); //enable pullup resistor
+  
   if (!cap.begin(0x5A)) {
     while (1);
   }  
@@ -105,6 +108,31 @@ void loop()
       }
     }
   }
+
+
+  if (!checkInterrupt()) {  
+  // Get the currently touched pads
+  currtouched = cap.touched();
+  
+  for (uint8_t i=0; i<ntouchChannels; i++) {
+    touchPin = touchChannels[i];
+    if ((currtouched & _BV(touchPin)) && !(lasttouched & _BV(touchPin)) ) {
+//      Serial.print(i); Serial.println(" touched");
+        Serial1COM.writeByte(byte(i));
+    }
+    // if it *was* touched and now *isnt*, alert!
+    // comment out so only one report per lick
+//    if (!(currtouched & _BV(touchPin)) && (lasttouched & _BV(touchPin)) ) {
+////      Serial.print(i); Serial.println(" released");
+//      Serial1COM.writeByte(byte(i));
+//    }
+  }
+
+  // reset our state
+  lasttouched = currtouched;
+  }
+
+  
   thisEvent = 1;
   for (int i = 0; i < nInputChannels; i++) {
     if (inputsEnabled[i] == 1) {
@@ -156,4 +184,8 @@ void returnModuleInfo() {
     }
   }
   Serial1COM.writeByte(0); // 1 if more info follows, 0 if not
+}
+
+boolean checkInterrupt(void){
+  return digitalRead(irqpin);
 }
