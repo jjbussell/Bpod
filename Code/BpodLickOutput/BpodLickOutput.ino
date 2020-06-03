@@ -32,17 +32,18 @@ int ntouchChannels = (sizeof(touchChannels)/sizeof(uint8_t));
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 char moduleName[] = "DIOLicks"; // Name of module for manual override UI and state machine assembler
-char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo"};
+//char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo"};
+char* eventNames[] = {"Lick_Left", "Lick_Right", "Lick_Center"};
 #define FirmwareVersion 1
 #define InputOffset 2
 #define OutputOffset 19
-#define nInputChannels 5
+#define nInputChannels 3
 #define nOutputChannels 5
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
                                   // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
 // Constants
-#define InputChRangeHigh InputOffset+nInputChannels
+//#define InputChRangeHigh InputOffset+nInputChannels
 #define OutputChRangeHigh OutputOffset+nOutputChannels
 
 byte nEventNames = (sizeof(eventNames)/sizeof(char *));
@@ -66,12 +67,12 @@ void setup()
 {
   Serial1.begin(1312500);
   currentTime = micros();
-  for (int i = 0; i < nInputChannels; i++) {
-    pinMode(i+InputOffset, INPUT_PULLUP);
-    inputsEnabled[i] = 1;
-    inputChState[i] = 1;
-    lastInputChState[i] = 1;
-  }
+//  for (int i = 0; i < nInputChannels; i++) {
+//    pinMode(i+InputOffset, INPUT_PULLUP);
+//    inputsEnabled[i] = 1;
+//    inputChState[i] = 1;
+//    lastInputChState[i] = 1;
+//  }
   for (int i = OutputOffset; i < OutputChRangeHigh; i++) {
     pinMode(i, OUTPUT);
   }
@@ -100,13 +101,14 @@ void loop()
     }else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
-    } else if (opCode == 'E') {
-      channel = Serial1COM.readByte(); 
-      state = Serial1COM.readByte();
-      if ((channel >= InputOffset) && (channel < InputChRangeHigh)) {
-        inputsEnabled[channel-InputOffset] = state;
-      }
-    }
+    } 
+//    else if (opCode == 'E') {
+//      channel = Serial1COM.readByte(); 
+//      state = Serial1COM.readByte();
+//      if ((channel >= InputOffset) && (channel < InputChRangeHigh)) {
+//        inputsEnabled[channel-InputOffset] = state;
+//      }
+//    }
   }
 
 
@@ -127,37 +129,37 @@ void loop()
   }
 
   
-  thisEvent = 1;
-  for (int i = 0; i < nInputChannels; i++) {
-    if (inputsEnabled[i] == 1) {
-      inputChState[i] = digitalRead(i+InputOffset);
-      readThisChannel = false;
-      if (currentTime > inputChSwitchTime[i]) {
-        if ((currentTime - inputChSwitchTime[i]) > refractoryPeriod) {
-          readThisChannel = true;
-        }
-      } else if ((currentTime + 4294967296-inputChSwitchTime[i]) > refractoryPeriod) {
-        readThisChannel = true;
-      }
-      if (readThisChannel) {
-        if ((inputChState[i] == 1) && (lastInputChState[i] == 0)) {
-          events[nEvents] = thisEvent; nEvents++;
-          inputChSwitchTime[i] = currentTime;
-          lastInputChState[i] = inputChState[i];
-        }
-        if ((inputChState[i] == 0) && (lastInputChState[i] == 1)) {
-          events[nEvents] = thisEvent+1; nEvents++;
-          inputChSwitchTime[i] = currentTime;
-          lastInputChState[i] = inputChState[i];
-        }
-      }
-    }
-    thisEvent += 2;
-  }
-  if (nEvents > 0) {
-    Serial1COM.writeByteArray(events, nEvents);
-    nEvents = 0;
-  }
+//  thisEvent = 1;
+//  for (int i = 0; i < nInputChannels; i++) {
+//    if (inputsEnabled[i] == 1) {
+//      inputChState[i] = digitalRead(i+InputOffset);
+//      readThisChannel = false;
+//      if (currentTime > inputChSwitchTime[i]) {
+//        if ((currentTime - inputChSwitchTime[i]) > refractoryPeriod) {
+//          readThisChannel = true;
+//        }
+//      } else if ((currentTime + 4294967296-inputChSwitchTime[i]) > refractoryPeriod) {
+//        readThisChannel = true;
+//      }
+//      if (readThisChannel) {
+//        if ((inputChState[i] == 1) && (lastInputChState[i] == 0)) {
+//          events[nEvents] = thisEvent; nEvents++;
+//          inputChSwitchTime[i] = currentTime;
+//          lastInputChState[i] = inputChState[i];
+//        }
+//        if ((inputChState[i] == 0) && (lastInputChState[i] == 1)) {
+//          events[nEvents] = thisEvent+1; nEvents++;
+//          inputChSwitchTime[i] = currentTime;
+//          lastInputChState[i] = inputChState[i];
+//        }
+//      }
+//    }
+//    thisEvent += 2;
+//  }
+//  if (nEvents > 0) {
+//    Serial1COM.writeByteArray(events, nEvents);
+//    nEvents = 0;
+//  }
 }
 
 void returnModuleInfo() {
