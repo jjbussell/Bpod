@@ -36,9 +36,9 @@ char moduleName[] = "DIOLicks"; // Name of module for manual override UI and sta
 char* eventNames[] = {"Lick_Left", "Lick_Right", "Lick_Center"};
 #define FirmwareVersion 1
 #define InputOffset 2
-#define OutputOffset 19
+#define OutputOffset 3
 #define nInputChannels 3
-#define nOutputChannels 5
+#define nOutputChannels 15
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
                                   // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
