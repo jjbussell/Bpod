@@ -78,7 +78,6 @@ TrialManager = TrialManagerObject;
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.ImageFlag = 0;
     S.GUI.TrialTypes = 5;
     S.GUI.InfoSide = 0;
     S.GUI.InfoOdor = 3;
@@ -102,7 +101,10 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RandRewardProb = 0.5;
     S.GUI.GracePeriod = 0; 
     S.GUI.Interval = 1; 
-    S.GUI.OptoFlag = 0; 
+    S.GUI.OptoFlag = 0;
+    S.GUI.OptoType = 0;
+    S.GUI.ImageFlag = 0;
+    S.GUI.ImageType = 0;
 end
 
 
@@ -110,15 +112,24 @@ end
 
 %% HOW TO CHECK WHAT MODULES ARE THERE? (i.e. right teensys?)
 
-%% VALVE AND OTHER PINS
+%% VALVE AND OTHER PINS / NON-BPOD HARDWARD
 
-latchValves = [2 3 4 5 19 20 21 22]; % 1:4 go to left, 5:8 go to right!
-latchModule = 'Serial5';
-teensyModule = 'Serial3';
-buzzerModule = 'TeensyDO2';
-buzzerPin = 19;
-LEDModule = 'TeensyDO2';
-LEDPin = 20;
+% {'DIOLicks', [N S]} where N is pin number (19-23) and S is the new logic state (0 or 1 for 0V or 3.3V)
+
+latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
+latchModule = 'DIOLicks';
+teensyModule = 'DIOLicks';
+LEDPin = 11;
+
+% MINISCOPE
+% miniscope has 4 I/O BNC Pins, and scope sync and trig
+% scope sync connects to Bpod IN BNC
+% scope trig to Bpod OUT BNC
+% other Bpod out BNC at center odor start
+
+% for side odor on and reward on
+syncPins = [12, 13];
+
 
 
 %% Define trial types
@@ -340,7 +351,7 @@ sma = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, Ran
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
                               
-%% START SCOPE RECORDING?
+%% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
                               
 %% MAIN TRIAL LOOP
 
@@ -572,7 +583,7 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {'Serial3',253}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {ModuleWrite(teensyModule,254,1,'byte')}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -592,7 +603,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {'Serial3',254,'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {ModuleWrite(teensyModule,253,1,'byte'),'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
