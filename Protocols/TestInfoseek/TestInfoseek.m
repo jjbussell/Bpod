@@ -326,22 +326,22 @@ PokesPlotInfo('init', getStateColors, getPokeColors);
 infoSide = S.GUI.InfoSide;
 
 %% SET ODOR SIDES (LATCH VALVES) AND ODOR IDS
-% 
-% if infoSide == 0
-%     for i = 1:4
-%         ModuleWrite(latchModule,[latchValves(i) 1]);
-%         pause(100/1000);
-%         ModuleWrite(latchModule,[latchValves(i) 0]);
-%         pause(100/1000);
-%     end
-% else
-%     for i = 5:8
-%         ModuleWrite(latchModule,[latchValves(i) 1]);
-%         pause(100/1000);
-%         ModuleWrite(latchModule,[latchValves(i) 0]);
-%         pause(100/1000);
-%     end
-% end
+
+if infoSide == 0
+    for i = 1:4
+        ModuleWrite(latchModule,[latchValves(i) 1]);
+        pause(100/1000);
+        ModuleWrite(latchModule,[latchValves(i) 0]);
+        pause(100/1000);
+    end
+else
+    for i = 5:8
+        ModuleWrite(latchModule,[latchValves(i) 1]);
+        pause(100/1000);
+        ModuleWrite(latchModule,[latchValves(i) 0]);
+        pause(100/1000);
+    end
+end
 
 %% SET INITIAL TYPE COUNTS
 
