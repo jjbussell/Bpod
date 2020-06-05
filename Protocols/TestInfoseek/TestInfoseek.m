@@ -117,8 +117,8 @@ end
 % {'DIOLicks', [N S]} where N is pin number (19-23) and S is the new logic state (0 or 1 for 0V or 3.3V)
 
 latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
-latchModule = 'DIOLicks';
-teensyModule = 'DIOLicks';
+latchModule = 'DIOLicks1';
+teensyModule = 'DIOLicks1';
 LEDPin = 11;
 
 % MINISCOPE
@@ -130,6 +130,8 @@ LEDPin = 11;
 % for side odor on and reward on
 syncPins = [12, 13];
 
+% 'DIOLicks1',[254 1]
+% 'DIOLicks1',[253 1],
 
 
 %% Define trial types
@@ -583,7 +585,7 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {ModuleWrite(teensyModule,254,1,'byte')}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -603,7 +605,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {ModuleWrite(teensyModule,253,1,'byte'),'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
