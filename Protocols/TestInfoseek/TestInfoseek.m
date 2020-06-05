@@ -119,9 +119,9 @@ end
 
 modules = BpodSystem.Modules.Name;
 
-latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
-latchModule = [modules(strncmp('DIO',modules,3))];
-latchModule = latchModule{1};
+% latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
+% latchModule = [modules(strncmp('DIO',modules,3))];
+% latchModule = latchModule{1};
 % latchModule = 'DIOLicks1';
 
 % ModuleWrite(teensyModule,[254 1]);
@@ -321,21 +321,21 @@ infoSide = S.GUI.InfoSide;
 
 %% SET ODOR SIDES (LATCH VALVES) AND ODOR IDS
 
-if infoSide == 0
-    for i = 1:4
-        ModuleWrite(latchModule,[latchValves(i) 1]);
-        pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
-        pause(100/1000);
-    end
-else
-    for i = 5:8
-        ModuleWrite(latchModule,[latchValves(i) 1]);
-        pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
-        pause(100/1000);
-    end
-end
+% if infoSide == 0
+%     for i = 1:4
+%         ModuleWrite(latchModule,[latchValves(i) 1]);
+%         pause(100/1000);
+%         ModuleWrite(latchModule,[latchValves(i) 0]);
+%         pause(100/1000);
+%     end
+% else
+%     for i = 5:8
+%         ModuleWrite(latchModule,[latchValves(i) 1]);
+%         pause(100/1000);
+%         ModuleWrite(latchModule,[latchValves(i) 0]);
+%         pause(100/1000);
+%     end
+% end
 
 %% SET INITIAL TYPE COUNTS
 
@@ -403,9 +403,9 @@ RewardPauseTime = 0.05;
 % pins
 LEDPin = 11;
 
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
+% modules = BpodSystem.Modules.Name;
+% DIOmodule = [modules(strncmp('DIO',modules,3))];
+% DIOmodule = DIOmodule{1};
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -597,7 +597,7 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {'DIOLicks1', [3 1]}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
 % 'DIOLicks1',[254 1]
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
