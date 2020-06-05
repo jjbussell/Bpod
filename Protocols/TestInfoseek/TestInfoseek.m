@@ -1,3 +1,6 @@
+% Can't Get module/buzzer to work within SMA!!!
+
+
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
@@ -110,27 +113,18 @@ end
 
 % Put code here to set session params interactively?? i.e. via GUI
 
-%% HOW TO CHECK WHAT MODULES ARE THERE? (i.e. right teensys?)
-
 %% VALVE AND OTHER PINS / NON-BPOD HARDWARD
 
 % {'DIOLicks', [N S]} where N is pin number (19-23) and S is the new logic state (0 or 1 for 0V or 3.3V)
 
+modules = BpodSystem.Modules.Name;
+
 latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
-latchModule = 'DIOLicks1';
-teensyModule = 'DIOLicks1';
-LEDPin = 11;
+latchModule = [modules(strncmp('DIO',modules,3))];
+latchModule = latchModule{1};
+% latchModule = 'DIOLicks1';
 
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC
-% other Bpod out BNC at center odor start
-
-% for side odor on and reward on
-syncPins = [12, 13];
-
-% 'DIOLicks1',[254 1]
+% ModuleWrite(teensyModule,[254 1]);
 % 'DIOLicks1',[253 1],
 
 
@@ -349,12 +343,12 @@ TrialCounts = [0,0,0,0];
 
 %% INITIALIZE STATE MACHINE
 
-sma = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+sma = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
                               
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
-                              
+                           
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -394,6 +388,8 @@ end % end of protocol main function
 
 function [sma, S] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
 
+global BpodSystem;
+
 S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
 % Water parameters
@@ -403,6 +399,22 @@ maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI
 RewardPauseTime = 0.05;
 
 % LeftValveTime = 2; RightValveTime = 2;
+
+% pins
+LEDPin = 11;
+
+modules = BpodSystem.Modules.Name;
+DIOmodule = [modules(strncmp('DIO',modules,3))];
+DIOmodule = DIOmodule{1};
+
+% MINISCOPE
+% miniscope has 4 I/O BNC Pins, and scope sync and trig
+% scope sync connects to Bpod IN BNC
+% scope trig to Bpod OUT BNC
+% other Bpod out BNC at center odor start
+
+% for side odor on and reward on
+syncPins = [12, 13];
 
 % Set trialParams (reward and odor)
 switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
@@ -585,7 +597,8 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {'DIOLicks1', [3 1]}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+% 'DIOLicks1',[254 1]
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
