@@ -119,14 +119,35 @@ end
 
 modules = BpodSystem.Modules.Name;
 
-% latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
-% latchModule = [modules(strncmp('DIO',modules,3))];
-% latchModule = latchModule{1};
+latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
+latchModule = [modules(strncmp('DIO',modules,3))];
+latchModule = latchModule{1};
 % latchModule = 'DIOLicks1';
 
 % ModuleWrite(teensyModule,[254 1]);
 % 'DIOLicks1',[253 1],
 
+%% SET INFO SIDE
+
+infoSide = S.GUI.InfoSide;
+
+%% SET ODOR SIDES (LATCH VALVES) AND ODOR IDS
+
+if infoSide == 0
+    for i = 1:4
+        ModuleWrite(latchModule,[latchValves(i) 1]);
+        pause(100/1000);
+        ModuleWrite(latchModule,[latchValves(i) 0]);
+        pause(100/1000);
+    end
+else
+    for i = 5:8
+        ModuleWrite(latchModule,[latchValves(i) 1]);
+        pause(100/1000);
+        ModuleWrite(latchModule,[latchValves(i) 0]);
+        pause(100/1000);
+    end
+end
 
 %% Define trial types
 
@@ -313,29 +334,6 @@ RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors, getPokeColors);
-
-
-%% SET INFO SIDE
-
-infoSide = S.GUI.InfoSide;
-
-%% SET ODOR SIDES (LATCH VALVES) AND ODOR IDS
-
-% if infoSide == 0
-%     for i = 1:4
-%         ModuleWrite(latchModule,[latchValves(i) 1]);
-%         pause(100/1000);
-%         ModuleWrite(latchModule,[latchValves(i) 0]);
-%         pause(100/1000);
-%     end
-% else
-%     for i = 5:8
-%         ModuleWrite(latchModule,[latchValves(i) 1]);
-%         pause(100/1000);
-%         ModuleWrite(latchModule,[latchValves(i) 0]);
-%         pause(100/1000);
-%     end
-% end
 
 %% SET INITIAL TYPE COUNTS
 
@@ -597,8 +595,10 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {'DIOLicks1',254,'DIOLicks1',1}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
 % 'DIOLicks1',[254 1]
+% DIOmodule,[254 1]
+% ModuleWrite(DIOmodule,[254 1]);
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -618,7 +618,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',253,'DIOLicks1',1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
