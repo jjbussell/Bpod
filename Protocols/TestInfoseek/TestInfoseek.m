@@ -400,10 +400,14 @@ RewardPauseTime = 0.05;
 
 % pins
 LEDPin = 11;
+% for sending side odor on and reward on to scope
+syncPins = [12, 13];
+buzzer1 = [254 1];
+buzzer2 = [253 1];
 
-% modules = BpodSystem.Modules.Name;
-% DIOmodule = [modules(strncmp('DIO',modules,3))];
-% DIOmodule = DIOmodule{1};
+modules = BpodSystem.Modules.Name;
+DIOmodule = [modules(strncmp('DIO',modules,3))];
+DIOmodule = DIOmodule{1};
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -411,8 +415,9 @@ LEDPin = 11;
 % scope trig to Bpod OUT BNC
 % other Bpod out BNC at center odor start
 
-% for side odor on and reward on
-syncPins = [12, 13];
+
+
+% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});  % Set serial messages 1 and 2
 
 % Set trialParams (reward and odor)
 switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
@@ -591,22 +596,22 @@ end
 
 
 % STATES
-
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {'DIOLicks1',254,'DIOLicks1',1}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+    'OutputActions', {ModuleWrite('DIO1',[5 1])}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
+% 'DIOLicks1',254,'DIOLicks1',1
 % 'DIOLicks1',[254 1]
 % DIOmodule,[254 1]
 % ModuleWrite(DIOmodule,[254 1]);
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
-    'OutputActions', {'PWM2',255}); % port light on
+    'OutputActions', {'PWM2',255,'DIOLicks1',3}); % port light on
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
-    'OutputActions', {}); 
+    'OutputActions', {'DIOLicks1',4}); 
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
@@ -618,7 +623,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',253,'DIOLicks1',1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
