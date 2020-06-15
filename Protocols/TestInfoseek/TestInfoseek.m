@@ -417,7 +417,8 @@ DIOmodule = DIOmodule{1};
 
 
 
-% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});  % Set serial messages 1 and 2
+% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});  % Set
+% serial messages 1,2,3,4
 
 % Set trialParams (reward and odor)
 switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
