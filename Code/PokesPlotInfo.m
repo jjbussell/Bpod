@@ -31,20 +31,20 @@ switch action
         state_colors = varargin{2};
         poke_colors = varargin{3};
 
-        BpodSystem.ProtocolFigures.PokesPlot = figure('Position', [50 50 300 700],'name','PokesPlot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
+        BpodSystem.ProtocolFigures.PokesPlot = figure('Position', [50 50 300 700],'name','TrialEvents','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
 
         BpodSystem.GUIHandles.PokesPlot.StateColors= state_colors;
         BpodSystem.GUIHandles.PokesPlot.PokeColors= poke_colors;
 
         
         BpodSystem.GUIHandles.PokesPlot.AlignOnLabel = uicontrol('Style', 'text','String','align on:', 'Position', [30 70 60 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.AlignOnMenu = uicontrol('Style', 'popupmenu','Value',2, 'String', fields(state_colors), 'Position', [95 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'alignon'});
+        BpodSystem.GUIHandles.PokesPlot.AlignOnMenu = uicontrol('Style', 'popupmenu','Value',6, 'String', fields(state_colors), 'Position', [95 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'alignon'});
         
         BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','start', 'Position', [30 35 40 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.LeftEdge = uicontrol('Style', 'edit','String',-0.25, 'Position', [75 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        BpodSystem.GUIHandles.PokesPlot.LeftEdge = uicontrol('Style', 'edit','String',-2, 'Position', [75 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
         
         BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','end', 'Position', [30 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.RightEdge = uicontrol('Style', 'edit','String',2, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        BpodSystem.GUIHandles.PokesPlot.RightEdge = uicontrol('Style', 'edit','String',10, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
          
         BpodSystem.GUIHandles.PokesPlot.LastnLabel = uicontrol('Style', 'text','String','N trials', 'Position', [130 33 50 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
         BpodSystem.GUIHandles.PokesPlot.Lastn = uicontrol('Style', 'edit','String',10, 'Position', [185 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});

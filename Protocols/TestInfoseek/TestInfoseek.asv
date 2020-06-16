@@ -110,25 +110,16 @@ end
 
 % Put code here to set session params interactively?? i.e. via GUI
 
-%% VALVE AND OTHER PINS / NON-BPOD HARDWARD
-
-% {'DIOLicks', [N S]} where N is pin number (19-23) and S is the new logic state (0 or 1 for 0V or 3.3V)
-
-modules = BpodSystem.Modules.Name;
-
-latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
-latchModule = [modules(strncmp('DIO',modules,3))];
-latchModule = latchModule{1};
-% latchModule = 'DIOLicks1';
-
-% ModuleWrite(teensyModule,[254 1]);
-% 'DIOLicks1',[253 1],
-
 %% SET INFO SIDE
 
 infoSide = S.GUI.InfoSide;
 
-%% SET ODOR SIDES (LATCH VALVES) AND ODOR IDS
+%% SET ODOR SIDES (LATCH VALVES)
+
+modules = BpodSystem.Modules.Name;
+latchValves = [3 4 5 6 7 8 9 10]; % 1:4 go to left, 5:8 go to right!
+latchModule = [modules(strncmp('DIO',modules,3))];
+latchModule = latchModule{1};
 
 if infoSide == 0
     for i = 1:4
@@ -271,7 +262,6 @@ for n = 1:typeBlockCount
     end
 end
 
-
 % info forced
 for n = 1:typeBlockCount
     for m = 1:typeBlockSize
@@ -331,8 +321,7 @@ RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors, getPokeColors);
-
-% ADD TOTAL WATER AMOUNT GUI!
+% TotalRewardDisplay('init');
 
 %% SET INITIAL TYPE COUNTS
 
@@ -598,19 +587,15 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {'DIOLicks1',1}); % {'Buzzer',1,'LED',1}buzzer on, light on (configure teensy, consider lighting center port)
-% 'DIOLicks1',254,'DIOLicks1',1
-% 'DIOLicks1',[254 1]
-% DIOmodule,[254 1]
-% ModuleWrite(DIOmodule,[254 1]);
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
-    'OutputActions', {'PWM2',255,'DIOLicks1',3}); % port light on
+    'OutputActions', {'PWM2',255}); % port light on
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
-    'OutputActions', {'DIOLicks1',4}); 
+    'OutputActions', {}); 
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
@@ -622,7 +607,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
@@ -640,7 +625,7 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{ 'PWM1',255}, turnOnSideOdor(LeftSideOdor,'left')]);
+    'OutputActions', [{'PWM1',255}, turnOnSideOdor(LeftSideOdor,'left')]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup',OutcomeStateLeft},...
@@ -673,7 +658,7 @@ sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
 sma = AddState(sma, 'Name', 'OdorRight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
-    'OutputActions', [{'PWM3',255}, turnOnSideOdor(RightSideOdor,'right')]);
+    'OutputActions', [{'PWM3',100}, turnOnSideOdor(RightSideOdor,'right')]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup',OutcomeStateRight},...
