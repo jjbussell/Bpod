@@ -327,6 +327,27 @@ PokesPlotInfo('init', getStateColors, getPokeColors);
 
 TrialCounts = [0,0,0,0];
 
+%% INITIALIZE SERIAL MESSAGES
+
+% pins
+LEDPin = 11;
+% for sending side odor on and reward on to scope
+syncPins = [12, 13];
+buzzer1 = [254 1];
+buzzer2 = [253 1];
+
+DIOmodule = [modules(strncmp('DIO',modules,3))];
+DIOmodule = DIOmodule{1};
+
+% MINISCOPE
+% miniscope has 4 I/O BNC Pins, and scope sync and trig
+% scope sync connects to Bpod IN BNC
+% scope trig to Bpod OUT BNC
+% other Bpod out BNC at center odor start
+
+% Set serial messages 1,2,3,4
+LoadSerialMessages('DIOLicks1', {buzzer1,buzzer2,[5 1], [5 0]});
+
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
 
 %% INITIALIZE STATE MACHINE
@@ -385,16 +406,16 @@ MaxValveTime = max(R);
 maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
 RewardPauseTime = 0.05;
 
-% pins
-LEDPin = 11;
-% for sending side odor on and reward on to scope
-syncPins = [12, 13];
-buzzer1 = [254 1];
-buzzer2 = [253 1];
-
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
+% % pins
+% LEDPin = 11;
+% % for sending side odor on and reward on to scope
+% syncPins = [12, 13];
+% buzzer1 = [254 1];
+% buzzer2 = [253 1];
+% 
+% modules = BpodSystem.Modules.Name;
+% DIOmodule = [modules(strncmp('DIO',modules,3))];
+% DIOmodule = DIOmodule{1};
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -402,8 +423,10 @@ DIOmodule = DIOmodule{1};
 % scope trig to Bpod OUT BNC
 % other Bpod out BNC at center odor start
 
-% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
 % Set serial messages 1,2,3,4
+% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
+% LoadSerialMessages('DIOLicks1', {[5 1]});
+% LoadSerialMessages(1, {[5 8], [2 3 4]});
 
 % Set trialParams (reward and odor)
 switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
@@ -585,7 +608,7 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {});
+    'OutputActions', {'DIOLicks1',1});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -605,7 +628,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
-    'OutputActions', {'GlobalTimerTrig', 1}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
