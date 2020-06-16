@@ -331,8 +331,7 @@ TrialCounts = [0,0,0,0];
 
 % pins
 LEDPin = 11;
-% for sending side odor on and reward on to scope
-syncPins = [12, 13];
+
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 
@@ -342,13 +341,27 @@ DIOmodule = DIOmodule{1};
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
 % scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC
-% other Bpod out BNC at center odor start
+% scope trig to Bpod OUT BNC 1
+% Bpod out BNC 2 at center odor start
 
-% Set serial messages 1,2,3,4
-LoadSerialMessages('DIOLicks1', {buzzer1,buzzer2,[5 1], [5 0]});
+% Set serial messages 1,2,3,4,5,6,7,8,9,10
+LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
+    [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
+%{
+    1 buzzer 1
+    2 buzzer 2
+    3 LEDs on
+    4 LEDs off
+    5 scope signal 1 on
+    6 scope signal 1 off
+    7 scope signal 2 on
+    8 scope signal 2 off
+    %}
 
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
+
+% Turn on BNC1
+ManualOverride('OB',1);
 
 %% INITIALIZE STATE MACHINE
 
@@ -389,6 +402,7 @@ end
 
 %% SHUT DOWN
 % NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
+ManualOverride('OB',1);
 
 end % end of protocol main function
 
@@ -620,7 +634,7 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'PWM2',100},turnOnCenterOdor(0)]);
+    'OutputActions',[{'PWM2',100,'BNC2',1},turnOnCenterOdor(0)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
@@ -646,11 +660,11 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{'PWM1',50}, turnOnSideOdor(LeftSideOdor,'left')]);
+    'OutputActions', [{'PWM1',50,'DIOLicks1',5}, turnOnSideOdor(LeftSideOdor,'left')]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup',OutcomeStateLeft},...
-    'OutputActions', {});
+    'OutputActions', {'DIOLicks1',6});
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftBigReward', ...
