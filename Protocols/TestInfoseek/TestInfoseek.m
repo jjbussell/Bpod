@@ -65,7 +65,7 @@ informative odor, then after a delay, reward outcome at the same side port.
 
 ----------------------------------------------------------------------------
 %}
-function TestInfoSeek
+function TestInfoSeek4
 
 
 global BpodSystem
@@ -334,7 +334,7 @@ TrialCounts = [0,0,0,0];
 sma = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
-                                                  
+                              
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -385,8 +385,6 @@ MaxValveTime = max(R);
 maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
 RewardPauseTime = 0.05;
 
-% LeftValveTime = 2; RightValveTime = 2;
-
 % pins
 LEDPin = 11;
 % for sending side odor on and reward on to scope
@@ -404,7 +402,7 @@ DIOmodule = DIOmodule{1};
 % scope trig to Bpod OUT BNC
 % other Bpod out BNC at center odor start
 
-LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
+% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
 % Set serial messages 1,2,3,4
 
 % Set trialParams (reward and odor)
