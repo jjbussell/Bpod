@@ -1,6 +1,3 @@
-% Can't Get module/buzzer to work within SMA!!!
-
-
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
@@ -335,18 +332,20 @@ BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors, getPokeColors);
 
+% ADD TOTAL WATER AMOUNT GUI!
+
 %% SET INITIAL TYPE COUNTS
 
 TrialCounts = [0,0,0,0];
+
+%% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
 
 %% INITIALIZE STATE MACHINE
 
 sma = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
-                              
-%% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
-                           
+                                                  
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -354,7 +353,8 @@ for currentTrial = 1:MaxTrials
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point
                                        
-    % CODE FOR PULLING IN SCOPE SYNC SIGNAL GOES HERE??
+    % CODE FOR PULLING IN SCOPE SYNC SIGNAL GOES HERE?? NO CODE NEEDED?
+    % WILL JUST BE EVENTS?
     
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
     [sma, S] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -373,7 +373,7 @@ for currentTrial = 1:MaxTrials
         PokesPlotInfo('update');
 %         UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
         TrialCounts = UpdateTypeOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, infoSide);
-        SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
+        SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
 
@@ -414,8 +414,6 @@ DIOmodule = DIOmodule{1};
 % scope sync connects to Bpod IN BNC
 % scope trig to Bpod OUT BNC
 % other Bpod out BNC at center odor start
-
-
 
 LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
 % Set serial messages 1,2,3,4
