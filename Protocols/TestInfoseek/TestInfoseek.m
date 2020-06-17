@@ -210,6 +210,8 @@ end
 % trial choiceTypes
 TrialTypes=TrialTypes(1:MaxTrials);
 
+Outcomes = NaN(1,MaxTrials);
+
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 
 %% SET REWARD BLOCKS
@@ -314,9 +316,11 @@ RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
 
 %% Initialize plots
 
-% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
-% TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes); %trial choice types
+BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes); %trial choice types
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
@@ -396,7 +400,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         PokesPlotInfo('update');
 %         UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
-        TrialCounts = UpdateTypeOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, infoSide);
+        [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -832,68 +836,86 @@ function SideOdorOutputActions = turnOnSideOdor(odorID, side)
 end
 
 %% OUTCOME PLOT
-
-function UpdateOutcomePlot(TrialTypes, Data)
-global BpodSystem
-Outcomes = zeros(1,Data.nTrials);
-for x = 1:Data.nTrials
-    if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
-        Outcomes(x) = 1;
-    elseif ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
-        Outcomes(x) = 2;
-    elseif ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
-        Outcomes(x) = 1;
-    elseif ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
-        Outcomes(x) = 2;        
-    else
-        Outcomes(x) = 0;
-    end
-end
-TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);
-end
+% 
+% function UpdateOutcomePlot(TrialTypes, Data)
+% global BpodSystem
+% Outcomes = zeros(1,Data.nTrials);
+% for x = 1:Data.nTrials
+%     if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
+%         Outcomes(x) = 1;
+%     elseif ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
+%         Outcomes(x) = 2;
+%     elseif ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
+%         Outcomes(x) = 1;
+%     elseif ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
+%         Outcomes(x) = 2;        
+%     else
+%         Outcomes(x) = 0;
+%     end
+% end
+% TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);
+% end
 
 
 %% KEEP TRACK OF CHOICES FOR REWARD BLOCKS
+% this doesn't count incorrect or no choice?
 
-function newTrialCounts = UpdateTypeOutcomes(TrialTypes, Data, TrialCounts, infoSide)
+% Outcomes = type: choice, info, rand. outcome: NaN, nochoice(2) incorrect (3), not present(-1), correctinfo(1), correct rand(0)
+
+function [newTrialCounts,newOutcomes] = UpdateOutcomes(TrialTypes, Data, TrialCounts, Outcomes, infoSide)
     global BpodSystem;
     x = Data.nTrials;
     newTrialCounts = TrialCounts;
+    newOutcomes = Outcomes;
     if infoSide == 0
         switch TrialTypes(x)
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
+                    newOutcomes(x) = 1;
                 elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
+                    newOutcomes(x) = 0;
                 end
             case 2
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
+                    newOutcomes(x) = 1;
                 end
             case 3
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                end          
+                    newOutcomes(x) = 0;
+                end
         end
     else
         switch TrialTypes(x)
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
+                    newOutcomes(x) = 0;
                 elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
+                    newOutcomes(x) = 1;
                 end
             case 2
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-
+                    newOutcomes(x) = 1;
                 end
             case 3
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
+                    newOutcomes(x) = 0;
                 end          
         end            
+    end
+    if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftNotPresent(1) Data.RawEvents.Trial{x}.States.RightNotPresent(1)]))
+        newOutcomes(x) = -1;
+    elseif ~isnan(Data.RawEvents.Trial{x}.States.Incorrect(1))
+        newOutcomes(x) = 3;
+    elseif ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+        newOutcomes(x) = 2;
     end
 end
         
