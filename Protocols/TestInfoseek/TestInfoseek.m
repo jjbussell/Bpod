@@ -137,9 +137,7 @@ else
     end
 end
 
-%% Define trial types
-
-% trial types depend on trial types available!!
+%% Define choice trial types
 
 MaxTrials = S.GUI.SessionTrials;
 
@@ -149,7 +147,7 @@ blockSize = 12;
 typeBlockSize = 8;
 choicePercent = 0; infoPercent = 0; randPercent = 0;
 
-switch typesAvailable % set trial type arrays based on TrialTypes
+switch typesAvailable 
     case 1
         choicePercent = 1; infoPercent = 0; randPercent = 0;
     case 2
@@ -168,6 +166,7 @@ switch typesAvailable % set trial type arrays based on TrialTypes
         choicePercent = 0.5; infoPercent = 0; randPercent = 0.5;        
 end
 
+% set trial type arrays based on TrialTypes
 choiceBlockSize = round(choicePercent * blockSize);
 infoBlockSize = round(infoPercent * blockSize);
 randBlockSize = round(randPercent * blockSize);
@@ -352,10 +351,10 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
     2 buzzer 2
     3 LEDs on
     4 LEDs off
-    5 scope signal 1 on
-    6 scope signal 1 off
-    7 scope signal 2 on
-    8 scope signal 2 off
+    5 scope signal 1 on side odor
+    6 scope signal 1 off side odor
+    7 scope signal 2 on reward
+    8 scope signal 2 off reward
     %}
 
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
@@ -570,14 +569,15 @@ sma = SetCondition(sma, 6, 'Port3', 0); % Condition 6: Port 3 low (is out) (righ
 
 % TIMERS
 sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
+
 sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY
 if maxDrops > 1
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'PWM4', 'OnMessage', 0, 'OffMessage', 0,...
+        'OnsetDelay', 0, 'Channel', DIOmodule, 'OnMessage', 7, 'OffMessage', 8,...
         'Loop', maxDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime); % timer to stay in reward state
 else
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'PWM4', 'OnMessage', 0, 'OffMessage', 0,...
+        'OnsetDelay', 0, 'Channel', DIOmodule, 'OnMessage', 7, 'OffMessage', 8,...
         'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0); % timer to stay in reward state    
 end
 sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
@@ -634,7 +634,7 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'PWM2',100,'BNC2',1},turnOnCenterOdor(0)]);
+    'OutputActions',[{'PWM2',100,'BNC2',1},turnOnCenterOdor(CenterOdor)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
@@ -725,6 +725,7 @@ sma = AddState(sma, 'Name', 'RightNotPresent', ...
 %     'StateChangeConditions',{'GlobalCounter2_End','InterTrialInterval'},...
 %     'OutputActions',{});
 
+% Waits for max drops time
 sma = AddState(sma, 'Name','OutcomeDelivery','Timer',0,...
     'StateChangeConditions',{'GlobalCounter2_End','InterTrialInterval'},...
     'OutputActions',{});
