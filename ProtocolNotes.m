@@ -28,10 +28,11 @@ Right reward:
 4"" for right
 
 TO DO::
-Incorrect/not present
+Incorrect/not present--moving through trial types
 Scope Sync
 Camera
-Rename and make clearer pokes plot (trial events)
+Rename and make clearer pokes plot (trial events)--lines for instant, by
+trial type?
 Set up Outcome plot
 Set up total liquid
 Set up performance % info and % correct

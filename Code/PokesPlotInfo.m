@@ -29,12 +29,12 @@ switch action
     case 'init'
         
         state_colors = varargin{2};
-        poke_colors = varargin{3};
+%         poke_colors = varargin{3};
 
         BpodSystem.ProtocolFigures.PokesPlot = figure('Position', [50 50 300 700],'name','TrialEvents','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
 
         BpodSystem.GUIHandles.PokesPlot.StateColors= state_colors;
-        BpodSystem.GUIHandles.PokesPlot.PokeColors= poke_colors;
+%         BpodSystem.GUIHandles.PokesPlot.PokeColors= poke_colors;
 
         
         BpodSystem.GUIHandles.PokesPlot.AlignOnLabel = uicontrol('Style', 'text','String','align on:', 'Position', [30 70 60 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
@@ -103,7 +103,11 @@ switch action
             for i=1:length(fnames)
                 
                 t = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(fnames{i})-aligning_time;
-                x_vertices = [t(1) t(2) t(2) t(1)]';
+                if t(1)==t(2)
+                    x_vertices = [t(1)-0.05 t(2) t(2) t(1)-0.05]';
+                else
+                    x_vertices = [t(1) t(2) t(2) t(1)]';
+                end
                 y_vertices = [repmat(last_n-j,1,2)+0.1 repmat(last_n-j+1,1,2)-0.1]';
                 
                 if size(BpodSystem.GUIHandles.PokesPlot.StateHandle,2)<last_n % if the number of trial to plot (last_n) is changed from the gui.
