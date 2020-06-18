@@ -209,7 +209,7 @@ end
 
 % trial choiceTypes
 TrialTypes=TrialTypes(1:MaxTrials);
-TrialTypes = [1 1 2 2 3 3 1 2 3 1];
+% TrialTypes = [1 1 2 2 3 3 1 2 3 1];
 
 Outcomes = NaN(1,MaxTrials);
 
@@ -381,7 +381,7 @@ for currentTrial = 1:MaxTrials
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
-    [sma, S, trialType] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents); % Prepare next state machine.
+    [sma, S, trialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -409,7 +409,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, trialType] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
+function [sma, S, trialType,TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -450,6 +450,7 @@ if currentTrial>1
     % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
     if contains(previousStates,'NoChoice'))) | contains(previousStates,'Incorrect')))
         currentTrialType = TrialTypes(currentTrial);
+        TrialTypes = UpdateTrialTypes(1,trialType,TrialTypes,MaxTrials);
     else
         currentTrialType = TrialTypes(currentTrial+1);
     end
@@ -770,6 +771,12 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
     'StateChangeConditions', {'Tup', '>exit'},...
     'OutputActions', {'GlobalTimerCancel', 2});
 
+end
+
+%% TRIAL TYPES
+
+function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes,MaxTrials)
+    updatedtypes = [trialTypes(1:i) trialTypes(i) trialTypes(i+1:end-1)];
 end
 
 %% ODOR CONTROL
