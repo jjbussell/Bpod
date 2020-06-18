@@ -64,7 +64,7 @@ switch Action
     case 'init'
         %initialize pokes plot
         TrialTypeList = varargin{1};
-        nTrialsToShow = 10; %default number of trials to display
+        nTrialsToShow = 20; %default number of trials to display
         
         if nargin > 3 %custom number of trials
             nTrialsToShow =varargin{2};

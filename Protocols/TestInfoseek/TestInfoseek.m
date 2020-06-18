@@ -409,7 +409,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, trialType,TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
+function [sma, S, currentTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -448,11 +448,11 @@ DIOmodule = DIOmodule{1};
 if currentTrial>1
     previousStates = currentTrialEvents.StatesVisited;
     % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
-    if contains(previousStates,'NoChoice'))) | contains(previousStates,'Incorrect')))
-        currentTrialType = TrialTypes(currentTrial);
-        TrialTypes = UpdateTrialTypes(1,trialType,TrialTypes,MaxTrials);
+    if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
+        currentTrialType = TrialTypes(currentTrial-1);
+        TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes,MaxTrials);
     else
-        currentTrialType = TrialTypes(currentTrial+1);
+        currentTrialType = TrialTypes(currentTrial);
     end
 else
    currentTrialType = TrialTypes(currentTrial);
