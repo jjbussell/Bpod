@@ -379,13 +379,9 @@ TrialManager.startTrial(sma); % Sends & starts running first trial's state machi
 for currentTrial = 1:MaxTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'InterTrialInterval'}); 
                                        % Hangs here until Bpod enters one of the listed trigger states, 
-                                       % then returns current trial's states visited + events captured to this point
-                                       
-    % CODE FOR PULLING IN SCOPE SYNC SIGNAL GOES HERE?? NO CODE NEEDED?
-    % WILL JUST BE EVENTS?
-    
+                                       % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
-    [sma, S] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    [sma, S] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -447,8 +443,22 @@ DIOmodule = DIOmodule{1};
 % LoadSerialMessages('DIOLicks1', {[5 1]});
 % LoadSerialMessages(1, {[5 8], [2 3 4]});
 
+
+% DETERMINE TRIAL TYPE
+if currentTrial>1
+    previousStates = currentTrialEvents.StatesVisited;
+    % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
+    if contains(previousStates,'NoChoice'))) | contains(previousStates,'Incorrect')))
+        currentTrialType = TrialTypes(currentTrial);
+    else
+        currentTrialType = TrialTypes(currentTrial+1);
+    end
+else
+   currentTrialType = TrialTypes(currentTrial);
+end
+
 % Set trialParams (reward and odor)
-switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
+switch currentTrialType % Determine trial-specific state matrix fields
     % Stimulus output will change to CENTER ODOR
     case 1 % CHOICE
 %         OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
