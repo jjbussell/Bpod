@@ -393,7 +393,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        BpodSystem.Data.TrialTypes(currentTrial) = trialType; % Adds the trial type of the current trial to data
+        BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
         PokesPlotInfo('update');
         TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes, Outcomes);
@@ -450,7 +450,7 @@ if currentTrial>1
     % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
     if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
         currentTrialType = TrialTypes(currentTrial-1);
-        TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes,MaxTrials);
+        TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes);
     else
         currentTrialType = TrialTypes(currentTrial);
     end
@@ -775,8 +775,8 @@ end
 
 %% TRIAL TYPES
 
-function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes,MaxTrials)
-    updatedtypes = [trialTypes(1:i) trialTypes(i) trialTypes(i+1:end-1)];
+function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes)
+    updatedtypes = [TrialTypes(1:i); TrialTypes(i); TrialTypes(i+1:end-1)];
 end
 
 %% ODOR CONTROL
