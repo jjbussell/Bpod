@@ -1,4 +1,24 @@
 %{
+
+To implement:
+reshuffling trial types so don't move on from no choice/incorrect?
+
+training protocols!!
+
+scope sync
+
+center reward protocol, must stay in port protocol
+
+outcome plot
+
+total liquid/performance
+
+GUI to load and set session parameters BEFORE trial types are chosen (json
+files?)
+
+camera
+
+
 Params
 
 ChooseLeft
@@ -27,15 +47,6 @@ global counter 3 = counts those for left drops
 Right reward:
 4"" for right
 
-TO DO::
-Incorrect/not present--moving through trial types
-Scope Sync
-Camera
-Rename and make clearer pokes plot (trial events)--lines for instant, by
-trial type?
-Set up Outcome plot
-Set up total liquid
-Set up performance % info and % correct
 
 
 incorrect = wrong choice, duration odor delay

@@ -77,7 +77,7 @@ TrialManager = TrialManagerObject;
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.SessionTrials = 1000;
+    S.GUI.SessionTrials = 10;
     S.GUI.TrialTypes = 5;
     S.GUI.InfoSide = 0;
     S.GUI.InfoOdor = 3;
@@ -171,7 +171,7 @@ choiceBlockSize = round(choicePercent * blockSize);
 infoBlockSize = round(infoPercent * blockSize);
 randBlockSize = round(randPercent * blockSize);
 
-blockToShuffle = zeros(12,1);
+blockToShuffle = zeros(blockSize,1);
 
 if choiceBlockSize > 0
     blockToShuffle(1:choiceBlockSize) = 1;
@@ -209,6 +209,7 @@ end
 
 % trial choiceTypes
 TrialTypes=TrialTypes(1:MaxTrials);
+TrialTypes = [1 1 2 2 3 3 1 2 3 1];
 
 Outcomes = NaN(1,MaxTrials);
 
@@ -320,7 +321,7 @@ RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes); %trial choice types
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 90])); %trial choice types
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
@@ -334,7 +335,6 @@ TrialCounts = [0,0,0,0];
 
 % pins
 LEDPin = 11;
-
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 
@@ -398,9 +398,9 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        PokesPlotInfo('update');
-%         UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
         [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
+        PokesPlotInfo('update');
+        TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes, Outcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
