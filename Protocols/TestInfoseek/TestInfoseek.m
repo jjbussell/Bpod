@@ -315,6 +315,9 @@ RewardTypes = RewardTypes(1:MaxTrials,:);
 % Rand Odors to pull from
 RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
 
+BpodSystem.Data.OrigTrialTypes = TrialTypes;
+BpodSystem.Data.RewardTypes = RewardTypes;
+
 %% Initialize plots
 
 % BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
@@ -370,7 +373,8 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
 
 %% INITIALIZE STATE MACHINE
 
-[sma,~,trialType] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,~,nextTrialType] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+currentTrialType = nextTrialType;
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
                               
@@ -381,7 +385,7 @@ for currentTrial = 1:MaxTrials
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
-    [sma, S, trialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents); % Prepare next state machine.
+    [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -393,8 +397,9 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
+        currentTrialType = nextTrialType;
+        BpodSystem.Data.TrialTypes(currentTrial) = currentTrialType; % Adds the trial type of the current trial to data
+        [TrialCounts,Outcomes] = UpdateOutcomes(currentTrialType, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
         PokesPlotInfo('update');
         TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes, Outcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
@@ -409,7 +414,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, currentTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
+function [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -450,7 +455,7 @@ if currentTrial>1
     % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
     if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
         currentTrialType = TrialTypes(currentTrial-1);
-        TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes);
+%         TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes);
     else
         currentTrialType = TrialTypes(currentTrial);
     end
@@ -879,13 +884,13 @@ end
 
 % Outcomes = type: choice, info, rand. outcome: NaN, nochoice(2) incorrect (3), not present(-1), correctinfo(1), correct rand(0)
 
-function [newTrialCounts,newOutcomes] = UpdateOutcomes(TrialTypes, Data, TrialCounts, Outcomes, infoSide)
+function [newTrialCounts,newOutcomes] = UpdateOutcomes(trialType, Data, TrialCounts, Outcomes, infoSide)
     global BpodSystem;
     x = Data.nTrials;
     newTrialCounts = TrialCounts;
     newOutcomes = Outcomes;
     if infoSide == 0
-        switch TrialTypes(x)
+        switch trialType
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
@@ -906,7 +911,7 @@ function [newTrialCounts,newOutcomes] = UpdateOutcomes(TrialTypes, Data, TrialCo
                 end
         end
     else
-        switch TrialTypes(x)
+        switch trialType
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
