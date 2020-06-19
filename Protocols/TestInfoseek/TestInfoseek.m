@@ -77,7 +77,7 @@ TrialManager = TrialManagerObject;
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.SessionTrials = 10;
+    S.GUI.SessionTrials = 1000;
     S.GUI.TrialTypes = 5;
     S.GUI.InfoSide = 0;
     S.GUI.InfoOdor = 3;
@@ -208,8 +208,8 @@ for n = 1:blocks
 end
 
 % trial choiceTypes
+TrialTypes = [1; 1; 2; 2; 3; 3; 1; 2; 3; 1; TrialTypes];
 TrialTypes=TrialTypes(1:MaxTrials);
-% TrialTypes = [1 1 2 2 3 3 1 2 3 1];
 
 Outcomes = NaN(1,MaxTrials);
 
@@ -324,7 +324,7 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 90])); %trial choice types
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 40])); %trial choice types
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
@@ -373,11 +373,9 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
 
 %% INITIALIZE STATE MACHINE
 
-[sma,~,nextTrialType] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
-currentTrialType = nextTrialType;
+[sma,~,nextTrialType,TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
-                              % console UI, while code below proceeds in parallel.
-                              
+                              % console UI, while code below proceeds in parallel.                           
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -397,9 +395,9 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        currentTrialType = nextTrialType;
-        BpodSystem.Data.TrialTypes(currentTrial) = currentTrialType; % Adds the trial type of the current trial to data
-        [TrialCounts,Outcomes] = UpdateOutcomes(currentTrialType, BpodSystem.Data, TrialCounts, Outcomes, infoSide);
+        BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
+        BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
+        [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, Outcomes, infoSide);
         PokesPlotInfo('update');
         TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes, Outcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
@@ -414,7 +412,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial, currentTrialEvents)
+function [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -450,21 +448,21 @@ DIOmodule = DIOmodule{1};
 
 
 % DETERMINE TRIAL TYPE
-if currentTrial>1
+if nextTrial>1
     previousStates = currentTrialEvents.StatesVisited;
     % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
     if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
-        currentTrialType = TrialTypes(currentTrial-1);
-%         TrialTypes = UpdateTrialTypes(currentTrial,currentTrialType,TrialTypes);
+        nextTrialType = TrialTypes(nextTrial-1);
+        TrialTypes = UpdateTrialTypes(nextTrial,nextTrialType,TrialTypes);
     else
-        currentTrialType = TrialTypes(currentTrial);
+        nextTrialType = TrialTypes(nextTrial);
     end
 else
-   currentTrialType = TrialTypes(currentTrial);
+   nextTrialType = TrialTypes(nextTrial);
 end
 
 % Set trialParams (reward and odor)
-switch currentTrialType % Determine trial-specific state matrix fields
+switch nextTrialType % Determine trial-specific state matrix fields
     % Stimulus output will change to CENTER ODOR
     case 1 % CHOICE
 %         OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';

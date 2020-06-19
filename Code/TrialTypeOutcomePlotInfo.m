@@ -64,10 +64,9 @@ switch Action
     case 'init'
         %initialize pokes plot
         TrialTypeList = varargin{1};
-        nTrialsToShow = 20; %default number of trials to display
-        
+        nTrialsToShow = 40; %default number of trials to display
         if nargin > 3 %custom number of trials
-            nTrialsToShow =varargin{2};
+            nTrialsToShow = varargin{2};
         end
         yticklabelsinfo = {'RandForced','InfoForced','Choice'};
         labelFontSize = 16;

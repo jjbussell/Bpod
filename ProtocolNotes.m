@@ -23,6 +23,10 @@ files?)
 
 camera
 
+Problem updating outcome window w small trials
+
+First and other trial rewards not in events plot
+
 
 Params
 
