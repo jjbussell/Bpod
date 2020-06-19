@@ -2,15 +2,9 @@
 
 To implement:
 
-LEAVE PLOTTING FOR LATER, CHOOSE TYPE OF NEXT TRIAL FROM TRIAL TYPES LIST
-MOVING ON ONLY IF MAKE CORRECT CHOICE ON LAST TRIAL (no incorrect or no
-choice state)
-
-reshuffling trial types so don't move on from no choice/incorrect?
+scope sync
 
 training protocols!!
-
-scope sync
 
 center reward protocol, must stay in port protocol
 
@@ -25,7 +19,7 @@ camera
 
 Problem updating outcome window w small trials
 
-First and other trial rewards not in events plot
+First and other trial rewards not in events plot?
 
 
 Params
