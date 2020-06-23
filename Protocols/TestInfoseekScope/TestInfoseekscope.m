@@ -367,7 +367,7 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
 
 % Turn on BNC1
-% ManualOverride('OB',1);
+ManualOverride('OB',1);
 
 % NEED TO CATCH AND TURN THIS OFF IF AN ERROR!!
 
@@ -406,7 +406,7 @@ end
 
 %% SHUT DOWN
 % NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
-% ManualOverride('OB',1);
+ManualOverride('OB',1);
 
 end % end of protocol main function
 
