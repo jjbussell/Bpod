@@ -8,8 +8,6 @@ training protocols!!
 
 center reward protocol, must stay in port protocol
 
-outcome plot
-
 total liquid/performance
 
 GUI to load and set session parameters BEFORE trial types are chosen (json

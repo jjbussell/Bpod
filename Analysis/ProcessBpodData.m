@@ -17,7 +17,7 @@ a.trialType = [a.data(:).TrialTypes]';
 a.TrialEvents = [a.RawEvents(:).Trial];
 a.TrialEvents = [a.TrialEvents{:}]';
 a.States = [a.TrialEvents(:).States]';
-% a.Events = [a.TrialEvents(:).Events];
+a.Events = [a.TrialEvents(:).Events];
 
 for f = 1:numFiles
     nTrials = a.trialCt(f);
@@ -26,6 +26,30 @@ for f = 1:numFiles
     end
     a.file = [a.file; trialFile];
     trialFile = [];
+end
+
+%% CALC TRIAL START LAG
+
+%% VIDEO FRAMES
+
+% BNC1High, BNC1Low
+a.frameStarts = [];
+a.frameStops = [];
+for f = 1:numFiles
+    for t = 1:a.trialCt
+       frameStarts = [];
+       frameStops = [];
+       trialFramesStart = a.Events(t).BNC1High+a.TrialStartTimestamp(t);
+       trialFramesStop = a.Events(t).BNC1Low+a.TrialStartTimestamp(t);
+       frameStarts(:,1) = trialFramesStart';
+       frameStarts(:,2) = t;
+       frameStarts(:,3) = f;
+       a.frameStarts = [a.frameStarts; frameStarts];
+       frameStops(:,1) = trialFramesStop';
+       frameStops(:,2) = t;
+       frameStops(:,3) = f;
+       a.frameStops = [a.frameStops; frameStops];       
+    end
 end
 
 %% TIMES AND COUNTS FOR EACH STATE
