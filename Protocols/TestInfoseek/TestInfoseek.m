@@ -371,6 +371,12 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
 
 % NEED TO CATCH AND TURN THIS OFF IF AN ERROR!!
 
+%% SAVE EVENT NAMES AND NUMBER
+
+BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
+BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
+SaveBpodSessionData;
+
 %% INITIALIZE STATE MACHINE
 
 [sma,~,nextTrialType,TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
