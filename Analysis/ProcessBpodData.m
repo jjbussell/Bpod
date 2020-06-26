@@ -8,16 +8,16 @@ load(fname); % opens structure "a" with previous data, if available
 
 numFiles = numel(a.filename);
 
-%% TRIAL DATA
+%% TRIAL STATE DATA
 
 a.file = [];
 a.trialType = [a.data(:).TrialTypes]';
 
-
 a.TrialEvents = [a.RawEvents(:).Trial];
 a.TrialEvents = [a.TrialEvents{:}]';
 a.States = [a.TrialEvents(:).States]';
-a.Events = [a.TrialEvents(:).Events];
+% a.Events = [a.TrialEvents(:).Events];
+
 
 for f = 1:numFiles
     nTrials = a.trialCt(f);
@@ -27,6 +27,22 @@ for f = 1:numFiles
     a.file = [a.file; trialFile];
     trialFile = [];
 end
+
+%% EVENTS
+
+for e = 1:a.nEvents
+   eventName = a.eventNames{e};
+   a.Events.eventName=[];
+   for t = 1:a.trialCt
+       if isfield(a.TrialEvents(t).Events,eventName)
+            a.Events.(eventName){t} = a.TrialEvents(t).Events.(eventName);
+       else
+           a.Events.(eventName){t} = [];
+       end
+   end
+end
+
+
 
 %% CALC TRIAL START LAG
 
@@ -39,8 +55,8 @@ for f = 1:numFiles
     for t = 1:a.trialCt
        frameStarts = [];
        frameStops = [];
-       trialFramesStart = a.Events(t).BNC1High+a.TrialStartTimestamp(t);
-       trialFramesStop = a.Events(t).BNC1Low+a.TrialStartTimestamp(t);
+       trialFramesStart = a.Events.BNC1High{t}+a.TrialStartTimestamp(t);
+       trialFramesStop = a.Events.BNC1Low{t}+a.TrialStartTimestamp(t);
        frameStarts(:,1) = trialFramesStart';
        frameStarts(:,2) = t;
        frameStarts(:,3) = f;
