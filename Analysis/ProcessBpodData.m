@@ -68,9 +68,15 @@ for f = 1:numFiles
            frameStops(:,2) = t;
            frameStops(:,3) = f;
            a.frameStops = [a.frameStops; frameStops];
+           a.trialFrameStarts(t) = numel(trialFramesStart);
+           a.trialFrameStarts(t) = numel(trialFramesStop);
        end
     end
 end
+
+a.trialFrames = cumsum(a.trialFrameStarts);
+
+
 
 %% TIMES AND COUNTS FOR EACH STATE
 
