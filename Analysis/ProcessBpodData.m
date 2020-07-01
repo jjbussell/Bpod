@@ -47,34 +47,35 @@ end
 %% CALC TRIAL START LAG
 
 %% VIDEO FRAMES
-
-% BNC1High, BNC1Low
-a.frameStarts = [];
-a.frameStops = [];
-for f = 1:numFiles
-    for t = 1:a.trialCt
-       frameStarts = [];
-       frameStops = [];
-       trialFramesStarts = [];
-       trialFramesStop = [];
-       if ~isempty(a.Events.BNC1High{t})
-           trialFramesStart = a.Events.BNC1High{t}+a.TrialStartTimestamp(t);
-           trialFramesStop = a.Events.BNC1Low{t}+a.TrialStartTimestamp(t);       
-           frameStarts(:,1) = trialFramesStart';
-           frameStarts(:,2) = t;
-           frameStarts(:,3) = f;
-           a.frameStarts = [a.frameStarts; frameStarts];
-           frameStops(:,1) = trialFramesStop';
-           frameStops(:,2) = t;
-           frameStops(:,3) = f;
-           a.frameStops = [a.frameStops; frameStops];
-           a.trialFrameStarts(t) = numel(trialFramesStart);
-           a.trialFrameStarts(t) = numel(trialFramesStop);
-       end
+if ~isempty(a.Events.BNC1High{1})
+    % BNC1High, BNC1Low
+    a.frameStarts = [];
+    a.frameStops = [];
+    for f = 1:numFiles
+        for t = 1:a.trialCt
+           frameStarts = [];
+           frameStops = [];
+           trialFramesStarts = [];
+           trialFramesStop = [];
+           if ~isempty(a.Events.BNC1High{t})
+               trialFramesStart = a.Events.BNC1High{t}+a.TrialStartTimestamp(t);
+               trialFramesStop = a.Events.BNC1Low{t}+a.TrialStartTimestamp(t);       
+               frameStarts(:,1) = trialFramesStart';
+               frameStarts(:,2) = t;
+               frameStarts(:,3) = f;
+               a.frameStarts = [a.frameStarts; frameStarts];
+               frameStops(:,1) = trialFramesStop';
+               frameStops(:,2) = t;
+               frameStops(:,3) = f;
+               a.frameStops = [a.frameStops; frameStops];
+               a.trialFrameStarts(t) = numel(trialFramesStart);
+               a.trialFrameStarts(t) = numel(trialFramesStop);
+           end
+        end
     end
-end
 
-a.trialFrames = cumsum(a.trialFrameStarts);
+    a.trialFrames = cumsum(a.trialFrameStarts);
+end
 
 
 
