@@ -13,7 +13,7 @@ title('Inscopix Frame Gaps');
 histogram(inscopixGaps)
 bpodFrames=size(a.frameStarts,1);
 inscopixFrames = size(frameTimes,1);
-inscopixFrames-bpodFrames
+missingFrames = inscopixFrames-bpodFrames
 
 %% TROUBLESHOOTING
 
@@ -28,6 +28,10 @@ if trial gaps truly 200us, inscopix won't see them and turn off at 1000Hz.
 
 large gaps between trials account for like ~20 missing frames, but more
 than 400! a whole extra video in session?!?
+
+no, not extra pre-existing video. number of extra inscopix frames ~= the
+pre-recording time? each trial has ~expected number of frames. slight diff
+in b/t trial gaps can't explain 11s of missing frames.
 %}
 
 %% sessions/videos
@@ -41,6 +45,7 @@ vidStarts = trigTimes(startIdx);
 vidStops = trigTimes(stopIdx);
 vidGaps = diff([vidStops(1:end-1) vidStarts(2:end)],1,2);
 
+%% TRIAL TIMES
 endTimes=a.TrialEndTimestamp(1:end-1);
 startTimes=a.TrialStartTimestamp(2:end);
 timeBetween=startTimes-endTimes;
@@ -50,3 +55,9 @@ trialLengths = a.TrialEndTimestamp-a.TrialStartTimestamp;
 
 bigGaps = gaps(gaps>0.052);
 bigScopeGaps = inscopixGaps(inscopixGaps>0.052);
+
+%%
+for t=1:a.trialCt
+   framesInTrial(t,1)=a.trialFrames(t);
+   framesInTrial2(t,1)=a.trialFrameStarts(t);
+end
