@@ -25,6 +25,9 @@ missed a frame b/c it had 350 ms between trials
 
 if trial gaps truly 200us, inscopix won't see them and turn off at 1000Hz.
 1000Hz also enough to see 50ms incoming pulses
+
+large gaps between trials account for like ~20 missing frames, but more
+than 400! a whole extra video in session?!?
 %}
 
 %% sessions/videos
@@ -38,7 +41,12 @@ vidStarts = trigTimes(startIdx);
 vidStops = trigTimes(stopIdx);
 vidGaps = diff([vidStops(1:end-1) vidStarts(2:end)],1,2);
 
-endTimes=a.TrialEndTimestamp(1:end-1)
-startTimes=a.TrialStartTimestamp(2:end)
+endTimes=a.TrialEndTimestamp(1:end-1);
+startTimes=a.TrialStartTimestamp(2:end);
 timeBetween=startTimes-endTimes;
 trialLengths = a.TrialEndTimestamp-a.TrialStartTimestamp;
+
+%%
+
+bigGaps = gaps(gaps>0.052);
+bigScopeGaps = inscopixGaps(inscopixGaps>0.052);
