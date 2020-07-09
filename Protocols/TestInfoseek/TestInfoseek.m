@@ -1,3 +1,6 @@
+% TO TRACK: water, trials complete, % correct, % info
+% MAKE OUTCOME BARS??
+
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
@@ -318,11 +321,11 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 
 %% Initialize plots
 
-% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
-BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 40])); %trial choice types
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
