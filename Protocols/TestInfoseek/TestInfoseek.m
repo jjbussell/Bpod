@@ -5,8 +5,6 @@
 
 % HOUSE LIGHTS
 
-% ERROR TRIALS / NOT PRESENT
-
 % ADDITIONAL COMPONENTS: OUTPUT PINS: 4 latch valves (8 pins), buzzer,
 % house light LED, scope sync: center odor, side odor, water (3 pins)
 % lick sensors (IRQ, SCL, SDA) 
@@ -328,7 +326,7 @@ TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
-% TotalRewardDisplay('init');
+TotalRewardDisplay('init');
 
 %% SET INITIAL TYPE COUNTS
 
