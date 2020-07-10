@@ -1,6 +1,8 @@
 % TO TRACK: water, trials complete, % correct, % info
 % MAKE OUTCOME BARS??
 
+% NEED TO FIX REPEATING TRIAL TYPES IF NO CHOICE ETC!!git status
+
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
