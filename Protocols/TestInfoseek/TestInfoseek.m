@@ -212,9 +212,11 @@ end
 TrialTypes = [1; 1; 2; 2; 3; 3; 1; 2; 3; 1; TrialTypes];
 TrialTypes=TrialTypes(1:MaxTrials);
 
+PlotOutcomes = NaN(1,MaxTrials);
 Outcomes = NaN(1,MaxTrials);
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
+BpodSystem.Data.Outcomes = [];
 
 %% SET REWARD BLOCKS
 
@@ -380,9 +382,10 @@ SaveBpodSessionData;
 
 %% INITIALIZE STATE MACHINE
 
-[sma,~,nextTrialType,TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,~,nextTrialType,TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
-                              % console UI, while code below proceeds in parallel.                           
+                              % console UI, while code below proceeds in parallel.
+RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -390,7 +393,7 @@ for currentTrial = 1:MaxTrials
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
-    [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    [sma, S, nextTrialType, TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -404,9 +407,11 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
-        [TrialCounts,Outcomes] = UpdateOutcomes(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, Outcomes, infoSide);
+        BpodSystem.Data.Outcomes(currentTrial) = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide);
+        RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
+        [TrialCounts,PlotOutcomes] = UpdateCounts(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
         PokesPlotInfo('update');
-        TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes, Outcomes);
+        TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -419,7 +424,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, nextTrialType, TrialTypes] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, nextTrial, currentTrialEvents)
+function [sma, S, nextTrialType, TrialTypes, RewardLeft, RewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -862,57 +867,200 @@ function SideOdorOutputActions = turnOnSideOdor(odorID, side)
     SideOdorOutputActions = [cmd1, cmd2, cmd3, cmd4];
 end
 
-%% OUTCOME PLOT
-% 
-% function UpdateOutcomePlot(TrialTypes, Data)
-% global BpodSystem
-% Outcomes = zeros(1,Data.nTrials);
-% for x = 1:Data.nTrials
-%     if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
-%         Outcomes(x) = 1;
-%     elseif ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
-%         Outcomes(x) = 2;
-%     elseif ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
-%         Outcomes(x) = 1;
-%     elseif ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
-%         Outcomes(x) = 2;        
-%     else
-%         Outcomes(x) = 0;
-%     end
-% end
-% TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);
-% end
+
+%% OUTCOMES
+
+function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
+    global BpodSystem;    
+    x = Data.nTrials;
+    
+    if infoSide == 0
+        switch trialType
+            case 1
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 1; % choice no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1))
+                    if RewardLeft == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
+                            Outcome = 2; % choice info big
+                        else
+                            Outcome = 3; % choice info big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
+                            Outcome = 4; % choice info small
+                        else
+                            Outcome = 5; % choice info small NP
+                        end
+                    end
+                else
+                   if RewardRight == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
+                            Outcome = 6; % choice rand big
+                        else
+                            Outcome = 7; % choice rand big NP
+                        end                       
+                   else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
+                            Outcome = 8; % choice rand small
+                        else
+                            Outcome = 9; % choice rand small NP
+                        end                       
+                   end
+                end
+                
+            case 2
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 10; % info no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1))
+                    if RewardLeft == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
+                            Outcome = 11; % info big
+                        else
+                            Outcome = 12; % info big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
+                            Outcome = 13; % info small
+                        else
+                            Outcome = 14; % info small NP
+                        end
+                    end
+                else
+                    Outcome = 15; % info incorrect
+                end
+                
+            case 3
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 16; % rand no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorRight(1))
+                    if RewardRight == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
+                            Outcome = 17; % rand big
+                        else
+                            Outcome = 18; % rand big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
+                            Outcome = 19; % rand small
+                        else
+                            Outcome = 20; % rand small NP
+                        end
+                    end
+                else
+                    Outcome = 21; % rand incorrect
+                end
+        end
+        
+    else
+        switch trialType
+            case 1
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 1; % choice no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorRight(1))
+                    if RewardRight == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
+                            Outcome = 2; % choice info big
+                        else
+                            Outcome = 3; % choice info big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
+                            Outcome = 4; % choice info small
+                        else
+                            Outcome = 5; % choice info small NP
+                        end
+                    end
+                else
+                   if RewardLeft == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
+                            Outcome = 6; % choice rand big
+                        else
+                            Outcome = 7; % choice rand big NP
+                        end                       
+                   else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
+                            Outcome = 8; % choice rand small
+                        else
+                            Outcome = 9; % choice rand small NP
+                        end                       
+                   end
+                end
+                
+            case 2
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 10; % info no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorRight(1))
+                    if RewardRight == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
+                            Outcome = 11; % info big
+                        else
+                            Outcome = 12; % info big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
+                            Outcome = 13; % info small
+                        else
+                            Outcome = 14; % info small NP
+                        end
+                    end
+                else
+                    Outcome = 15; % info incorrect
+                end
+                
+            case 3
+                if ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
+                    Outcome = 16; % rand no choice
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1))
+                    if RewardLeft == 1
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
+                            Outcome = 17; % rand big
+                        else
+                            Outcome = 18; % rand big NP
+                        end
+                    else
+                        if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
+                            Outcome = 19; % rand small
+                        else
+                            Outcome = 20; % rand small NP
+                        end
+                    end
+                else
+                    Outcome = 21; % rand incorrect
+                end
+        end            
+    end
+end
 
 
-%% KEEP TRACK OF CHOICES FOR REWARD BLOCKS
-% this doesn't count incorrect or no choice?
+%% COUNTS
 
-% Outcomes = type: choice, info, rand. outcome: NaN, nochoice(2) incorrect (3), not present(-1), correctinfo(1), correct rand(0)
+% PlotOutcomes = type: choice, info, rand. outcome: NaN, nochoice(2) incorrect (3), not present(-1), correctinfo(1), correct rand(0)
 
-function [newTrialCounts,newOutcomes] = UpdateOutcomes(trialType, Data, TrialCounts, Outcomes, infoSide)
+function [newTrialCounts,newPlotOutcomes] = UpdateCounts(trialType, Data, TrialCounts, PlotOutcomes, infoSide)
     global BpodSystem;
     x = Data.nTrials;
     newTrialCounts = TrialCounts;
-    newOutcomes = Outcomes;
+    newPlotOutcomes = PlotOutcomes;
     if infoSide == 0
         switch trialType
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
-                    newOutcomes(x) = 1;
+                    newPlotOutcomes(x) = 1;
                 elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
-                    newOutcomes(x) = 0;
+                    newPlotOutcomes(x) = 0;
                 end
             case 2
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newOutcomes(x) = 1;
+                    newPlotOutcomes(x) = 1;
                 end
             case 3
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                    newOutcomes(x) = 0;
+                    newPlotOutcomes(x) = 0;
                 end
         end
     else
@@ -920,33 +1068,33 @@ function [newTrialCounts,newOutcomes] = UpdateOutcomes(trialType, Data, TrialCou
             case 1
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
-                    newOutcomes(x) = 0;
+                    newPlotOutcomes(x) = 0;
                 elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
-                    newOutcomes(x) = 1;
+                    newPlotOutcomes(x) = 1;
                 end
             case 2
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newOutcomes(x) = 1;
+                    newPlotOutcomes(x) = 1;
                 end
             case 3
                 if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                    newOutcomes(x) = 0;
+                    newPlotOutcomes(x) = 0;
                 end          
         end            
     end
     if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftNotPresent(1) Data.RawEvents.Trial{x}.States.RightNotPresent(1)]))
-        newOutcomes(x) = -1;
+        newPlotOutcomes(x) = -1;
     elseif ~isnan(Data.RawEvents.Trial{x}.States.Incorrect(1))
-        newOutcomes(x) = 3;
+        newPlotOutcomes(x) = 3;
     elseif ~isnan(Data.RawEvents.Trial{x}.States.NoChoice(1))
-        newOutcomes(x) = 2;
+        newPlotOutcomes(x) = 2;
     end
 end
         
-%% POKES PLOTTING
+%% TRIAL EVENT PLOTTING
 
 function state_colors = getStateColors(thisInfoSide)
     if thisInfoSide == 0

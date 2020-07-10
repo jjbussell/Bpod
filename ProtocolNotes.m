@@ -1,5 +1,7 @@
 %{
 
+variables to put in Bpodsystem.Data = trialtypes, outcomes
+
 To implement:
 
 grace period/house lights/timer beeps
