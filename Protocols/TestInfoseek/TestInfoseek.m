@@ -409,7 +409,9 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
-        BpodSystem.Data.Outcomes(currentTrial) = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide);
+        [outcome, rewardAmount] = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide);
+        TotalRewardDisplay('add',rewardAmount);
+        BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         [TrialCounts,PlotOutcomes] = UpdateCounts(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
         PokesPlotInfo('update');
@@ -872,9 +874,13 @@ end
 
 %% OUTCOMES
 
-function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
+function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
     global BpodSystem;    
     x = Data.nTrials;
+    infoBigReward = BpodSystem.Data.TrialSettings(x).InfoBigDrops*4;
+    infoSmallReward = BpodSystem.Data.TrialSettings(x).InfoSmallDrops*4;
+    randBigReward = BpodSystem.Data.TrialSettings(x).RandBigDrops*4;
+    randSmallReward = BpodSystem.Data.TrialSettings(x).RandSmallDrops*4;
     
     if infoSide == 0
         switch trialType
@@ -885,12 +891,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardLeft == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
                             Outcome = 2; % choice info big
+                            rewardAmount = infoBigReward;
                         else
                             Outcome = 3; % choice info big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
                             Outcome = 4; % choice info small
+                            rewardAmount = infoSmallReward;
                         else
                             Outcome = 5; % choice info small NP
                         end
@@ -899,12 +907,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                    if RewardRight == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
                             Outcome = 6; % choice rand big
+                            rewardAmount = randBigReward;
                         else
                             Outcome = 7; % choice rand big NP
                         end                       
                    else
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
                             Outcome = 8; % choice rand small
+                            rewardAmount = randSmallReward;
                         else
                             Outcome = 9; % choice rand small NP
                         end                       
@@ -918,12 +928,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardLeft == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
                             Outcome = 11; % info big
+                            rewardAmount = infoBigReward;
                         else
                             Outcome = 12; % info big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
                             Outcome = 13; % info small
+                            rewardAmount = infoSmallReward;
                         else
                             Outcome = 14; % info small NP
                         end
@@ -939,12 +951,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardRight == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
                             Outcome = 17; % rand big
+                            rewardAmount = randBigReward;
                         else
                             Outcome = 18; % rand big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
                             Outcome = 19; % rand small
+                            rewardAmount = randSmallReward;
                         else
                             Outcome = 20; % rand small NP
                         end
@@ -963,12 +977,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardRight == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
                             Outcome = 2; % choice info big
+                            rewardAmount = infoBigReward;
                         else
                             Outcome = 3; % choice info big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
                             Outcome = 4; % choice info small
+                            rewardAmount = infoSmallReward;
                         else
                             Outcome = 5; % choice info small NP
                         end
@@ -977,12 +993,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                    if RewardLeft == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
                             Outcome = 6; % choice rand big
+                            rewardAmount = randBigReward;
                         else
                             Outcome = 7; % choice rand big NP
                         end                       
                    else
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
                             Outcome = 8; % choice rand small
+                            rewardAmount = randSmallReward;
                         else
                             Outcome = 9; % choice rand small NP
                         end                       
@@ -996,12 +1014,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardRight == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightBigReward(1))
                             Outcome = 11; % info big
+                            rewardAmount = infoBigReward;
                         else
                             Outcome = 12; % info big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.RightSmallReward(1))
                             Outcome = 13; % info small
+                            rewardAmount = infoSmallReward;
                         else
                             Outcome = 14; % info small NP
                         end
@@ -1017,12 +1037,14 @@ function Outcome = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
                     if RewardLeft == 1
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftBigReward(1))
                             Outcome = 17; % rand big
+                            rewardAmount = randBigReward;
                         else
                             Outcome = 18; % rand big NP
                         end
                     else
                         if ~isnan(Data.RawEvents.Trial{x}.States.LeftSmallReward(1))
                             Outcome = 19; % rand small
+                            rewardAmount = randSmallReward;
                         else
                             Outcome = 20; % rand small NP
                         end
