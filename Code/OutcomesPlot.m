@@ -28,9 +28,11 @@ CCfinal = [0.2,0.2,0.2; %choice no choice
 0.0,0.0,0.0]; %rand incorrect
 
 outcomes = SessionData.Outcomes;
-[outcomeCounts,outcomeBins] = histcounts(outcomes,[0.5:1:21.5],'Normalization','probability');
-outcomesToPlot = [outcomeCounts; outcomeCounts];
+[outcomeCountsNorm,outcomeBins] = histcounts(outcomes,[0.5:1:21.5],'Normalization','probability');
+[outcomeCounts,outcomeBins] = histcounts(outcomes,[0.5:1:21.5]);
+outcomesToPlot = [outcomeCountsNorm; outcomeCountsNorm];
 
+%%
 figure();
 fig = gcf;
 fig.PaperUnits = 'inches';
@@ -50,3 +52,27 @@ set(gca, 'ydir', 'reverse');
 lgd = legend(ax,a.finalOutcomeLabels,'Location','eastoutside');
 lgd.Box = 'off';
 lgd.FontWeight = 'bold';
+
+%%
+figure();
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [1 1 10 8];
+set(fig,'renderer','painters')
+set(fig,'PaperOrientation','landscape');
+
+ax = nsubplot(1,1,1,1);
+ax.FontSize = 10;
+title('Trial Outcomes');
+ylabel('# of trials');
+% ax.YLim = [0 1];
+% ax.YTick = [0:0.25:1];
+% ax.XLim = [0 1.5];
+colormap(fig,CCfinal);
+for i = 1:numel(outcomeCounts)
+    bar(i,outcomeCounts(i),'FaceColor',CCfinal(i,:));
+end
+lgd = legend(ax,a.finalOutcomeLabels,'Location','eastoutside');
+lgd.Box = 'off';
+lgd.FontWeight = 'bold';
+
