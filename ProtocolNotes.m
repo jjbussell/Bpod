@@ -2,6 +2,8 @@
 
 To implement:
 
+grace period/house lights/timer beeps
+
 scope sync
 
 training protocols!!

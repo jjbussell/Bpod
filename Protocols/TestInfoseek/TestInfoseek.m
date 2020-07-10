@@ -1,11 +1,12 @@
+% TO TRACK: water, trials complete, % correct, % info
+% MAKE OUTCOME BARS??
+
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
 % OMG BEEPING TIMER!!!
 
 % HOUSE LIGHTS
-
-% ERROR TRIALS / NOT PRESENT
 
 % ADDITIONAL COMPONENTS: OUTPUT PINS: 4 latch valves (8 pins), buzzer,
 % house light LED, scope sync: center odor, side odor, water (3 pins)
@@ -324,11 +325,11 @@ BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250]
 % BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 40])); %trial choice types
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
 PokesPlotInfo('init', getStateColors(infoSide));
-% TotalRewardDisplay('init');
+TotalRewardDisplay('init');
 
 %% SET INITIAL TYPE COUNTS
 
