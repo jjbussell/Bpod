@@ -2,6 +2,8 @@
 % MAKE OUTCOME BARS??
 
 % NEED TO FIX REPEATING TRIAL TYPES IF NO CHOICE ETC!!git status
+% is randomization of reward and trial correct??
+% sending data vs making state machine vs current trial?!?
 
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
@@ -409,7 +411,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
-        [outcome, rewardAmount] = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide);
+        [outcome, rewardAmount] = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide,S);
         TotalRewardDisplay('add',rewardAmount);
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
@@ -874,13 +876,13 @@ end
 
 %% OUTCOMES
 
-function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide)
+function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide,S)
     global BpodSystem;    
     x = Data.nTrials;
-    infoBigReward = BpodSystem.Data.TrialSettings(x).InfoBigDrops*4;
-    infoSmallReward = BpodSystem.Data.TrialSettings(x).InfoSmallDrops*4;
-    randBigReward = BpodSystem.Data.TrialSettings(x).RandBigDrops*4;
-    randSmallReward = BpodSystem.Data.TrialSettings(x).RandSmallDrops*4;
+    infoBigReward = S.GUI.InfoBigDrops*4;
+    infoSmallReward = S.GUI.InfoSmallDrops*4;
+    randBigReward = S.GUI.RandBigDrops*4;
+    randSmallReward = S.GUI.RandSmallDrops*4;
     
     if infoSide == 0
         switch trialType
