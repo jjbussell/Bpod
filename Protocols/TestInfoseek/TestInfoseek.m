@@ -105,7 +105,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.InfoRewardProb = 0.5;
     S.GUI.RandRewardProb = 0.5;
     S.GUI.GracePeriod = 0; 
-    S.GUI.Interval = 3; 
+    S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
@@ -327,8 +327,8 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 
 %% Initialize plots
 
-BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
-% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
 TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types
