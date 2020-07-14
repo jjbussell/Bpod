@@ -220,3 +220,9 @@ end
 
 % a.percentCorrectCenterEntries;
 
+%%
+
+save('infoSeekBpodDataProcessed.mat','a');
+% uisave({'a'},'infoSeekFSMData.mat');
+
+save(['infoSeekFSMBpodDataProcessed' datestr(now,'yyyymmdd')],'a');

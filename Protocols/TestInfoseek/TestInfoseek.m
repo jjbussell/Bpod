@@ -5,6 +5,10 @@
 % is randomization of reward and trial correct??
 % sending data vs making state machine vs current trial?!?
 
+% trial event plots--Not present?? not showing reward?
+
+% NOT ACTUALLY OPENING WATER VALVES?!?
+
 % GRACE PERIOD: additional time after response period expires. mouse can
 % still choose then goes immediately to odor-->messes up timing!
 
