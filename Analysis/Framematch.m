@@ -1,3 +1,14 @@
+%%
+%{
+with laptop and triggered, no more big gaps but still a few hundred extra
+inscopix frames--from last trial?!?
+
+scope23--multiple vids, maybe large trial gap? also 12 s in last trial that
+wasn't completed and maybe didn't save!!
+
+%}
+
+%%
 gaps=diff(a.frameStarts(:,1),1);
 fig1 = figure();
 title('Bpod Frame Gaps');

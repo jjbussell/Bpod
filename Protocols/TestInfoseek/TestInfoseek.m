@@ -883,6 +883,7 @@ function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRigh
     infoSmallReward = S.GUI.InfoSmallDrops*4;
     randBigReward = S.GUI.RandBigDrops*4;
     randSmallReward = S.GUI.RandSmallDrops*4;
+    rewardAmount = 0;
     
     if infoSide == 0
         switch trialType
