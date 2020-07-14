@@ -441,7 +441,9 @@ global BpodSystem;
 S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
 % Water parameters
-R = GetValveTimes(4, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
+% R = GetValveTimes(4, [1 3]);
+R = [0.100 0.100];
+LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 MaxValveTime = max(R);
 maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
 RewardPauseTime = 0.05;
@@ -617,11 +619,11 @@ sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
 sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY
 if maxDrops > 1
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', DIOmodule, 'OnMessage', 7, 'OffMessage', 8,...
+        'OnsetDelay', 0, 'Channel', 'PWM2', 'OnMessage', 255, 'OffMessage', 0,...
         'Loop', maxDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime); % timer to stay in reward state
 else
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', DIOmodule, 'OnMessage', 7, 'OffMessage', 8,...
+        'OnsetDelay', 0, 'Channel', 'PWM2', 'OnMessage', 255, 'OffMessage', 0,...
         'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0); % timer to stay in reward state    
 end
 sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
@@ -645,6 +647,12 @@ else
        'Channel','Valve1','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 end
+
+
+% sma = SetGlobalTimer(sma,'TimerID',3,'Duration',1,'OnsetDelay',0,...
+%    'Channel', 'PWM1', 'OnsetValue', 255, 'OffsetValue', 0);
+% sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
+
 
 if RightRewardDrops > 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration', RightValveTime,'OnsetDelay',0,...
