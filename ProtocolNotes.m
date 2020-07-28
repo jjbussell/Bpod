@@ -2,7 +2,7 @@
 
 NP white, don't give reward - outcomes not picking up not present!
 
-variables to put in Bpodsystem.Data = trialtypes, outcomes
+variables to put in Bpodsystem.Data = trialtypes, outcomes OK
 
 To implement:
 
@@ -20,7 +20,7 @@ total liquid/performance - OK
 GUI to load and set session parameters BEFORE trial types are chosen (json
 files?) - OK
 
-camera
+camera / File save structure!
 
 Problem updating outcome window w small trials - OK
 
