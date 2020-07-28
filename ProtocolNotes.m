@@ -1,31 +1,36 @@
 %{
 
+NP white, don't give reward - outcomes not picking up not present!
+
 variables to put in Bpodsystem.Data = trialtypes, outcomes
 
 To implement:
 
-grace period/house lights/timer beeps
+grace period/house lights/timer beeps - house lights for ITI, port lights
+for timing
 
-scope sync
+scope sync - OK
 
 training protocols!!
 
-center reward protocol, must stay in port protocol
+center reward protocol, must stay in port protocol - 4 ports
 
-total liquid/performance
+total liquid/performance - OK
 
 GUI to load and set session parameters BEFORE trial types are chosen (json
-files?)
+files?) - OK
 
 camera
 
-Problem updating outcome window w small trials
+Problem updating outcome window w small trials - OK
 
 Errors/not present/repeating trial types
 
 If timings long/short??
 
 First and other trial rewards not in events plot?
+
+---------------
 
 
 Params
