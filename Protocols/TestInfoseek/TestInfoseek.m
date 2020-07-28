@@ -117,8 +117,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 
-% Put code here to set session params interactively?? i.e. via GUI
-
 %% SET INFO SIDE
 
 infoSide = S.GUI.InfoSide;
@@ -335,8 +333,8 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types   
-PokesPlotInfo('init', getStateColors(infoSide));
+TrialTypePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 20])); %trial choice types   
+EventsPlotInfo('init', getStateColors(infoSide));
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
@@ -420,8 +418,8 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         [TrialCounts,PlotOutcomes] = UpdateCounts(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
-        PokesPlotInfo('update');
-        TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
+        EventsPlotInfo('update');
+        TrialTypePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
