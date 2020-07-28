@@ -1,5 +1,7 @@
 %{
 
+CONFIRM INFOSIDE
+
 NP white, don't give reward - outcomes not picking up not present!
 
 variables to put in Bpodsystem.Data = trialtypes, outcomes OK
