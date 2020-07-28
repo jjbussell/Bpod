@@ -21,6 +21,10 @@ camera
 
 Problem updating outcome window w small trials
 
+Errors/not present/repeating trial types
+
+If timings long/short??
+
 First and other trial rewards not in events plot?
 
 

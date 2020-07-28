@@ -74,7 +74,7 @@ informative odor, then after a delay, reward outcome at the same side port.
 
 ----------------------------------------------------------------------------
 %}
-function TestInfoSeek4
+function TestInfoSeek
 
 
 global BpodSystem
@@ -146,7 +146,7 @@ else
     end
 end
 
-%% Define choice trial types
+%% Define trial choice types
 
 MaxTrials = S.GUI.SessionTrials;
 
@@ -335,10 +335,10 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types
-BpodNotebook('init');
-BpodParameterGUI('init', S); % Initialize parameter GUI plugin   
+TrialTypeOutcomePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 200])); %trial choice types   
 PokesPlotInfo('init', getStateColors(infoSide));
+BpodNotebook('init');
+InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
 
 %% SET INITIAL TYPE COUNTS
@@ -438,7 +438,7 @@ function [sma, S, nextTrialType, TrialTypes, RewardLeft, RewardRight] = PrepareS
 
 global BpodSystem;
 
-S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
+S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
 % Water parameters
 % R = GetValveTimes(4, [1 3]);
