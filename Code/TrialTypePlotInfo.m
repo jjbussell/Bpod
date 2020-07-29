@@ -18,16 +18,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %}
 % function OutcomePlot(AxesHandle,TrialTypeSides, OutcomeRecord, CurrentTrial)
-function TrialTypeOutcomePlot(AxesHandle, Action, varargin)
+function TrialTypePlot(AxesHandle, Action, varargin)
 %% 
 % Plug in to Plot trial type and trial outcome.
 % AxesHandle = handle of axes to plot on
 % Action = specific action for plot, "init" - initialize OR "update" -  update plot
 
 %Example usage:
-% TrialTypeOutcomePlot(AxesHandle,'init',TrialTypes)
-% TrialTypeOutcomePlot(AxesHandle,'init',TrialTypes,'ntrials',90)
-% TrialTypeOutcomePlot(AxesHandle,'update',CurrentTrial,TrialTypes,OutcomeRecord)
+% TrialTypePlot(AxesHandle,'init',TrialTypes)
+% TrialTypePlot(AxesHandle,'init',TrialTypes,'ntrials',90)
+% TrialTypePlot(AxesHandle,'update',CurrentTrial,TrialTypes,OutcomeRecord)
 
 % varargins:
 % TrialTypes: Vector of trial types (integers)
@@ -166,7 +166,7 @@ end
 end
 
 function [mn,mx] = rescaleX(AxesHandle,CurrentTrial,nTrialsToShow)
-FractionWindowStickpoint = .75; % After this fraction of visible trials, the trial position in the window "sticks" and the window begins to slide through trials.
+FractionWindowStickpoint = .5; % After this fraction of visible trials, the trial position in the window "sticks" and the window begins to slide through trials.
 mn = max(round(CurrentTrial - FractionWindowStickpoint*nTrialsToShow),1);
 mx = mn + nTrialsToShow - 1;
 tickLabels = sprintfc('%d',(mn-1:10:mx));
