@@ -123,6 +123,9 @@ end
 
 infoSide = S.GUI.InfoSide;
 
+% 0 = info on left
+% LEFT = port 1
+
 %% SET ODOR SIDES (LATCH VALVES)
 
 modules = BpodSystem.Modules.Name;
@@ -217,7 +220,7 @@ for n = 1:blocks
 end
 
 % trial choiceTypes
-TrialTypes = [1; 1; 2; 2; 3; 3; 1; 2; 3; 1; TrialTypes];
+TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
 TrialTypes=TrialTypes(1:MaxTrials);
 
 PlotOutcomes = NaN(1,MaxTrials);
@@ -492,7 +495,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
 %         OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM1', 255,'PWM3', 255};
         ThisCenterOdor = S.GUI.ChoiceOdor;
-        if infoSide == 0            
+        if infoSide == 0 % INFO LEFT            
             RewardLeft = RewardTypes(TrialCounts(1)+1,1); RewardRight = RewardTypes(TrialCounts(2)+1,2);
             RightSideOdor = RandOdorTypes(TrialCounts(1)+1,1);
             if RewardLeft == 1
@@ -536,6 +539,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
 %         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Punish'; StimulusOutput = {'PWM1', 255}; OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
         ThisCenterOdor = S.GUI.InfoOdor;
         if infoSide == 0
+            % info on left
             RewardLeft = RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect'; StimulusOutput = {'PWM1', 255};
             RightSideOdor = 5;
@@ -571,7 +575,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
     case 3 % RAND LEFT
 %         ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255}; OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
         ThisCenterOdor = S.GUI.RandOdor;
-        if infoSide == 0
+        if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
@@ -1090,20 +1094,20 @@ function [newTrialCounts,newPlotOutcomes] = UpdateCounts(trialType, Data, TrialC
     if infoSide == 0
         switch trialType
             case 1
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
+                if ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
                     newPlotOutcomes(x) = 1;
-                elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorRight(1))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
                     newPlotOutcomes(x) = 0;
                 end
             case 2
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
+                if sum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
                     newPlotOutcomes(x) = 1;
                 end
             case 3
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
+                if sum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorRight(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
                     newPlotOutcomes(x) = 0;
                 end
@@ -1111,20 +1115,20 @@ function [newTrialCounts,newPlotOutcomes] = UpdateCounts(trialType, Data, TrialC
     else
         switch trialType
             case 1
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
+                if ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1))
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
                     newPlotOutcomes(x) = 0;
-                elseif sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
+                elseif ~isnan(Data.RawEvents.Trial{x}.States.WaitForOdorRight(1))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
                     newPlotOutcomes(x) = 1;
                 end
             case 2
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.RightBigReward(1) Data.RawEvents.Trial{x}.States.RightSmallReward(1)]))
+                if ssum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorRight(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
                     newPlotOutcomes(x) = 1;
                 end
             case 3
-                if sum(~isnan([Data.RawEvents.Trial{x}.States.LeftBigReward(1) Data.RawEvents.Trial{x}.States.LeftSmallReward(1)]))
+                if sum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorLeft(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
                     newPlotOutcomes(x) = 0;
                 end          
