@@ -617,6 +617,8 @@ sma = SetCondition(sma, 6, 'Port3', 0); % Condition 6: Port 3 low (is out) (righ
 sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
 
 sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY
+
+% TIMER 2 FOR MAX REWARD
 if maxDrops > 1
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
         'OnsetDelay', 0, 'Channel', 'PWM2', 'OnMessage', 255, 'OffMessage', 0,...
