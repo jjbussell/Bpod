@@ -1,8 +1,10 @@
 %{
 
-CONFIRM INFOSIDE
+CONFIRM INFOSIDE OK
 
-NP white, don't give reward - outcomes not picking up not present!
+NP white, don't give reward - outcomes not picking up not present! OK
+
+fix plotting multiple center tries OK?
 
 variables to put in Bpodsystem.Data = trialtypes, outcomes OK
 
@@ -26,11 +28,11 @@ camera / File save structure!
 
 Problem updating outcome window w small trials - OK
 
-Errors/not present/repeating trial types
+Errors/not present/repeating trial types OK
 
 If timings long/short??
 
-First and other trial rewards not in events plot?
+First and other trial rewards not in events plot? OK??
 
 ---------------
 
