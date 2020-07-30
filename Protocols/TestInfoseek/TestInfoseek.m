@@ -1,3 +1,5 @@
+% INFO SIDE 0 = info on LEFT
+
 % TO TRACK: water, trials complete, % correct, % info
 % MAKE OUTCOME BARS??
 
@@ -128,7 +130,7 @@ latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
 
-if infoSide == 0
+if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)
     for i = 1:4
         ModuleWrite(latchModule,[latchValves(i) 1]);
         pause(100/1000);
