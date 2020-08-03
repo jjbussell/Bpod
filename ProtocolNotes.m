@@ -1,5 +1,9 @@
 %{
 
+OLFACTOMETER:
+need 2 red blockers, switch cords, latch valves??
+need to load serial messages?
+
 CONFIRM INFOSIDE OK
 
 NP white, don't give reward - outcomes not picking up not present! OK
