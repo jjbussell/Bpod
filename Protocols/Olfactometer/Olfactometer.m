@@ -5,7 +5,7 @@ T
 
 ----------------------------------------------------------------------------
 %}
-function CenterTraining
+function Olfactometer
 
 global BpodSystem
 
@@ -14,16 +14,14 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.RewardDelay = 1;
-    S.GUI.RewardAmount = 4; %uL
-    S.GUI.ITI = 0;
+    S.GUI.OdorTime = 3;
+    S.GUI.OdorInterval = 4; %uL
+    S.GUI.Port = 0;
 end
 
 %% Initialize plots
 
-BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
-TotalRewardDisplay('init');
 
 %% MAIN TRIAL LOOP
 
@@ -32,11 +30,10 @@ MaxTrials = S.GUI.SessionTrials;
 %% Main loop (runs once per trial)
 for currentTrial = 1:MaxTrials
    S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
-    
-   R = GetValveTimes(S.GUI.RewardAmount, [1]);
-   ValveTime = R(1);
    
    MaxTrials = S.GUI.SessionTrials;
+   
+   % SETUP ODORS
    
     %--- Assemble state machine
     sma = NewStateMachine();
@@ -64,8 +61,6 @@ for currentTrial = 1:MaxTrials
     if ~isempty(fieldnames(RawEvents)) % If you didn't stop the session manually mid-trial
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Adds raw events to a human-readable data struct
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data);
-        TotalRewardDisplay('add',S.GUI.RewardAmount);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
         
         %--- Typically a block of code here will update online plots using the newly updated BpodSystem.Data
