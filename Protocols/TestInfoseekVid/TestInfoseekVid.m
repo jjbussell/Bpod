@@ -449,7 +449,11 @@ end
 % NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
 % ManualOverride('OB',1);
 
+stop(vid);
 
+flushdata(vid);
+delete(vid);
+clear vid;
 
 end % end of protocol main function
 
