@@ -7,6 +7,21 @@ src.AcquisitionFrameRateEnable = 'True';
 src.AcquisitionFrameRateAbs = 30;
 vid.FramesPerTrigger = Inf;
 triggerconfig(vid, 'manual');
+
+%BpodSystem.Path.DataFolder;
+% DataPath = fullfile(BpodSystem.Path.DataFolder,subjectName);
+% mkdir(DataPath, protocolName);
+% mkdir(fullfile(DataPath,protocolName,'Session Data'))
+% mkdir(fullfile(DataPath,protocolName,'Session Settings'))
+% DateInfo = datestr(now, 30); 
+% DateInfo(DateInfo == 'T') = '_';
+% FileName = [subjectName '_' protocolName '_' DateInfo '.mat'];
+% DataFolder = fullfile(BpodSystem.Path.DataFolder,subjectName,protocolName,'Session Data');
+% if ~exist(DataFolder)
+%     mkdir(DataFolder);
+% end
+% BpodSystem.Path.CurrentDataFile = fullfile(DataFolder, FileName);
+
 logfile = VideoWriter('testvid.avi','Motion JPEG AVI');
 set(logfile,'FrameRate',30);
 vid.DiskLogger = logfile;
