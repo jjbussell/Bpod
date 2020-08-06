@@ -2,7 +2,7 @@ info=imaqhwinfo('winvideo');
 dev_info = info.DeviceInfo(1);
 dev_info.SupportedFormats;
 
-vid = videoinput('winvideo',1,'MJPG_960x720');
+vid = videoinput('winvideo',1,'MJPG_1920x1080');
 src.AcquisitionFrameRateEnable = 'True';
 src.AcquisitionFrameRateAbs = 30;
 vid.FramesPerTrigger = Inf;
