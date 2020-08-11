@@ -62,42 +62,7 @@ for currentTrial = 1:MaxTrials
    newPort = S.GUI.Port;
    port = newPort; % change here to switch sides
    
-   % SETUP ODORS
-   
-%    LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]});
-%    switch port
-%        case 0 % center
-%            switch odor
-%                msg1 = {'ValveModule1',1};
-%                case 0
-%                    action = {'ValveModule1',1};
-%                case 1
-%                    action = {'ValveModule1',1};
-%                case 2
-%                    action = {'ValveModule1',1};
-%                case 3
-%            end
-%        case 1 % left
-%            switch odor
-%                msg1 = {'ValveModule1',2};
-%                case 0
-%                    action = {'ValveModule2',1};
-%                case 1
-%                    action = {'ValveModule3',1};
-%                case 2
-%                    action = {'ValveModule1',1};
-%            end           
-%        case 2 % right
-%            switch odor
-%                msg1 = {'ValveModule1',3};
-%                case 0
-%                    action = {'ValveModule1',1};
-%                case 1
-%                    action = {'ValveModule1',1};
-%                case 2
-%                    action = {'ValveModule1',1};
-%            end           
-%    end
+	% controls
     LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port    
     
     %--- Assemble state machine
@@ -116,6 +81,11 @@ for currentTrial = 1:MaxTrials
     
     %--- Package and save the trial's data, update plots
     if ~isempty(fieldnames(RawEvents)) % If you didn't stop the session manually mid-trial
+        for v = 1:8
+            ModuleWrite('ValveModule1',['C' v]);
+            ModuleWrite('ValveModule2',['C' v]);
+            ModuleWrite('ValveModule3',['C' v]);
+        end
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Adds raw events to a human-readable data struct
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
