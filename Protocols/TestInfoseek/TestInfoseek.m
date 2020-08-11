@@ -118,18 +118,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ImageType = 0;
 end
 
-%% SETUP VIDEO
-
-vid = videoinput('winvideo',1,'MJPG_960x720');
-src.AcquisitionFrameRateEnable = 'True';
-src.AcquisitionFrameRateAbs = 30;
-vid.FramesPerTrigger = Inf;
-triggerconfig(vid, 'manual');
-logfile = VideoWriter('testvid.avi','Motion JPEG AVI');
-set(logfile,'FrameRate',30);
-vid.DiskLogger = logfile;
-set(vid,'LoggingMode','disk');
-preview(vid);
 
 %% SET INFO SIDE
 
@@ -139,6 +127,8 @@ infoSide = S.GUI.InfoSide;
 % LEFT = port 1
 
 %% SET ODOR SIDES (LATCH VALVES)
+
+% pin 10 is side orod 1 1A1, 9 is 1B1 (both side odor 1)
 
 modules = BpodSystem.Modules.Name;
 latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
@@ -406,9 +396,6 @@ SaveBpodSessionData;
 %% INITIALIZE STATE MACHINE
 
 [sma,~,nextTrialType,TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
-
-start(vid);
-trigger(vid);
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.

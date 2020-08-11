@@ -5,7 +5,7 @@ T
 
 ----------------------------------------------------------------------------
 %}
-function OdorTest
+function Olfactometer
 
 global BpodSystem
 
@@ -17,7 +17,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorTime = 3;
     S.GUI.OdorInterval = 4;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 0;
+    S.GUI.OdorID = 1;
 end
 
 %% Initialize plots
@@ -69,11 +69,11 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions', [{'PWM2',255}, odorSwitch(port,odor)]);
+        'OutputActions', [{'PWM2',255}, turnOnOdor(odor,port)]);
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
-        'OutputActions', odorSwitch(port,odor));  
+        'OutputActions', turnOnOdor(odor,port));  
     
     SendStateMatrix(sma); % Send state machine to the Bpod state machine device
     RawEvents = RunStateMatrix; % Run the trial and return events
@@ -98,120 +98,62 @@ end
 
 %% ODOR CONTROL
 
-function OdorActions = odorSwitch(portID,odorID)
-    switch portID
+%% GENERAL ODOR
+
+function OdorOutputActions = turnOnOdor(odorID,port)
+    switch port
         case 0
-            cmd1 = {'ValveModule3',1}; % before center control
-            cmd2 = {'ValveModule3',2}; % after center control
+            cmd1 = {'ValveModule1',1}; % before center control
+            cmd2 = {'ValveModule1',2}; % after center contro            
             switch odorID
                 case 0
-                    cmd3 = {'ValveModule1',1}; % before center odor
-                    cmd4 = {'ValveModule2',1}; % after center odor                    
+                   cmd3 = {'ValveModule2',1};
+                   cmd4 = {'ValveModule3',1};
                 case 1
-                    cmd3 = {'ValveModule1',1}; % before center odor
-                    cmd4 = {'ValveModule2',1}; % after center odor                     
+                   cmd3 = {'ValveModule2',2};
+                   cmd4 = {'ValveModule3',2};                    
                 case 2
-                    cmd3 = {'ValveModule1',1}; % before center odor
-                    cmd4 = {'ValveModule2',1}; % after center odor                     
+                   cmd3 = {'ValveModule2',3};
+                   cmd4 = {'ValveModule3',3};                    
                 case 3
-                    cmd3 = {'ValveModule1',1}; % before center odor
-                    cmd4 = {'ValveModule2',1}; % after center odor                    
-            end
+                   cmd3 = {'ValveModule2',4};
+                   cmd4 = {'ValveModule3',4};                    
+            end            
         case 1
-            cmd1 = {'ValveModule3',3}; % before left control
-            cmd2 = {'ValveModule3',4}; % after left control            
+            cmd1 = {'ValveModule1',3}; % before left control
+            cmd2 = {'ValveModule1',4}; % after left control
+            switch odorID
+                case 0
+                   cmd3 = {'ValveModule2',5};
+                   cmd4 = {'ValveModule3',5};
+                case 1
+                   cmd3 = {'ValveModule2',6};
+                   cmd4 = {'ValveModule3',6};                    
+                case 2
+                   cmd3 = {'ValveModule2',7};
+                   cmd4 = {'ValveModule3',7};                    
+                case 3
+                   cmd3 = {'ValveModule2',8};
+                   cmd4 = {'ValveModule3',8};                    
+            end            
         case 2
-            cmd1 = {'ValveModule3',5}; % before right control
-            cmd2 = {'ValveModule3',6}; % after right control              
+            cmd1 = {'ValveModule1',5}; % before right control
+            cmd2 = {'ValveModule1',6}; % after right control
+            switch odorID
+                case 0
+                   cmd3 = {'ValveModule2',5};
+                   cmd4 = {'ValveModule3',5};
+                case 1
+                   cmd3 = {'ValveModule2',6};
+                   cmd4 = {'ValveModule3',6};                    
+                case 2
+                   cmd3 = {'ValveModule2',7};
+                   cmd4 = {'ValveModule3',7};                    
+                case 3
+                   cmd3 = {'ValveModule2',8};
+                   cmd4 = {'ValveModule3',8};                    
+            end            
     end
-    
-    OdorActions = [cmd1, cmd2, cmd3, cmd4];
+    OdorOutputActions = [cmd1, cmd2, cmd3, cmd4];
 end
 
-%% CONTROLS
-
-function OdorOutputActions = turnOnOdor(odorID)
-    switch odorID
-        case 0
-            cmd1 = {'ValveModule3',1}; % before center control
-            cmd2 = {'ValveModule3',2}; % after center control  
-        case 1
-            cmd1 = {'ValveModule3',3}; % before left control
-            cmd2 = {'ValveModule3',4}; % after left control              
-        case 2
-            cmd1 = {'ValveModule3',5}; % before right control
-            cmd2 = {'ValveModule3',6}; % after right control  
-    end
-    OdorOutputActions = [cmd1, cmd2];
-end
-
-%% CENTER ODOR
-
-function CenterOdorOutputActions = turnOnCenterOdor(odorID)
-    switch odorID
-        case 0
-            cmd1 = {'ValveModule1',1}; % before center odor
-            cmd2 = {'ValveModule1',2}; % after center odor
-            cmd3 = {'ValveModule3',3}; % before center control
-            cmd4 = {'ValveModule1',4}; % after center control
-        case 1
-            cmd1 = {'ValveModule1',1}; % before center odor
-            cmd2 = {'ValveModule1',2}; % after center odor
-            cmd3 = {'ValveModule3',3}; % before center control
-            cmd4 = {'ValveModule3',4}; % after center control
-        case 2
-            cmd1 = {'ValveModule1',1}; % before center odor
-            cmd2 = {'ValveModule1',2}; % after center odor
-            cmd3 = {'ValveModule3',3}; % before center control
-            cmd4 = {'ValveModule3',4}; % after center control                        
-        case 3
-            cmd1 = {'ValveModule1',1}; % before center odor
-            cmd2 = {'ValveModule1',2}; % after center odor
-            cmd3 = {'ValveModule3',3}; % before center control
-            cmd4 = {'ValveModule3',4}; % after center control            
-    end
-    CenterOdorOutputActions = [cmd1, cmd2, cmd3, cmd4];
-    % string({'John ','Mary '});
-end
-
-%% SIDE ODOR
-
-function SideOdorOutputActions = turnOnSideOdor(odorID, side)
-    
-    if strcmp('left',side)
-        controlBefore = 1;
-        controlAfter = 2;
-    else
-        controlBefore = 3;
-        controlAfter = 4; 
-    end
-
-    switch odorID
-        case 0
-            cmd1 = {'ValveModule1',1}; % before odor
-            cmd2 = {'ValveModule1',2}; % after odor
-            cmd3 = {'ValveModule1',controlBefore}; % before control
-            cmd4 = {'ValveModule1',controlAfter}; % after control
-        case 1
-            cmd1 = {'ValveModule1',1}; % before odor
-            cmd2 = {'ValveModule1',2}; % after odor
-            cmd3 = {'ValveModule1',controlBefore}; % before control
-            cmd4 = {'ValveModule1',controlAfter}; % after control
-        case 2
-            cmd1 = {'ValveModule1',1}; % before odor
-            cmd2 = {'ValveModule1',2}; % after odor
-            cmd3 = {'ValveModule1',controlBefore}; % before control
-            cmd4 = {'ValveModule1',controlAfter}; % after control                        
-        case 3
-            cmd1 = {'ValveModule1',1}; % before odor
-            cmd2 = {'ValveModule1',2}; % after odor
-            cmd3 = {'ValveModule1',controlBefore}; % before control
-            cmd4 = {'ValveModule1',controlAfter}; % after control
-        case 5
-            cmd1 = [];
-            cmd2 = [];
-            cmd3 = [];
-            cmd4 = [];
-    end
-    SideOdorOutputActions = [cmd1, cmd2, cmd3, cmd4];
-end

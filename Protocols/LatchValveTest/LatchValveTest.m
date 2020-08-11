@@ -5,7 +5,7 @@ T
 
 ----------------------------------------------------------------------------
 %}
-function ControlTest
+function LatchValveTest
 
 global BpodSystem
 
@@ -14,9 +14,7 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.OdorTime = 3;
-    S.GUI.OdorInterval = 4;
-    S.GUI.OdorID = 0;
+    S.GUI.Odor = 1;
 end
 
 %% Initialize plots
@@ -27,39 +25,51 @@ BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 
 MaxTrials = S.GUI.SessionTrials;
 
+%% SET ODOR SIDES (LATCH VALVES)
+
+modules = BpodSystem.Modules.Name;
+latchValves = [10 9 8 7 6 5 4 3];
+% latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
+latchModule = [modules(strncmp('DIO',modules,3))];
+latchModule = latchModule{1};
+
 
 %% Main loop (runs once per trial)
 for currentTrial = 1:MaxTrials
    S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
    
    MaxTrials = S.GUI.SessionTrials;
-   odor = S.GUI.OdorID; % logic here to cycle odors
+   odor = S.GUI.Odor; % logic here to cycle odors
+   latchPins = [latchValves(odor*2+1) latchValves(odor*2+2)];
    
-   % SETUP ODORS
-%    cmd = [{'ValveModule1',1},{'ValveModule1',2}];
-   LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]});
+   LoadSerialMessages(latchModule,{[latchPins(1) 1],[latchPins(1) 0],...
+       [latchPins(2) 1],[latchPins(2) 0]});
    
-   switch odor
-       case 0
-           msg = 1;
-       case 1
-           msg = 2;
-       case 2
-           msg = 3;
-   end
-   
-    %--- Assemble state machine
     sma = NewStateMachine();
-    sma = AddState(sma, 'Name', 'OdorOn', ...
-        'Timer', S.GUI.OdorTime,...
-        'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions',{'ValveModule1',msg});            
-%         'OutputActions', [{'PWM2',255}, turnOnOdor(odor)]);  
-    sma = AddState(sma, 'Name', 'OdorOff', ...
-        'Timer', S.GUI.OdorInterval,...
+    sma = AddState(sma, 'Name', 'PowerOnLeft', ...
+        'Timer', 0.020,...
+        'StateChangeConditions', {'Tup', 'PowerOffLeft'},...
+        'OutputActions', {latchModule,1});
+    sma = AddState(sma, 'Name', 'PowerOffLeft', ...
+        'Timer', 0,...
+        'StateChangeConditions', {'Tup', 'Wait1'},...
+        'OutputActions', {latchModule,2});
+    sma = AddState(sma, 'Name', 'Wait1',...
+        'Timer', 0.200,...
+        'StateChangeConditions', {'Tup', 'PowerOnRight'},...
+        'OutputActions', {});
+    sma = AddState(sma, 'Name', 'PowerOnRight', ...
+        'Timer', 0.020,...
+        'StateChangeConditions', {'Tup', 'PowerOffRight'},...
+        'OutputActions', {latchModule,3});
+    sma = AddState(sma, 'Name', 'PowerOffRight', ...
+        'Timer', 0,...
+        'StateChangeConditions', {'Tup', 'Wait2'},...
+        'OutputActions', {latchModule,4});
+    sma = AddState(sma, 'Name', 'Wait2',...
+        'Timer', 0.200,...
         'StateChangeConditions', {'Tup', '>exit'},...
-        'OutputActions', {'ValveModule1',msg}); 
-%         'OutputActions', turnOnOdor(odor));      
+        'OutputActions', {});    
     
     SendStateMatrix(sma); % Send state machine to the Bpod state machine device
     RawEvents = RunStateMatrix; % Run the trial and return events
@@ -77,35 +87,8 @@ for currentTrial = 1:MaxTrials
     %--- This final block of code is necessary for the Bpod console's pause and stop buttons to work
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     if BpodSystem.Status.BeingUsed == 0
-        ModuleWrite('ValveModule1',['C' 1]);
-        ModuleWrite('ValveModule1',['C' 2]);
-        ModuleWrite('ValveModule1',['C' 3]);
-        ModuleWrite('ValveModule1',['C' 4]);
-        ModuleWrite('ValveModule1',['C' 5]);
-        ModuleWrite('ValveModule1',['C' 6]);
         return
     end
 end
-
-
-end
-
-%% ODOR CONTROL
-
-%% GENERAL ODOR
-
-function OdorOutputActions = turnOnOdor(odorID)
-    switch odorID
-        case 0
-            cmd1 = {'ValveModule1',1}; % before center control
-            cmd2 = {'ValveModule1',2}; % after center control  
-        case 1
-            cmd1 = {'ValveModule1',3}; % before left control
-            cmd2 = {'ValveModule1',4}; % after left control              
-        case 2
-            cmd1 = {'ValveModule1',5}; % before right control
-            cmd2 = {'ValveModule1',6}; % after right control  
-    end
-    OdorOutputActions = [cmd1, cmd2];
 end
 
