@@ -19,7 +19,7 @@ for currentTrial = 1:MaxTrials
     
     %--- Typically, a block of code here will compute variables for assembling this trial's state machine
     
-    cmd1 = {'ValveModule1',1};
+    cmd1 = {'ValveModule2',1};
     
     %--- Assemble state machine
     sma = NewStateMachine();
