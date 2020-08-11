@@ -19,7 +19,8 @@ for currentTrial = 1:MaxTrials
     
     %--- Typically, a block of code here will compute variables for assembling this trial's state machine
     
-    cmd1 = {'ValveModule2',1};
+    cmd1 = {'ValveModule3',1};
+    LoadSerialMessages('ValveModule1',{['O' 1],['C' 1]});
     
     %--- Assemble state machine
     sma = NewStateMachine();
@@ -27,10 +28,12 @@ for currentTrial = 1:MaxTrials
         'Timer', 1,...
         'StateChangeConditions', {'Tup', 'Off'},...
         'OutputActions', cmd1);
+%     'OutputActions', {'ValveModule1',1});
     sma = AddState(sma, 'Name', 'Off', ...
         'Timer', 1,...
         'StateChangeConditions', {'Tup', '>exit'},...
         'OutputActions', cmd1);
+%     'OutputActions', {'ValveModule1',2});
     
     SendStateMatrix(sma); % Send state machine to the Bpod state machine device
     RawEvents = RunStateMatrix; % Run the trial and return events
@@ -48,6 +51,11 @@ for currentTrial = 1:MaxTrials
     %--- This final block of code is necessary for the Bpod console's pause and stop buttons to work
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     if BpodSystem.Status.BeingUsed == 0
+        for v = 1:8
+            ModuleWrite('ValveModule1',['C' v]);
+            ModuleWrite('ValveModule2',['C' v]);
+            ModuleWrite('ValveModule3',['C' v]);
+        end
         return
     end
 end

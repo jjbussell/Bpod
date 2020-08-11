@@ -98,17 +98,18 @@ for currentTrial = 1:MaxTrials
 %                    action = {'ValveModule1',1};
 %            end           
 %    end
-   
+    LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port    
+    
     %--- Assemble state machine
     sma = NewStateMachine();
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions', turnOnOdor(odor,port));
+        'OutputActions', RunOdor(odor,port));
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
-        'OutputActions', turnOffOdor(odor,port));  
+        'OutputActions', RunOdor(odor,port));  
     
     SendStateMatrix(sma); % Send state machine to the Bpod state machine device
     RawEvents = RunStateMatrix; % Run the trial and return events
@@ -140,8 +141,60 @@ end
 
 %% GENERAL ODOR
 
+function OdorOutputActions = RunOdor(odorID,port)
+    switch port
+        case 0
+            cmd1 = {'ValveModule1',1}; % center control  
+            switch odorID
+                case 0
+                    cmd2 = {'ValveModule2',1};
+                    cmd3 = {'ValveModule3',1};
+                case 1
+                    cmd2 = {'ValveModule2',2};
+                    cmd3 = {'ValveModule3',2};
+                case 2
+                    cmd2 = {'ValveModule2',3};
+                    cmd3 = {'ValveModule3',3};                    
+                case 3
+                    cmd2 = {'ValveModule2',4};
+                    cmd3 = {'ValveModule3',4};                    
+            end
+        case 1
+            cmd1 = {'ValveModule1',2}; % left control
+            switch odorID
+                case 0
+                    cmd2 = {'ValveModule2',5};
+                    cmd3 = {'ValveModule3',5};
+                case 1
+                    cmd2 = {'ValveModule2',6};
+                    cmd3 = {'ValveModule3',6};
+                case 2
+                    cmd2 = {'ValveModule2',7};
+                    cmd3 = {'ValveModule3',7};                    
+                case 3
+                    cmd2 = {'ValveModule2',8};
+                    cmd3 = {'ValveModule3',8};                    
+            end            
+        case 2
+            cmd1 = {'ValveModule1',3}; % right control
+                case 0
+                    cmd2 = {'ValveModule2',5};
+                    cmd3 = {'ValveModule3',5};
+                case 1
+                    cmd2 = {'ValveModule2',6};
+                    cmd3 = {'ValveModule3',6};
+                case 2
+                    cmd2 = {'ValveModule2',7};
+                    cmd3 = {'ValveModule3',7};                    
+                case 3
+                    cmd2 = {'ValveModule2',8};
+                    cmd3 = {'ValveModule3',8};            
+    end
+    OdorOutputActions = [cmd1,cmd2,cmd3];
+end
+
 function OdorOutputActions = turnOnOdor(odorID,port)
-    LoadSerialMessages('ValveModule1',{['O' 1],['O' 2],['O' 3],['O' 4],['O' 5],['O' 6]});
+%     LoadSerialMessages('ValveModule1',{['O' 1],['O' 2],['O' 3],['O' 4],['O' 5],['O' 6]});
     switch port
         case 0
             cmd1 = {'ValveModule1',1}; % center control   
@@ -195,7 +248,7 @@ function OdorOutputActions = turnOnOdor(odorID,port)
                    cmd4 = {'ValveModule3',8};                    
             end            
     end
-    OdorOutputActions = [cmd1, cmd2];
+    OdorOutputActions = cmd1;
 end
 
 function OdorOutputActions = turnOffOdor(odorID,port)
@@ -253,6 +306,6 @@ function OdorOutputActions = turnOffOdor(odorID,port)
                    cmd4 = {'ValveModule3',8};                    
             end            
     end
-    OdorOutputActions = [cmd1, cmd2];
+    OdorOutputActions = cmd1;
 end
 
