@@ -33,22 +33,21 @@ MaxTrials = S.GUI.SessionTrials;
 port = S.GUI.Port;
 
 modules = BpodSystem.Modules.Name;
-latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
+latchValves = [10 9 8 7 6 5 4 3]; % evens to left!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
 
-if port == 1 % SEND INFO ODORS TO LEFT (A,B)
+if port == 1 % SEND ALL ODORS TO LEFT (A,B)
+    pins = latchValves(1:2:end);    
+elseif port == 2 % RIGHT
+    pins = latchValves(2:2:end);
+end
+
+if port ~= 0
     for i = 1:4
-        ModuleWrite(latchModule,[latchValves(i) 1]);
+        ModuleWrite(latchModule,[pins(i) 1]);
         pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
-        pause(100/1000);
-    end
-else
-    for i = 5:8
-        ModuleWrite(latchModule,[latchValves(i) 1]);
-        pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
+        ModuleWrite(latchModule,[pins(i) 0]);
         pause(100/1000);
     end
 end
@@ -60,7 +59,25 @@ for currentTrial = 1:MaxTrials
    MaxTrials = S.GUI.SessionTrials;
    odor = S.GUI.OdorID; % logic here to cycle odors
    newPort = S.GUI.Port;
+   
+    if newPort~= port
+        if newPort == 1 % SEND INFO ODORS TO LEFT (A,B)
+            pins = latchValves(1:2:end);    
+        elseif newPort == 2
+            pins = latchValves(2:2:end);
+        end
+        
+        if port ~= 0
+        for i = 1:4
+            ModuleWrite(latchModule,[pins(i) 1]);
+            pause(100/1000);
+            ModuleWrite(latchModule,[pins(i) 0]);
+            pause(100/1000);
+        end
+        end
+   end
    port = newPort; % change here to switch sides
+   
    
 	% controls
     LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port    

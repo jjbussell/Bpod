@@ -28,7 +28,7 @@ MaxTrials = S.GUI.SessionTrials;
 %% SET ODOR SIDES (LATCH VALVES)
 
 modules = BpodSystem.Modules.Name;
-latchValves = [10 9 8 7 6 5 4 3];
+latchValves = [10 9 8 7 6 5 4 3]; % evens to left
 % latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
@@ -39,8 +39,8 @@ for currentTrial = 1:MaxTrials
    S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
    
    MaxTrials = S.GUI.SessionTrials;
-   odor = S.GUI.Odor; % logic here to cycle odors
-   latchPins = [latchValves(odor*2+1) latchValves(odor*2+2)];
+    odor = S.GUI.Odor; % logic here to cycle odors
+    latchPins = [latchValves(odor*2+1) latchValves(odor*2+2)];
    
    LoadSerialMessages(latchModule,{[latchPins(1) 1],[latchPins(1) 0],...
        [latchPins(2) 1],[latchPins(2) 0]});
