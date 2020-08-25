@@ -16,7 +16,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 3;
     S.GUI.OdorInterval = 4;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
+    S.GUI.Port = 2; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 1; % 0 = odor 1
 end
 
@@ -147,6 +147,7 @@ function OdorOutputActions = RunOdor(odorID,port)
             end            
         case 2
             cmd1 = {'ValveModule1',3}; % right control
+            switch odorID
                 case 0
                     cmd2 = {'ValveModule2',5};
                     cmd3 = {'ValveModule3',5};
@@ -158,7 +159,8 @@ function OdorOutputActions = RunOdor(odorID,port)
                     cmd3 = {'ValveModule3',7};                    
                 case 3
                     cmd2 = {'ValveModule2',8};
-                    cmd3 = {'ValveModule3',8};            
+                    cmd3 = {'ValveModule3',8};
+            end
     end
     OdorOutputActions = [cmd1,cmd2,cmd3];
 end

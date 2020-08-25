@@ -14,7 +14,7 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.Odor = 1;
+    S.GUI.Odor = 2;
 end
 
 %% Initialize plots
