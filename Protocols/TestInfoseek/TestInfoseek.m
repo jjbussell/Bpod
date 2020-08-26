@@ -411,13 +411,25 @@ for currentTrial = 1:MaxTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'InterTrialInterval'}); 
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
-    if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
+    if BpodSystem.Status.BeingUsed == 0;        
+        for v = 1:8
+            ModuleWrite('ValveModule1',['C' v]);
+            ModuleWrite('ValveModule2',['C' v]);
+            ModuleWrite('ValveModule3',['C' v]);
+        end                
+        return; end % If user hit console "stop" button, end session 
     [sma, S, nextTrialType, TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
-    if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
+    if BpodSystem.Status.BeingUsed == 0;        
+        for v = 1:8
+            ModuleWrite('ValveModule1',['C' v]);
+            ModuleWrite('ValveModule2',['C' v]);
+            ModuleWrite('ValveModule3',['C' v]);
+        end        
+        return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events (call with no argument since SM was already sent)
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
