@@ -384,6 +384,9 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
     7 scope signal 2 on reward
     8 scope signal 2 off reward
     %}
+    
+% controls for odor
+LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port 
 
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
 
@@ -453,8 +456,6 @@ end
 % NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
 % ManualOverride('OB',1);
 
-
-
 end % end of protocol main function
 
 %% PREPARE STATE MACHINE
@@ -519,7 +520,12 @@ switch nextTrialType % Determine trial-specific state matrix fields
         ThisCenterOdor = S.GUI.ChoiceOdor;
         if infoSide == 0 % INFO LEFT            
             RewardLeft = RewardTypes(TrialCounts(1)+1,1); RewardRight = RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdor = RandOdorTypes(TrialCounts(1)+1,1);
+            RightSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            if RightSideOdorFlag == 0
+                RightSideOdor = S.GUI.OdorC;
+            else
+                RightSideOdor = S.GUI.OdorD;
+            end
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
@@ -538,7 +544,12 @@ switch nextTrialType % Determine trial-specific state matrix fields
             end
         else
             RewardLeft = RewardTypes(TrialCounts(2)+1,2); RewardRight = RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdor = RandOdorTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            if LeftSideOdorFlag == 0
+                LeftSideOdor = S.GUI.OdorC;
+            else
+                LeftSideOdor = S.GUI.OdorD;
+            end            
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.RandBigDrops;
@@ -594,14 +605,19 @@ switch nextTrialType % Determine trial-specific state matrix fields
             OutcomeStateLeft = 'IncorrectLeft';
             LeftRewardDrops = 0;
         end
-    case 3 % RAND LEFT
+    case 3 % RAND FORCED
 %         ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255}; OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
         ThisCenterOdor = S.GUI.RandOdor;
         if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
-            RightSideOdor = RandOdorTypes(TrialCounts(1)+1,1);
+            RightSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            if RightSideOdorFlag == 0
+                RightSideOdor = S.GUI.OdorC;
+            else
+                RightSideOdor = S.GUI.OdorD;
+            end            
             LeftSideOdor = 5;
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
@@ -615,7 +631,12 @@ switch nextTrialType % Determine trial-specific state matrix fields
         else
             RewardLeft = RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect'; StimulusOutput = {'PWM1', 255};
-            LeftSideOdor = RandOdorTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            if LeftSideOdorFlag == 0
+                LeftSideOdor = S.GUI.OdorC;
+            else
+                LeftSideOdor = S.GUI.OdorD;
+            end             
             RightSideOdor = 5;
 %             OutcomeStateLeft = 'LeftCorrectChoice'; OutcomeStateRight = 'RightIncorrectChoice';
             if RewardLeft == 1
@@ -714,11 +735,11 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'PWM2',100,'BNC2',1},turnOnCenterOdor(ThisCenterOdor)]);
+    'OutputActions',[{'PWM2',100,'BNC2',1,'DIOLicks1',3},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
-    'OutputActions', {});
+    'OutputActions', [{'DIOLicks1',4},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
@@ -740,11 +761,11 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{'PWM1',50,'DIOLicks1',5}, turnOnSideOdor(LeftSideOdor,'left')]);
+    'OutputActions', [{'PWM1',50,'DIOLicks1',5}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', {'DIOLicks1',6});
+    'OutputActions', [{'DIOLicks1',6},RunOdor(LeftSideOdor,1)]);
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
@@ -777,11 +798,11 @@ sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
 sma = AddState(sma, 'Name', 'OdorRight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
-    'OutputActions', [{'PWM3',50}, turnOnSideOdor(RightSideOdor,'right')]);
+    'OutputActions', [{'PWM3',50,'DIOLicks1',7}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', {});
+    'OutputActions', [{'DIOLicks1',8},RunOdor(LeftSideOdor,1)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
@@ -849,6 +870,62 @@ function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes)
 end
 
 %% ODOR CONTROL
+
+%% GENERAL ODOR
+
+function OdorOutputActions = RunOdor(odorID,port)
+    switch port
+        case 0
+            cmd1 = {'ValveModule1',1}; % center control  
+            switch odorID
+                case 0
+                    cmd2 = {'ValveModule2',1};
+                    cmd3 = {'ValveModule3',1};
+                case 1
+                    cmd2 = {'ValveModule2',2};
+                    cmd3 = {'ValveModule3',2};
+                case 2
+                    cmd2 = {'ValveModule2',3};
+                    cmd3 = {'ValveModule3',3};                    
+                case 3
+                    cmd2 = {'ValveModule2',4};
+                    cmd3 = {'ValveModule3',4};                    
+            end
+        case 1 % LEFT
+            cmd1 = {'ValveModule1',2}; % left control
+            switch odorID
+                case 0
+                    cmd2 = {'ValveModule2',5};
+                    cmd3 = {'ValveModule3',5};
+                case 1
+                    cmd2 = {'ValveModule2',6};
+                    cmd3 = {'ValveModule3',6};
+                case 2
+                    cmd2 = {'ValveModule2',7};
+                    cmd3 = {'ValveModule3',7};                    
+                case 3
+                    cmd2 = {'ValveModule2',8};
+                    cmd3 = {'ValveModule3',8};                    
+            end            
+        case 2 % RIGHT
+            cmd1 = {'ValveModule1',3}; % right control
+            switch odorID
+                case 0
+                    cmd2 = {'ValveModule2',5};
+                    cmd3 = {'ValveModule3',5};
+                case 1
+                    cmd2 = {'ValveModule2',6};
+                    cmd3 = {'ValveModule3',6};
+                case 2
+                    cmd2 = {'ValveModule2',7};
+                    cmd3 = {'ValveModule3',7};                    
+                case 3
+                    cmd2 = {'ValveModule2',8};
+                    cmd3 = {'ValveModule3',8};
+            end
+    end
+    OdorOutputActions = [cmd1,cmd2,cmd3];
+end
 
 %% CENTER ODOR
 
