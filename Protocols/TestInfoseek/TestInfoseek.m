@@ -89,20 +89,20 @@ TrialManager = TrialManagerObject;
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.TrialTypes = 5;
+    S.GUI.TrialTypes = 3;
     S.GUI.InfoSide = 0;
-    S.GUI.InfoOdor = 3;
+    S.GUI.InfoOdor = 0;
     S.GUI.RandOdor = 2;
     S.GUI.ChoiceOdor = 1;
-    S.GUI.OdorA = 3;
-    S.GUI.OdorB = 2;
-    S.GUI.OdorC = 1;
-    S.GUI.OdorD = 0;
+    S.GUI.OdorA = 0;
+    S.GUI.OdorB = 1;
+    S.GUI.OdorC = 2;
+    S.GUI.OdorD = 3;
     S.GUI.CenterDelay = 0;
     S.GUI.CenterOdorTime = 0.5;
     S.GUI.StartDelay = 0;
-    S.GUI.OdorDelay = 2;
-    S.GUI.OdorTime = 0.2;
+    S.GUI.OdorDelay = 5;
+    S.GUI.OdorTime = 3;
     S.GUI.RewardDelay = 1;
     S.GUI.InfoBigDrops = 4;
     S.GUI.InfoSmallDrops = 1;
@@ -227,7 +227,7 @@ for n = 1:blocks
 end
 
 % trial choiceTypes
-TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
+% TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
 TrialTypes=TrialTypes(1:MaxTrials);
 
 PlotOutcomes = NaN(1,MaxTrials);
@@ -324,9 +324,9 @@ for n = 1:typeBlockCount
         randOdorBlock(i) = temp;
     end
     if n == 1
-       RandOdorTypes(1:typeBlockSize,4) = randOdorBlock'; 
+       RandOdorTypes(1:typeBlockSize) = randOdorBlock'; 
     else
-        RandOdorTypes((n-1)*typeBlockSize+1:n*typeBlockSize,4) = randOdorBlock';
+        RandOdorTypes((n-1)*typeBlockSize+1:n*typeBlockSize) = randOdorBlock';
     end
 end
 
@@ -334,7 +334,8 @@ end
 RewardTypes = RewardTypes(1:MaxTrials,:);
 
 % Rand Odors to pull from
-RandOdorTypes = RandOdorTypes(1:MaxTrials,1);
+% RandOdorTypes = repmat(RandOdorTypes,1,4);
+RandOdorTypes = RandOdorTypes(1:MaxTrials);
 
 BpodSystem.Data.OrigTrialTypes = TrialTypes;
 BpodSystem.Data.RewardTypes = RewardTypes;
@@ -520,7 +521,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
         ThisCenterOdor = S.GUI.ChoiceOdor;
         if infoSide == 0 % INFO LEFT            
             RewardLeft = RewardTypes(TrialCounts(1)+1,1); RewardRight = RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            RightSideOdorFlag = RandOdorTypes(TrialCounts(2)+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
             else
@@ -544,7 +545,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
             end
         else
             RewardLeft = RewardTypes(TrialCounts(2)+1,2); RewardRight = RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = RandOdorTypes(TrialCounts(2)+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
             else
@@ -575,7 +576,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
             % info on left
             RewardLeft = RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect'; StimulusOutput = {'PWM1', 255};
-            RightSideOdor = 5;
+            RightSideOdor = 0;
 %             OutcomeStateLeft = 'LeftCorrectChoice'; OutcomeStateRight = 'RightIncorrectChoice';
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
@@ -591,7 +592,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
         else
             RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
-            LeftSideOdor = 5;
+            LeftSideOdor = 0;
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
@@ -612,13 +613,13 @@ switch nextTrialType % Determine trial-specific state matrix fields
             RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
-            RightSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            RightSideOdorFlag = RandOdorTypes(TrialCounts(4)+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
             else
                 RightSideOdor = S.GUI.OdorD;
             end            
-            LeftSideOdor = 5;
+            LeftSideOdor = 0;
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.RandBigDrops;
@@ -637,7 +638,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
             else
                 LeftSideOdor = S.GUI.OdorD;
             end             
-            RightSideOdor = 5;
+            RightSideOdor = 0;
 %             OutcomeStateLeft = 'LeftCorrectChoice'; OutcomeStateRight = 'RightIncorrectChoice';
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
@@ -798,11 +799,11 @@ sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
 sma = AddState(sma, 'Name', 'OdorRight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
-    'OutputActions', [{'PWM3',50,'DIOLicks1',7}, RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{'PWM3',50,'DIOLicks1',7}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', [{'DIOLicks1',8},RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{'DIOLicks1',8},RunOdor(RightSideOdor,2)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
