@@ -124,32 +124,37 @@ end
 infoSide = S.GUI.InfoSide;
 
 % 0 = info on left
-% LEFT = port 1
+% LEFT = port 1c
+% latchValves = [10 9 8 7 6 5 4 3]; % evens to left!
 
 %% SET ODOR SIDES (LATCH VALVES)
 
-% pin 10 is side orod 1 1A1, 9 is 1B1 (both side odor 1)
-
 modules = BpodSystem.Modules.Name;
-latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
+latchValves = [10 9 8 7 6 5 4 3]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
 
-if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)
-    for i = 1:4
-        ModuleWrite(latchModule,[latchValves(i) 1]);
-        pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
-        pause(100/1000);
-    end
+if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
+    odorApin = (S.GUI.OdorA+1)*2-1;
+    odorBpin = (S.GUI.OdorB+1)*2-1;
+    odorCpin = (S.GUI.OdorC+1)*2;
+    odorDpin = (S.GUI.OdorD+1)*2; 
 else
-    for i = 5:8
-        ModuleWrite(latchModule,[latchValves(i) 1]);
-        pause(100/1000);
-        ModuleWrite(latchModule,[latchValves(i) 0]);
-        pause(100/1000);
-    end
+    odorApin = (S.GUI.OdorA+1)*2;
+    odorBpin = (S.GUI.OdorB+1)*2;
+    odorCpin = (S.GUI.OdorC+1)*2-1;
+    odorDpin = (S.GUI.OdorD+1)*2-1;     
 end
+
+pins = [odorApin odorBpin odorCpin odorDpin];
+
+for i = 1:4
+    ModuleWrite(latchModule,[pins(i) 1]);
+    pause(100/1000);
+    ModuleWrite(latchModule,[pins(i) 0]);
+    pause(100/1000);
+end
+
 
 %% Define trial choice types
 
