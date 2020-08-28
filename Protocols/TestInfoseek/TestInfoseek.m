@@ -90,7 +90,7 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
     S.GUI.TrialTypes = 3;
-    S.GUI.InfoSide = 0;
+    S.GUI.InfoSide = 1;
     S.GUI.InfoOdor = 0;
     S.GUI.RandOdor = 2;
     S.GUI.ChoiceOdor = 1;
@@ -109,7 +109,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RandBigDrops = 4;
     S.GUI.RandSmallDrops = 1;
     S.GUI.InfoRewardProb = 0.5;
-    S.GUI.RandRewardProb = 0.5;
+    S.GUI.RandRewardProb = 1;
     S.GUI.GracePeriod = 0; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
@@ -135,15 +135,15 @@ latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
 
 if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
-    odorApin = (S.GUI.OdorA+1)*2-1;
-    odorBpin = (S.GUI.OdorB+1)*2-1;
-    odorCpin = (S.GUI.OdorC+1)*2;
-    odorDpin = (S.GUI.OdorD+1)*2; 
+    odorApin = latchValves((S.GUI.OdorA+1)*2-1);
+    odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
+    odorCpin = latchValves((S.GUI.OdorC+1)*2);
+    odorDpin = latchValves((S.GUI.OdorD+1)*2); 
 else
-    odorApin = (S.GUI.OdorA+1)*2;
-    odorBpin = (S.GUI.OdorB+1)*2;
-    odorCpin = (S.GUI.OdorC+1)*2-1;
-    odorDpin = (S.GUI.OdorD+1)*2-1;     
+    odorApin = latchValves((S.GUI.OdorA+1)*2);
+    odorBpin = latchValves((S.GUI.OdorB+1)*2);
+    odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
+    odorDpin = latchValves((S.GUI.OdorD+1)*2-1);     
 end
 
 pins = [odorApin odorBpin odorCpin odorDpin];
@@ -152,7 +152,7 @@ for i = 1:4
     ModuleWrite(latchModule,[pins(i) 1]);
     pause(200/1000);
     ModuleWrite(latchModule,[pins(i) 0]);
-    pause(200/1000);
+    pause(500/1000);
 end
 
 
