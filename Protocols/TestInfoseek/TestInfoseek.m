@@ -150,9 +150,9 @@ pins = [odorApin odorBpin odorCpin odorDpin];
 
 for i = 1:4
     ModuleWrite(latchModule,[pins(i) 1]);
-    pause(100/1000);
+    pause(200/1000);
     ModuleWrite(latchModule,[pins(i) 0]);
-    pause(100/1000);
+    pause(200/1000);
 end
 
 
