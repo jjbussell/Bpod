@@ -101,7 +101,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.CenterDelay = 0;
     S.GUI.CenterOdorTime = 0.2;
     S.GUI.StartDelay = 0;
-    S.GUI.OdorDelay = 0;
+    S.GUI.OdorDelay = 100;
     S.GUI.OdorTime = 0;
     S.GUI.RewardDelay = 0.5;
     S.GUI.InfoBigDrops = 1;
