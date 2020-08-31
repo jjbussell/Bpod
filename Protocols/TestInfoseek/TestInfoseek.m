@@ -91,26 +91,26 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.TrialTypes = 2;
     S.GUI.InfoSide = 0;
-    S.GUI.InfoOdor = 0;
-    S.GUI.RandOdor = 2;
-    S.GUI.ChoiceOdor = 1;
-    S.GUI.OdorA = 0;
-    S.GUI.OdorB = 1;
-    S.GUI.OdorC = 2;
-    S.GUI.OdorD = 3;
+    S.GUI.InfoOdor = 2;
+    S.GUI.RandOdor = 0;
+    S.GUI.ChoiceOdor = 3;
+    S.GUI.OdorA = 3;
+    S.GUI.OdorB = 2;
+    S.GUI.OdorC = 0;
+    S.GUI.OdorD = 1;
     S.GUI.CenterDelay = 0;
-    S.GUI.CenterOdorTime = 0.2;
+    S.GUI.CenterOdorTime = 0.05;
     S.GUI.StartDelay = 0;
     S.GUI.OdorDelay = 0;
     S.GUI.OdorTime = 0;
     S.GUI.RewardDelay = 0.5;
-    S.GUI.InfoBigDrops = 1;
-    S.GUI.InfoSmallDrops = 1;
-    S.GUI.RandBigDrops = 1;
-    S.GUI.RandSmallDrops = 1;
+    S.GUI.InfoBigDrops = 2;
+    S.GUI.InfoSmallDrops = 2;
+    S.GUI.RandBigDrops = 2;
+    S.GUI.RandSmallDrops = 2;
     S.GUI.InfoRewardProb = 1;
     S.GUI.RandRewardProb = 1;
-    S.GUI.GracePeriod = 5; 
+    S.GUI.GracePeriod = 10000000; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
@@ -669,11 +669,11 @@ sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODO
 % TIMER 2 FOR MAX REWARD
 if maxDrops > 1
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'PWM2', 'OnMessage', 0, 'OffMessage', 0,...
+        'OnsetDelay', 0, 'Channel', 'Serial5', 'OnMessage',0, 'OffMessage', 0,...
         'Loop', maxDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime); % timer to stay in reward state
 else
     sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'PWM2', 'OnMessage', 0, 'OffMessage', 0,...
+        'OnsetDelay', 0, 'Channel', 'Serial5', 'OnMessage', 0, 'OffMessage', 0,...
         'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0); % timer to stay in reward state    
 end
 sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
@@ -728,7 +728,7 @@ sma = AddState(sma, 'Name', 'StartTrial', ...
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
-    'OutputActions', {'PWM2',255}); % port light on
+    'OutputActions', {'PWM2',50}); % port light on
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
