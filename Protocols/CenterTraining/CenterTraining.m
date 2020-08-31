@@ -33,7 +33,7 @@ MaxTrials = S.GUI.SessionTrials;
 for currentTrial = 1:MaxTrials
    S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
     
-   R = GetValveTimes(S.GUI.RewardAmount, [1]);
+   R = GetValveTimes(S.GUI.RewardAmount, [2]);
    ValveTime = R(1);
    
    MaxTrials = S.GUI.SessionTrials;
