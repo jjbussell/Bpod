@@ -89,7 +89,7 @@ TrialManager = TrialManagerObject;
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.TrialTypes = 3;
+    S.GUI.TrialTypes = 2;
     S.GUI.InfoSide = 1;
     S.GUI.InfoOdor = 0;
     S.GUI.RandOdor = 2;
@@ -109,7 +109,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RandBigDrops = 4;
     S.GUI.RandSmallDrops = 1;
     S.GUI.InfoRewardProb = 0.5;
-    S.GUI.RandRewardProb = 1;
+    S.GUI.RandRewardProb = 0.5;
     S.GUI.GracePeriod = 0; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
@@ -1227,7 +1227,7 @@ function [newTrialCounts,newPlotOutcomes] = UpdateCounts(trialType, Data, TrialC
                     newPlotOutcomes(x) = 1;
                 end
             case 2
-                if ssum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorRight(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
+                if sum(~isnan([Data.RawEvents.Trial{x}.States.WaitForOdorRight(1) Data.RawEvents.Trial{x}.States.Incorrect(1)]))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
                     newPlotOutcomes(x) = 1;
                 end
