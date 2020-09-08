@@ -99,18 +99,18 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorC = 0;
     S.GUI.OdorD = 1;
     S.GUI.CenterDelay = 0;
-    S.GUI.CenterOdorTime = 0.05;
+    S.GUI.CenterOdorTime = 0.2;
     S.GUI.StartDelay = 0;
     S.GUI.OdorDelay = 0;
     S.GUI.OdorTime = 0;
     S.GUI.RewardDelay = 0.5;
-    S.GUI.InfoBigDrops = 2;
-    S.GUI.InfoSmallDrops = 2;
-    S.GUI.RandBigDrops = 2;
-    S.GUI.RandSmallDrops = 2;
+    S.GUI.InfoBigDrops = 1;
+    S.GUI.InfoSmallDrops = 1;
+    S.GUI.RandBigDrops = 1;
+    S.GUI.RandSmallDrops = 1;
     S.GUI.InfoRewardProb = 1;
     S.GUI.RandRewardProb = 1;
-    S.GUI.GracePeriod = 10000000; 
+    S.GUI.GracePeriod = 100000000; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
@@ -390,7 +390,7 @@ LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
     %}
     
 % controls for odor
-LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port 
+LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
 
@@ -735,18 +735,22 @@ sma = AddState(sma, 'Name', 'WaitForCenter', ...
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
-    'OutputActions', {}); 
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
-    'StateChangeConditions', {'Port2Out', 'WaitForCenter', 'Tup', 'CenterPostOdorDelay'},...
+    'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
     'OutputActions',[{'BNC2',1,'DIOLicks1',3},RunOdor(ThisCenterOdor,0)]);
+sma = AddState(sma, 'Name', 'CenterOdorOff',...
+    'Timer', 0,...
+    'StateChangeConditions', {'Tup','WaitForCenter'},...
+    'OutputActions', [{'DIOLicks1',4},RunOdor(ThisCenterOdor,0)]);    
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
     'OutputActions', [{'DIOLicks1',4},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
-    'StateChangeConditions', {'Tup','Response','Port2Out','WaitForCenter'},...
+    'StateChangeConditions', {'Tup','Response'},...
     'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
@@ -879,6 +883,132 @@ function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes)
 end
 
 %% ODOR CONTROL
+
+%% ODOR WITH SERIAL MESSAGES
+
+% LoadSerialMessages('ValveModule1',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
+%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
+%     ['O' 8],['C' 8]});
+% LoadSerialMessages('ValveModule2',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
+%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
+%     ['O' 8],['C' 8]});
+% LoadSerialMessages('ValveModule3',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
+%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
+%     ['O' 8],['C' 8]});
+% 
+% function OdorOutputActions = OdorOn(odorID,port)
+%     switch port
+%         case 0
+%             cmd1 = {'ValveModule1',1}; % center control  
+%             cmd2 = {'ValveModule1',3};
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',1};
+%                     cmd4 = {'ValveModule3',1};
+%                 case 1
+%                     cmd3 = {'ValveModule2',3};
+%                     cmd4 = {'ValveModule3',3};
+%                 case 2
+%                     cmd3 = {'ValveModule2',5};
+%                     cmd4 = {'ValveModule3',5};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',7};
+%                     cmd4 = {'ValveModule3',7};                    
+%             end
+%         case 1 % LEFT
+%             cmd1 = {'ValveModule1',5}; % left control
+%             cmd2 = {'ValveModule1',7}; % left control
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',9};
+%                     cmd4 = {'ValveModule3',9};
+%                 case 1
+%                     cmd3 = {'ValveModule2',11};
+%                     cmd4 = {'ValveModule3',11};
+%                 case 2
+%                     cmd3 = {'ValveModule2',13};
+%                     cmd4 = {'ValveModule3',13};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',15};
+%                     cmd4 = {'ValveModule3',15};                    
+%             end            
+%         case 2 % RIGHT
+%             cmd1 = {'ValveModule1',9}; % right control
+%             cmd2 = {'ValveModule1',11}; % right control
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',9};
+%                     cmd4 = {'ValveModule3',9};
+%                 case 1
+%                     cmd3 = {'ValveModule2',11};
+%                     cmd4 = {'ValveModule3',11};
+%                 case 2
+%                     cmd3 = {'ValveModule2',13};
+%                     cmd4 = {'ValveModule3',13};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',15};
+%                     cmd4 = {'ValveModule3',15};                    
+%             end   
+%     end
+%     OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];    
+% end
+% 
+% function OdorOutputActions = OdorOn(odorID,port)
+%     switch port
+%         case 0
+%             cmd1 = {'ValveModule1',2}; % center control  
+%             cmd2 = {'ValveModule1',4};
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',2};
+%                     cmd4 = {'ValveModule3',2};
+%                 case 1
+%                     cmd3 = {'ValveModule2',4};
+%                     cmd4 = {'ValveModule3',4};
+%                 case 2
+%                     cmd3 = {'ValveModule2',6};
+%                     cmd4 = {'ValveModule3',6};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',8};
+%                     cmd4 = {'ValveModule3',8};                    
+%             end
+%         case 1 % LEFT
+%             cmd1 = {'ValveModule1',6}; % left control
+%             cmd2 = {'ValveModule1',8}; % left control
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',10};
+%                     cmd4 = {'ValveModule3',10};
+%                 case 1
+%                     cmd3 = {'ValveModule2',12};
+%                     cmd4 = {'ValveModule3',12};
+%                 case 2
+%                     cmd3 = {'ValveModule2',14};
+%                     cmd4 = {'ValveModule3',14};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',16};
+%                     cmd4 = {'ValveModule3',16};                    
+%             end            
+%         case 2 % RIGHT
+%             cmd1 = {'ValveModule1',10}; % right control
+%             cmd2 = {'ValveModule1',12}; % right control
+%             switch odorID
+%                 case 0
+%                     cmd3 = {'ValveModule2',10};
+%                     cmd4 = {'ValveModule3',10};
+%                 case 1
+%                     cmd3 = {'ValveModule2',12};
+%                     cmd4 = {'ValveModule3',12};
+%                 case 2
+%                     cmd3 = {'ValveModule2',14};
+%                     cmd4 = {'ValveModule3',14};                    
+%                 case 3
+%                     cmd3 = {'ValveModule2',16};
+%                     cmd4 = {'ValveModule3',16};                    
+%             end   
+%     end
+%     OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];    
+% end
 
 %% GENERAL ODOR
 
@@ -1263,7 +1393,8 @@ function state_colors = getStateColors(thisInfoSide)
             'StartTrial', [0 0 0],...
             'WaitForCenter',[255 240 245]./255,...
             'CenterDelay', [255	255 102]./255,...
-            'CenterOdor',[255 255 102]./255,... 
+            'CenterOdor',[255 255 102]./255,...
+            'CenterOdorOff',[255 255 102]./255,...
             'CenterPostOdorDelay',[255 255 102]./255,...
             'GoCue',[0 1 0],...
             'Response',[1 1 0.8],...
@@ -1296,7 +1427,8 @@ function state_colors = getStateColors(thisInfoSide)
             'StartTrial', [0 0 0],...
             'WaitForCenter',[255 240 245]./255,...
             'CenterDelay', [255	255 102]./255,...
-            'CenterOdor',[255 255 102]./255,... 
+            'CenterOdor',[255 255 102]./255,...
+            'CenterOdorOff',[255 255 102]./255,...
             'CenterPostOdorDelay',[255 255 102]./255,...
             'GoCue',[0 1 0],...
             'Response',[1 1 0.8],...
