@@ -118,6 +118,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ImageType = 0;
 end
 
+BpodSystem.ProtocolSettings = S;
+
+SaveProtocolSettings(BpodSystem.ProtocolSettings);
 
 %% SET INFO SIDE
 
