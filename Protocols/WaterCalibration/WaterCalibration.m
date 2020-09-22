@@ -9,7 +9,7 @@ S = BpodSystem.ProtocolSettings; % Loads settings file chosen in launch manager 
 if isempty(fieldnames(S))  % If chosen settings file was an empty struct, populate struct with default settings
     S.GUI.WaterTime = 1;
     S.GUI.WaterInterval = 10;
-    S.GUI.Port = 1; %1 = left, 2 = center, 3 = right  
+    S.GUI.Port = 3; %1 = left, 2 = center, 3 = right  
 end
 
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
