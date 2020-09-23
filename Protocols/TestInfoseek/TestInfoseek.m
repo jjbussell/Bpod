@@ -346,11 +346,11 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 %% Initialize plots
 
 % BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
-BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [-1000 400 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
-BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes,min([MaxTrials 20])); %trial choice types   
-EventsPlotInfo('init', getStateColors(infoSide));
+BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
+TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',TrialTypes,min([MaxTrials 40])); %trial choice types   
+EventsPlot('init', getStateColors(infoSide));
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
@@ -450,8 +450,8 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         [TrialCounts,PlotOutcomes] = UpdateCounts(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
-        EventsPlotInfo('update');
-        TrialTypePlotInfo(BpodSystem.GUIHandles.OutcomePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
+        EventsPlot('update');
+        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
