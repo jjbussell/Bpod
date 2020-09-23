@@ -120,12 +120,13 @@ end
 
 %% SETUP VIDEO
 
-vid = videoinput('winvideo',1,'MJPG_960x720');
+% vid = videoinput('winvideo',1,'MJPG_960x720');
+vid = videoinput('winvideo',1,'MJPG_1280x720');
 src.AcquisitionFrameRateEnable = 'True';
 src.AcquisitionFrameRateAbs = 30;
 vid.FramesPerTrigger = Inf;
 triggerconfig(vid, 'manual');
-logfile = VideoWriter('testvid.avi','Motion JPEG AVI');
+logfile = VideoWriter('../dir/videos/testvid.avi','Motion JPEG AVI');
 set(logfile,'FrameRate',30);
 vid.DiskLogger = logfile;
 set(vid,'LoggingMode','disk');
