@@ -103,7 +103,7 @@ switch action
             for i=1:length(fnames)
                 
                 t = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(fnames{i})-aligning_time;
-                if t(1)==t(2)
+                if t(2)-t(1)<0.0001
                     x_vertices = [t(1)-0.05 t(2) t(2) t(1)-0.05]';
                 else
                     x_vertices = [t(1) t(2) t(2) t(1)]';
