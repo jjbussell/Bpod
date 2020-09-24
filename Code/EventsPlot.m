@@ -104,7 +104,7 @@ switch action
                 
                 t = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(fnames{i})-aligning_time;
                 if t(2)-t(1)<0.0001
-                    x_vertices = [t(1)-0.05 t(2) t(2) t(1)-0.05]';
+                    x_vertices = [t(1)-0.1 t(2)+0.1 t(2)+0.1 t(1)-0.1]';
                 else
                     x_vertices = [t(1) t(2) t(2) t(1)]';
                 end
@@ -129,4 +129,6 @@ switch action
     
     set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis, 'XLim', [str2double(get(BpodSystem.GUIHandles.EventsPlot.LeftEdge,'String')), str2double(get(BpodSystem.GUIHandles.EventsPlot.RightEdge,'String'))]);
     set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis,'YLim', [0 last_n]);
+    chi=get(gca, 'Children');
+    chi
 end
