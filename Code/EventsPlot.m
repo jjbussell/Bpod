@@ -38,13 +38,13 @@ switch action
 
         
         BpodSystem.GUIHandles.EventsPlot.AlignOnLabel = uicontrol('Style', 'text','String','align on:', 'Position', [30 70 60 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
-        BpodSystem.GUIHandles.EventsPlot.AlignOnMenu = uicontrol('Style', 'popupmenu','Value',6, 'String', fields(state_colors), 'Position', [95 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'alignon'});
+        BpodSystem.GUIHandles.EventsPlot.AlignOnMenu = uicontrol('Style', 'popupmenu','Value',7, 'String', fields(state_colors), 'Position', [95 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'alignon'});
         
         BpodSystem.GUIHandles.EventsPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','start', 'Position', [30 35 40 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
         BpodSystem.GUIHandles.EventsPlot.LeftEdge = uicontrol('Style', 'edit','String',-2, 'Position', [75 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
         
         BpodSystem.GUIHandles.EventsPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','end', 'Position', [30 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
-        BpodSystem.GUIHandles.EventsPlot.RightEdge = uicontrol('Style', 'edit','String',6, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
+        BpodSystem.GUIHandles.EventsPlot.RightEdge = uicontrol('Style', 'edit','String',14, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
          
         BpodSystem.GUIHandles.EventsPlot.LastnLabel = uicontrol('Style', 'text','String','N trials', 'Position', [130 33 50 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
         BpodSystem.GUIHandles.EventsPlot.Lastn = uicontrol('Style', 'edit','String',10, 'Position', [185 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
@@ -75,7 +75,7 @@ switch action
                 legend = fnames{i}(1:10);
             end
             hold on; t = text(i-0.5, -0.5, legend);
-            set(t, 'Interpreter', 'none', 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'Rotation', 90);
+            set(t, 'Interpreter', 'none', 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'Rotation', 45);
             set(gca, 'Visible', 'off');
         end
         ylim([0 1]); xlim([0 length(fnames)]);
