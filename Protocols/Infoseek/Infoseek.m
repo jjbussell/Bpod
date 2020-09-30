@@ -127,36 +127,6 @@ SaveProtocolSettings(BpodSystem.ProtocolSettings);
 infoSide = S.GUI.InfoSide;
 
 % 0 = info on left
-% LEFT = port 1c
-% latchValves = [10 9 8 7 6 5 4 3]; % evens to left!
-
-%% SET ODOR SIDES (LATCH VALVES)
-
-modules = BpodSystem.Modules.Name;
-latchValves = [10 9 8 7 6 5 4 3]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
-latchModule = [modules(strncmp('DIO',modules,3))];
-latchModule = latchModule{1};
-
-if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
-    odorApin = latchValves((S.GUI.OdorA+1)*2-1);
-    odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
-    odorCpin = latchValves((S.GUI.OdorC+1)*2);
-    odorDpin = latchValves((S.GUI.OdorD+1)*2); 
-else
-    odorApin = latchValves((S.GUI.OdorA+1)*2);
-    odorBpin = latchValves((S.GUI.OdorB+1)*2);
-    odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
-    odorDpin = latchValves((S.GUI.OdorD+1)*2-1);     
-end
-
-pins = [odorApin odorBpin odorCpin odorDpin];
-
-for i = 1:4
-    ModuleWrite(latchModule,[pins(i) 1]);
-    pause(200/1000);
-    ModuleWrite(latchModule,[pins(i) 0]);
-    pause(500/1000);
-end
 
 
 %% Define trial choice types
@@ -361,33 +331,33 @@ TrialCounts = [0,0,0,0];
 
 %% INITIALIZE SERIAL MESSAGES
 
-% pins
-LEDPin = 11;
-buzzer1 = [254 1];
-buzzer2 = [253 1];
-
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
-
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC 1
-% Bpod out BNC 2 at center odor start
-
-% Set serial messages 1,2,3,4,5,6,7,8,9,10
-LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
-    [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
-%{
-    1 buzzer 1
-    2 buzzer 2
-    3 LEDs on
-    4 LEDs off
-    5 scope signal 1 on side odor
-    6 scope signal 1 off side odor
-    7 scope signal 2 on reward
-    8 scope signal 2 off reward
-    %}
+% % pins
+% LEDPin = 11;
+% buzzer1 = [254 1];
+% buzzer2 = [253 1];
+% 
+% DIOmodule = [modules(strncmp('DIO',modules,3))];
+% DIOmodule = DIOmodule{1};
+% 
+% % MINISCOPE
+% % miniscope has 4 I/O BNC Pins, and scope sync and trig
+% % scope sync connects to Bpod IN BNC
+% % scope trig to Bpod OUT BNC 1
+% % Bpod out BNC 2 at center odor start
+% 
+% % Set serial messages 1,2,3,4,5,6,7,8,9,10
+% LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
+%     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
+% %{
+%     1 buzzer 1
+%     2 buzzer 2
+%     3 LEDs on
+%     4 LEDs off
+%     5 scope signal 1 on side odor
+%     6 scope signal 1 off side odor
+%     7 scope signal 2 on reward
+%     8 scope signal 2 off reward
+%     %}
     
 % controls for odor
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
@@ -412,6 +382,7 @@ SaveBpodSessionData;
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
+
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:MaxTrials
@@ -485,9 +456,9 @@ RewardPauseTime = 0.05;
 % buzzer1 = [254 1];
 % buzzer2 = [253 1];
 % 
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
+% modules = BpodSystem.Modules.Name;
+% DIOmodule = [modules(strncmp('DIO',modules,3))];
+% DIOmodule = DIOmodule{1};
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -727,7 +698,8 @@ end
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {'DIOLicks1',1});
+    'OutputActions', {});
+%     'OutputActions', {'DIOLicks1',1});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -739,19 +711,24 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'BNC2',1,'DIOLicks1',3,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions',[{'BNC2',1,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+%     'OutputActions',[{'BNC2',1,'DIOLicks1',3,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterOdorOff',...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','WaitForCenter'},...
-    'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);    
+    'OutputActions', [{'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+%     'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
-    'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions', [{'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+% 'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response'},...
-    'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2}); % DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
+    'OutputActions', {'GlobalTimerTrig', 1});
+% 'OutputActions', {'GlobalTimerTrig', 1,'DIOLicks1',2});
+% DOES TIMER START AT BEGINNING OR END? TIMER STARTS AT BEGINNING
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
@@ -774,11 +751,13 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{'DIOLicks1',5}, RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{RunOdor(LeftSideOdor,1)]);
+% 'OutputActions', [{'DIOLicks1',5}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', [{'DIOLicks1',6},RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [RunOdor(LeftSideOdor,1)]);
+% 'OutputActions', [{'DIOLicks1',6},RunOdor(LeftSideOdor,1)]);
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
@@ -811,11 +790,13 @@ sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
 sma = AddState(sma, 'Name', 'OdorRight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
-    'OutputActions', [{'DIOLicks1',7}, RunOdor(RightSideOdor,2)]);
+    'OutputActions', [RunOdor(RightSideOdor,2)]);
+% 'OutputActions', [{'DIOLicks1',7}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', [{'DIOLicks1',8},RunOdor(RightSideOdor,2)]);
+    'OutputActions', [RunOdor(RightSideOdor,2)]);
+% 'OutputActions', [{'DIOLicks1',8},RunOdor(RightSideOdor,2)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
