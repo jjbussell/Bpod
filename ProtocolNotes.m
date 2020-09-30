@@ -1,42 +1,10 @@
 %{
 
-OLFACTOMETER:
-need 2 red blockers, switch cords, latch valves??
-need to load serial messages?
+double check turning side odor off
 
-CONFIRM INFOSIDE OK
+all GUI live
 
-NP white, don't give reward - outcomes not picking up not present! OK
-
-fix plotting multiple center tries OK?
-
-variables to put in Bpodsystem.Data = trialtypes, outcomes OK
-
-To implement:
-
-grace period/house lights/timer beeps - house lights for ITI, port lights
-for timing
-
-scope sync - OK
-
-training protocols!!
-
-center reward protocol, must stay in port protocol - 4 ports
-
-total liquid/performance - OK
-
-GUI to load and set session parameters BEFORE trial types are chosen (json
-files?) - OK
-
-camera / File save structure!
-
-Problem updating outcome window w small trials - OK
-
-Errors/not present/repeating trial types OK
-
-If timings long/short??
-
-First and other trial rewards not in events plot? OK??
+repeat no choice trials
 
 ---------------
 

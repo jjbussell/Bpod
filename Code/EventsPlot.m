@@ -130,5 +130,5 @@ switch action
     set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis, 'XLim', [str2double(get(BpodSystem.GUIHandles.EventsPlot.LeftEdge,'String')), str2double(get(BpodSystem.GUIHandles.EventsPlot.RightEdge,'String'))]);
     set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis,'YLim', [0 last_n]);
     chi=get(gca, 'Children');
-    chi
+%     chi
 end

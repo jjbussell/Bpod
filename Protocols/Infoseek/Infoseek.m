@@ -1,83 +1,24 @@
-% INFO SIDE 0 = info on LEFT
-
-% TO TRACK: water, trials complete, % correct, % info
-% MAKE OUTCOME BARS??
-
-% NEED TO FIX REPEATING TRIAL TYPES IF NO CHOICE ETC!!git status
-% is randomization of reward and trial correct??
-% sending data vs making state machine vs current trial?!?
-
-% trial event plots--Not present?? not showing reward?
-
-% NOT ACTUALLY OPENING WATER VALVES?!?
-
-% GRACE PERIOD: additional time after response period expires. mouse can
-% still choose then goes immediately to odor-->messes up timing!
-
-% OMG BEEPING TIMER!!!
-
-% HOUSE LIGHTS
-
-% ADDITIONAL COMPONENTS: OUTPUT PINS: 4 latch valves (8 pins), buzzer,
-% house light LED, scope sync: center odor, side odor, water (3 pins)
-% lick sensors (IRQ, SCL, SDA) 
-% FOR SCOPE, BNCs: 1 IN = sync, 1 OUT = trig, 1 out for odor
-
-% additional components handled by teensy shield module, DIOLicks
-% send 2 bytes, pin + state, to turn output on and off
-% send 2 bytes, 254 or 253 and 1 to turn on buzzer
-% licks come as an event with number of sensor?
-
-%{
-
-how to read scope SYNC in signal?? (outside of trial structure)? no events
-in trial
-send it directly to computer??
-
-The simplest way to add more digital I/O is via Teensy 3.2 + the Bpod Teensy Shield (both are shown in this pic). With the DIO sketch loaded, this makes a "DIO Module' which provides 6 digital input channels on Teensy pins 2-7 and 6 digital output channels on Teensy pins 19-23. You can add up to 5 DIO modules for a total of 30 additional inputs and outputs.
-To build the DIO module, you'd have to solder two female headers to Teensy 3.2, and upload the DIO sketch. The state machine should power Teensy over the wire (if connected to module ports 1-3) and the DIO module will appear as DIO1 (additional modules detected are DIO2-5). Then, in the 'output actions' section of the state where you want to drive the pins, add {'DIO1', [N S]} where N is pin number (19-23) and S is the new logic state (0 or 1 for 0V or 3.3V).
-
-------------------------------------------------------
-5 modules: 3 valve modules, then need 15 TTL pins.
-
-So teensy (one or two, if can't configure all pins as outputs) can run
-latch valves (need 8 pins)
-
-How to do buzzer, LED, lick sensors (TOUCH_IRQ + WIRE)
-
-arduScope (to turn
-on scope-->USE native BNC for this and sending and receiving SYNC)
-
------------------
-
-how to read in SYNC outside of trial structure / during downtimes? some
-marker for missed frames? or only run scope outside of ITI? I don't care
-what mouse is doing then??
-
-see Josh's email re: ArCOM. Does it let me just use old protocol on regular
-arduino/due/teensy without Bpod? IS all Bpod giving me the trial manager
-object/holding saving data until ITI and preparing next state machine
-outside of trial running loop? Couldn't I just do this with Python and a
-DAQ?
-
-if not, use arduino shield for the non-teensy pins (lick sensor and send
-scope TTL). upload their sketch and use as normal?  
-%}
-
-
 %{
 ----------------------------------------------------------------------------
 
-This code runs a 2AFC Information Seeking assay. After initiating trial
-with a center-poke, animal receives odor directing to right or left port or
-free choice. Animal chooses side port, receives either informative or un-
+This code runs a 2AFC Information Seeking assay. The mouuse initiatess a
+trial by poking the center port to receive an odor directing to right or
+left port or free choice between the two. The mouse chooses side port by
+poking there and there receives either informative or un-
 informative odor, then after a delay, reward outcome at the same side port.
 
-
+The mouse only receives water if he is present in the corret chosen port
+at the outcome tiime.
 ----------------------------------------------------------------------------
+
+Three valve control modules control airflow in the custom dilution
+olfactometer.
+
+One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
+a buzzer and lick sensor.
+
 %}
 function InfoSeek
-
 
 global BpodSystem
 
@@ -119,15 +60,11 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 BpodSystem.ProtocolSettings = S;
-
-SaveProtocolSettings(BpodSystem.ProtocolSettings);
+SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
 
 %% SET INFO SIDE
 
-infoSide = S.GUI.InfoSide;
-
-% 0 = info on left
-
+infoSide = S.GUI.InfoSide; % 0 = info on left
 
 %% Define trial choice types
 
@@ -751,7 +688,7 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [RunOdor(LeftSideOdor,1)]);
 % 'OutputActions', [{'DIOLicks1',5}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
@@ -864,134 +801,6 @@ function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes)
 end
 
 %% ODOR CONTROL
-
-%% ODOR WITH SERIAL MESSAGES
-
-% LoadSerialMessages('ValveModule1',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
-%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
-%     ['O' 8],['C' 8]});
-% LoadSerialMessages('ValveModule2',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
-%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
-%     ['O' 8],['C' 8]});
-% LoadSerialMessages('ValveModule3',{['O' 1],['C' 1],['O' 2],['C' 2],['O' 3],...
-%     ['C' 3],['O' 4],['C' 4],['O' 5],['C' 5],['O' 6],['C' 6],['O' 7],['C' 7],...
-%     ['O' 8],['C' 8]});
-% 
-% function OdorOutputActions = OdorOn(odorID,port)
-%     switch port
-%         case 0
-%             cmd1 = {'ValveModule1',1}; % center control  
-%             cmd2 = {'ValveModule1',3};
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',1};
-%                     cmd4 = {'ValveModule3',1};
-%                 case 1
-%                     cmd3 = {'ValveModule2',3};
-%                     cmd4 = {'ValveModule3',3};
-%                 case 2
-%                     cmd3 = {'ValveModule2',5};
-%                     cmd4 = {'ValveModule3',5};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',7};
-%                     cmd4 = {'ValveModule3',7};                    
-%             end
-%         case 1 % LEFT
-%             cmd1 = {'ValveModule1',5}; % left control
-%             cmd2 = {'ValveModule1',7}; % left control
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',9};
-%                     cmd4 = {'ValveModule3',9};
-%                 case 1
-%                     cmd3 = {'ValveModule2',11};
-%                     cmd4 = {'ValveModule3',11};
-%                 case 2
-%                     cmd3 = {'ValveModule2',13};
-%                     cmd4 = {'ValveModule3',13};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',15};
-%                     cmd4 = {'ValveModule3',15};                    
-%             end            
-%         case 2 % RIGHT
-%             cmd1 = {'ValveModule1',9}; % right control
-%             cmd2 = {'ValveModule1',11}; % right control
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',9};
-%                     cmd4 = {'ValveModule3',9};
-%                 case 1
-%                     cmd3 = {'ValveModule2',11};
-%                     cmd4 = {'ValveModule3',11};
-%                 case 2
-%                     cmd3 = {'ValveModule2',13};
-%                     cmd4 = {'ValveModule3',13};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',15};
-%                     cmd4 = {'ValveModule3',15};                    
-%             end   
-%     end
-%     OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];    
-% end
-% 
-% function OdorOutputActions = OdorOn(odorID,port)
-%     switch port
-%         case 0
-%             cmd1 = {'ValveModule1',2}; % center control  
-%             cmd2 = {'ValveModule1',4};
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',2};
-%                     cmd4 = {'ValveModule3',2};
-%                 case 1
-%                     cmd3 = {'ValveModule2',4};
-%                     cmd4 = {'ValveModule3',4};
-%                 case 2
-%                     cmd3 = {'ValveModule2',6};
-%                     cmd4 = {'ValveModule3',6};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',8};
-%                     cmd4 = {'ValveModule3',8};                    
-%             end
-%         case 1 % LEFT
-%             cmd1 = {'ValveModule1',6}; % left control
-%             cmd2 = {'ValveModule1',8}; % left control
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',10};
-%                     cmd4 = {'ValveModule3',10};
-%                 case 1
-%                     cmd3 = {'ValveModule2',12};
-%                     cmd4 = {'ValveModule3',12};
-%                 case 2
-%                     cmd3 = {'ValveModule2',14};
-%                     cmd4 = {'ValveModule3',14};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',16};
-%                     cmd4 = {'ValveModule3',16};                    
-%             end            
-%         case 2 % RIGHT
-%             cmd1 = {'ValveModule1',10}; % right control
-%             cmd2 = {'ValveModule1',12}; % right control
-%             switch odorID
-%                 case 0
-%                     cmd3 = {'ValveModule2',10};
-%                     cmd4 = {'ValveModule3',10};
-%                 case 1
-%                     cmd3 = {'ValveModule2',12};
-%                     cmd4 = {'ValveModule3',12};
-%                 case 2
-%                     cmd3 = {'ValveModule2',14};
-%                     cmd4 = {'ValveModule3',14};                    
-%                 case 3
-%                     cmd3 = {'ValveModule2',16};
-%                     cmd4 = {'ValveModule3',16};                    
-%             end   
-%     end
-%     OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];    
-% end
-
-%% GENERAL ODOR
 
 function OdorOutputActions = RunOdor(odorID,port)
     switch port
