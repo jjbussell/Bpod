@@ -29,9 +29,9 @@ TrialManager = TrialManagerObject;
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.SessionTrials = 1000;
-    S.GUI.TrialTypes = 2;
-    S.GUI.InfoSide = 0;
+    S.GUI.SessionTrials = 1000;%
+    S.GUI.TrialTypes = 2;%
+    S.GUI.InfoSide = 0;%
     S.GUI.InfoOdor = 2;
     S.GUI.RandOdor = 0;
     S.GUI.ChoiceOdor = 3;
@@ -49,8 +49,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.InfoSmallDrops = 1;
     S.GUI.RandBigDrops = 1;
     S.GUI.RandSmallDrops = 1;
-    S.GUI.InfoRewardProb = 1;
-    S.GUI.RandRewardProb = 1;
+    S.GUI.InfoRewardProb = 1;%
+    S.GUI.RandRewardProb = 1;%
     S.GUI.GracePeriod = 100000000; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
@@ -252,12 +252,10 @@ BpodSystem.Data.RewardTypes = RewardTypes;
 
 %% Initialize plots
 
-% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
-% BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .35 .89 .6]);
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',TrialTypes,min([MaxTrials 40])); %trial choice types   
-EventsPlot('init', getStateColors(infoSide));
+TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',TrialTypes,min([MaxTrials 40])); % trial choice types  
+EventsPlot('init', getStateColors(infoSide)); % events within trial
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
@@ -299,13 +297,6 @@ TrialCounts = [0,0,0,0];
 % controls for odor
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
-%% START SCOPE RECORDING? HOW TO SET TIMER? MOVE THIS INTO TRIAL START??
-
-% Turn on BNC1
-% ManualOverride('OB',1);
-
-% NEED TO CATCH AND TURN THIS OFF IF AN ERROR!!
-
 %% SAVE EVENT NAMES AND NUMBER
 
 BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
@@ -327,11 +318,7 @@ for currentTrial = 1:MaxTrials
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
-        for v = 1:8
-            ModuleWrite('ValveModule1',['C' v]);
-            ModuleWrite('ValveModule2',['C' v]);
-            ModuleWrite('ValveModule3',['C' v]);
-        end                
+        TurnOffAllOdors()             
         return; end % If user hit console "stop" button, end session 
     [sma, S, nextTrialType, TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
@@ -339,11 +326,7 @@ for currentTrial = 1:MaxTrials
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
-        for v = 1:8
-            ModuleWrite('ValveModule1',['C' v]);
-            ModuleWrite('ValveModule2',['C' v]);
-            ModuleWrite('ValveModule3',['C' v]);
-        end        
+        TurnOffAllOdors()       
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events (call with no argument since SM was already sent)
@@ -364,11 +347,9 @@ for currentTrial = 1:MaxTrials
     end
 end
 
-%% SHUT DOWN
-% NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
-% ManualOverride('OB',1);
-
 end % end of protocol main function
+
+
 
 %% PREPARE STATE MACHINE
 
@@ -854,6 +835,14 @@ function OdorOutputActions = RunOdor(odorID,port)
             end
     end
     OdorOutputActions = [cmd1,cmd2,cmd3];
+end
+
+function TurnOffAllOdors()
+    for v = 1:8
+        ModuleWrite('ValveModule1',['C' v]);
+        ModuleWrite('ValveModule2',['C' v]);
+        ModuleWrite('ValveModule3',['C' v]);
+    end 
 end
 
 
