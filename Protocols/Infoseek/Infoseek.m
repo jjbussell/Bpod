@@ -66,6 +66,10 @@ SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save
 
 infoSide = S.GUI.InfoSide; % 0 = info on left
 
+%% Set up trial types and rewards
+
+S = SetTrialTypes(S);
+
 %% Define trial choice types
 
 MaxTrials = S.GUI.SessionTrials;
