@@ -1,12 +1,19 @@
 %{
 
+
+make redoing trial types and reward and rand odors only from that trial
+forward! Same as repeating trials (b/c what about the reward??)
+
+SMA state machine returns trial params!
+
+then have a single function that takes S and the params and data from that
+trial only to calc outcome, trial type counts, add water amount
+
 double check turning side odor off
 
 FIX MAIN LOOP FLOW!!
 Is state machine/main loop functioning correctly w/ current vs next trial type and
 outcome/reward?
-
-infoSide!! need to be able to switch
 
 trial counts and outcomes etc to update plots--faster. Do we need this?
 

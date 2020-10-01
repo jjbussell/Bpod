@@ -64,8 +64,11 @@ end
 
 %% Set up trial types and rewards
 
-S = SetTrialTypes(S); % Sets S.TrialTypes
-S = SetRewardTypes(S); % Sets S.RewardTypes, S.RandOdorTypes
+S.TrialTypes = [];
+S.RewardTypes = [];
+S.RandOdorTypes = [];
+S = SetTrialTypes(S,1); % Sets S.TrialTypes
+S = SetRewardTypes(S,1); % Sets S.RewardTypes, S.RandOdorTypes
 
 %% SET INITIAL TYPE COUNTS
 
@@ -186,11 +189,11 @@ lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
 if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
-   S = SetTrialTypes(S);
+   S = SetTrialTypes(S,nextTrial);
 end
 
 if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
-    S = SetRewardTypes(S);
+    S = SetRewardTypes(S,nextTrial);
 end
 
 % DETERMINE TRIAL TYPE
@@ -583,9 +586,11 @@ end
 function S = UpdateTrialTypes(i,S)
     TrialTypes = S.TrialTypes;
     S.TrialTypes = [TrialTypes(1:i-1); TrialTypes(i-1); TrialTypes(i:end-1)];
+    S.RewardTypes = [S.RewardTypes(1:i-1,:); S.RewardTypes(i-1,:); S.RewardTypes(i:end-1,:)];
+    S.RandOdorTypes = [S.RandOdorTypes(1:i-1); S.RandOdorTypes(i-1); S.RandOdorTypes(i:end-1)];
 end
 
-function S = SetTrialTypes(S)
+function S = SetTrialTypes(S,currentTrial)
 
     %% Define trial choice types
 
@@ -660,11 +665,11 @@ function S = SetTrialTypes(S)
 %     TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
     TrialTypes=TrialTypes(1:maxTrials);
     
-    S.TrialTypes = TrialTypes;
+    S.TrialTypes = [S.TrialTypes(1:currentTrial); TrialTypes(1:end-currentTrial)];
 
 end
 
-function S = SetRewardTypes(S)
+function S = SetRewardTypes(S,currentTrial)
 
     maxTrials = S.GUI.SessionTrials;
     typeBlockSize = 8;    
@@ -765,13 +770,13 @@ function S = SetRewardTypes(S)
 
     % Trial types (rewards) to pull from
     RewardTypes = RewardTypes(1:maxTrials,:);
-    S.RewardTypes = RewardTypes;
+    S.RewardTypes = [S.RewardTypes(1:currentTrial,:); RewardTypes(1:end-currentTrial)];
 
     % Rand Odors to pull from
     % RandOdorTypes = repmat(RandOdorTypes,1,4);
     RandOdorTypes = RandOdorTypes(1:maxTrials);
     
-    S.RandOdorTypes = RandOdorTypes;
+    S.RandOdorTypes = [S.RandOdorTypes(1:currentTrial); RandOdorTypes(1:end-currentTrial)];
 
 end
 
@@ -842,7 +847,7 @@ end
 
 %% OUTCOMES
 
-function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,infoSide,S)
+function [Outcome, rewardAmount] = UpdateOutcome(trialType,RewardLeft,RewardRight,Data,S)
     global BpodSystem;    
     x = Data.nTrials;
     infoBigReward = S.GUI.InfoBigDrops*4;
