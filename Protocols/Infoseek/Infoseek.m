@@ -59,20 +59,17 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ImageType = 0;
 end
 
+BpodSystem.ProtocolSettings = S;
+SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
 
 %% SET INFO SIDE
 
 infoSide = S.GUI.InfoSide; % 0 = info on left
 
-MaxTrials = S.GUI.SessionTrials;
-
 %% Set up trial types and rewards
 
 S = SetTrialTypes(S); % Sets S.TrialTypes
 S = SetRewardTypes(S); % Sets S.RewardTypes, S.RandOdorTypes
-
-BpodSystem.ProtocolSettings = S;
-SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 BpodSystem.Data.Outcomes = [];
@@ -94,8 +91,8 @@ SaveBpodSessionData;
 
 BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([MaxTrials 40])); % trial choice types  
-EventsPlot('init', getStateColors(infoSide)); % events within trial
+TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([S.GUI.SessionTrials 40])); % trial choice types  
+EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
@@ -136,7 +133,7 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% INITIALIZE STATE MACHINE
 
-[sma,~,nextTrialType,TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide,  RewardTypes, RandOdorTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,S,nextTrialType,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialCounts, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -144,14 +141,14 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 %% MAIN TRIAL LOOP
 
-for currentTrial = 1:MaxTrials
+for currentTrial = 1:S.GUI.SessionTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'InterTrialInterval'}); 
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors()             
         return; end % If user hit console "stop" button, end session 
-    [sma, S, nextTrialType, TrialTypes,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    [sma, S, nextTrialType, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialCounts, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -164,7 +161,7 @@ for currentTrial = 1:MaxTrials
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
-        BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
+        BpodSystem.Data.TrialSettings(currentTrial) = S.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
         [outcome, rewardAmount] = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide,S);
@@ -192,22 +189,16 @@ lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
 if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
-    
+   S = SetTrialTypes(S);
 end
 
-% Water parameters
-R = GetValveTimes(4, [1 3]);
-% R = [0.100 0.100];
-LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
-MaxValveTime = max(R);
-maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
-RewardPauseTime = 0.05;
-
+if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
+    S = SetRewardTypes(S);
+end
 
 % DETERMINE TRIAL TYPE
 if nextTrial>1
     previousStates = currentTrialEvents.StatesVisited;
-    % if ~isnan(find(contains(previousStates,'NoChoice'))) | ~isnan(find(contains(previousStates,'Incorrect')))
     if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
         nextTrialType = TrialTypes(nextTrial-1);
         TrialTypes = UpdateTrialTypes(nextTrial,nextTrialType,TrialTypes);
@@ -358,8 +349,16 @@ switch nextTrialType % Determine trial-specific state matrix fields
         end
 end
 
+% Water parameters
+R = GetValveTimes(4, [1 3]);
+% R = [0.100 0.100];
+LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
+MaxValveTime = max(R);
+maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
+RewardPauseTime = 0.05;
 
 sma = NewStateMatrix(); % Assemble state matrix
+
 sma = SetCondition(sma, 1, 'Port1', 1); % Condition 1: Port 1 high (is in) (left)
 sma = SetCondition(sma, 2, 'Port2', 1); % Condition 2: Port 2 high (is in) (center)
 sma = SetCondition(sma, 3, 'Port3', 1); % Condition 3: Port 3 high (is in) (right)
@@ -403,12 +402,6 @@ else
        'Channel','Valve1','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 end
-
-
-% sma = SetGlobalTimer(sma,'TimerID',3,'Duration',1,'OnsetDelay',0,...
-%    'Channel', 'PWM1', 'OnsetValue', 255, 'OffsetValue', 0);
-% sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
-
 
 if RightRewardDrops > 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration', RightValveTime,'OnsetDelay',0,...
@@ -673,7 +666,6 @@ function settingsStructUpdated = SetTrialTypes(settingsStruct)
     S.TrialTypes = TrialTypes;
 
 end
-
 
 function settingsStructUpdated = SetRewardTypes(settingsStruct)
 
@@ -1098,7 +1090,7 @@ function [newTrialCounts,newPlotOutcomes] = UpdateCounts(trialType, Data, TrialC
     end
 end
         
-%% TRIAL EVENT PLOTTING
+%% TRIAL EVENT PLOTTING COLORS
 
 function state_colors = getStateColors(thisInfoSide)
     if thisInfoSide == 0
