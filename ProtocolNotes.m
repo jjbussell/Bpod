@@ -6,6 +6,34 @@ all GUI live
 
 repeat no choice trials
 
+
+NEED TO FIX repeating trials when just a single of that type, plotting
+trial types
+
+Is state machine functioning correctly w/ current vs next trial type and
+outcome/reward?
+
+infoSide!! need to be able to switch
+
+trial counts and outcomes etc to update plots
+
+FIX MAIN LOOP FLOW!!
+
+FIX figures, put them all w/ GUIData, Handles, Protocol Figures within
+their own fxns? Or put that for spacing w/in protocol??
+
+
+BpodSystem.GUIData.ParameterGUI.ParamNames
+BpodSystem.GUIData.ParameterGUI.nParams
+BpodSystem.GUIData.ParameterGUI.LastParamValues
+BpodSystem.GUIHandles.ParameterGUI.Labels
+BpodSystem.GUIHandles.ParameterGUI.Params
+BpodSystem.ProtocolFigures.ParameterGUI
+
+S.GUIPanels
+S.GUI = has the parameters
+
+
 ---------------
 
 

@@ -57,10 +57,12 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
     S.GUI.ImageType = 0;
+    
+    BpodSystem.ProtocolSettings = S;
+    SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
-BpodSystem.ProtocolSettings = S;
-SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
+
 
 %% SET INFO SIDE
 
@@ -71,18 +73,20 @@ infoSide = S.GUI.InfoSide; % 0 = info on left
 S = SetTrialTypes(S); % Sets S.TrialTypes
 S = SetRewardTypes(S); % Sets S.RewardTypes, S.RandOdorTypes
 
+
+
+%% SET INITIAL TYPE COUNTS
+
+TrialCounts = [0,0,0,0];
+PlotOutcomes = [];
+
+%% SAVE EVENT NAMES AND NUMBER
+
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 BpodSystem.Data.Outcomes = [];
 
 BpodSystem.Data.OrigTrialTypes = S.TrialTypes;
 BpodSystem.Data.OrigRewardTypes = S.RewardTypes;
-
-%% SET INITIAL TYPE COUNTS
-
-TrialCounts = [0,0,0,0];
-
-%% SAVE EVENT NAMES AND NUMBER
-
 BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
 BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
 SaveBpodSessionData;
@@ -133,7 +137,7 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% INITIALIZE STATE MACHINE
 
-[sma,S,nextTrialType,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialCounts, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,S,nextTrialType,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -148,7 +152,7 @@ for currentTrial = 1:S.GUI.SessionTrials
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors()             
         return; end % If user hit console "stop" button, end session 
-    [sma, S, nextTrialType, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, TrialCounts, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    [sma, S, nextTrialType, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -162,15 +166,15 @@ for currentTrial = 1:S.GUI.SessionTrials
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        BpodSystem.Data.AllTrialTypes{currentTrial} = TrialTypes;
-        [outcome, rewardAmount] = UpdateOutcome(TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide,S);
+        BpodSystem.Data.TrialTypes(currentTrial) = S.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
+        BpodSystem.Data.AllTrialTypes{currentTrial} = S.TrialTypes;
+        [outcome, rewardAmount] = UpdateOutcome(S.TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide,S);
         TotalRewardDisplay('add',rewardAmount);
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
-        [TrialCounts,PlotOutcomes] = UpdateCounts(TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
+        [TrialCounts,PlotOutcomes] = UpdateCounts(S.TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
         EventsPlot('update');
-        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',BpodSystem.Data.nTrials+1,TrialTypes,PlotOutcomes);
+        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',BpodSystem.Data.nTrials+1,S.TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -181,7 +185,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, nextTrialType, RewardLeft, RewardRight] = PrepareStateMachine(S, TrialCounts, nextTrial, currentTrialEvents)
+function [sma, S, nextTrialType, RewardLeft, RewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -200,14 +204,11 @@ end
 if nextTrial>1
     previousStates = currentTrialEvents.StatesVisited;
     if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
-        nextTrialType = TrialTypes(nextTrial-1);
-        TrialTypes = UpdateTrialTypes(nextTrial,nextTrialType,TrialTypes);
-    else
-        nextTrialType = TrialTypes(nextTrial);
+        S = UpdateTrialTypes(nextTrial,S);
     end
-else
-   nextTrialType = TrialTypes(nextTrial);
 end
+
+nextTrialType = S.TrialTypes(nextTrial);
 
 % Set trialParams (reward and odor)
 switch nextTrialType % Determine trial-specific state matrix fields
@@ -217,8 +218,8 @@ switch nextTrialType % Determine trial-specific state matrix fields
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM1', 255,'PWM3', 255};
         ThisCenterOdor = S.GUI.ChoiceOdor;
         if infoSide == 0 % INFO LEFT            
-            RewardLeft = RewardTypes(TrialCounts(1)+1,1); RewardRight = RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdorFlag = RandOdorTypes(TrialCounts(2)+1,1);
+            RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
+            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
             else
@@ -241,8 +242,8 @@ switch nextTrialType % Determine trial-specific state matrix fields
                 RightRewardDrops = S.GUI.RandSmallDrops;
             end
         else
-            RewardLeft = RewardTypes(TrialCounts(2)+1,2); RewardRight = RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdorFlag = RandOdorTypes(TrialCounts(2)+1,1);
+            RewardLeft = S.RewardTypes(TrialCounts(2)+1,2); RewardRight = S.RewardTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
             else
@@ -271,7 +272,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
         ThisCenterOdor = S.GUI.InfoOdor;
         if infoSide == 0
             % info on left
-            RewardLeft = RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
+            RewardLeft = S.RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect'; StimulusOutput = {'PWM1', 255};
             RightSideOdor = 0;
 %             OutcomeStateLeft = 'LeftCorrectChoice'; OutcomeStateRight = 'RightIncorrectChoice';
@@ -287,7 +288,7 @@ switch nextTrialType % Determine trial-specific state matrix fields
             OutcomeStateRight = 'IncorrectRight';
             RightRewardDrops = 0;
         else
-            RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(3)+1,3);
+            RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
             LeftSideOdor = 0;
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
@@ -307,10 +308,10 @@ switch nextTrialType % Determine trial-specific state matrix fields
 %         ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255}; OutcomeStateLeft = 'LeftReward'; OutcomeStateRight = 'RightReward';
         ThisCenterOdor = S.GUI.RandOdor;
         if infoSide == 0 % INFO ON LEFT
-            RewardLeft = 0; RewardRight = RewardTypes(TrialCounts(4)+1,4);
+            RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight'; StimulusOutput = {'PWM3', 255};
 %             OutcomeStateLeft = 'LeftInCorrectChoice'; OutcomeStateRight = 'RightCorrectChoice';
-            RightSideOdorFlag = RandOdorTypes(TrialCounts(4)+1,1);
+            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(4)+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
             else
@@ -327,9 +328,9 @@ switch nextTrialType % Determine trial-specific state matrix fields
             OutcomeStateLeft = 'IncorrectLeft';
             LeftRewardDrops = 0;
         else
-            RewardLeft = RewardTypes(TrialCounts(4)+1); RewardRight = 0;
+            RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect'; StimulusOutput = {'PWM1', 255};
-            LeftSideOdorFlag = RandOdorTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(1)+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
             else
@@ -584,11 +585,12 @@ end
 
 %% TRIAL TYPES
 
-function updatedtypes = UpdateTrialTypes(i,trialType,TrialTypes)
-    updatedtypes = [TrialTypes(1:i); TrialTypes(i); TrialTypes(i+1:end-1)];
+function S = UpdateTrialTypes(i,S)
+    TrialTypes = S.TrialTypes;
+    S.TrialTypes = [TrialTypes(1:i); TrialTypes(i); TrialTypes(i+1:end-1)];
 end
 
-function settingsStructUpdated = SetTrialTypes(settingsStruct)
+function S = SetTrialTypes(S)
 
     %% Define trial choice types
 
@@ -660,14 +662,14 @@ function settingsStructUpdated = SetTrialTypes(settingsStruct)
         end
     end
 
-    % TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
+    TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
     TrialTypes=TrialTypes(1:maxTrials);
     
     S.TrialTypes = TrialTypes;
 
 end
 
-function settingsStructUpdated = SetRewardTypes(settingsStruct)
+function S = SetRewardTypes(S)
 
     maxTrials = S.GUI.SessionTrials;
     typeBlockSize = 8;    
