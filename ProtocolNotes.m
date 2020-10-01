@@ -2,22 +2,15 @@
 
 double check turning side odor off
 
-all GUI live
+NEED TO FIX plotting trial types
 
-repeat no choice trials
-
-
-NEED TO FIX repeating trials when just a single of that type, plotting
-trial types
-
-Is state machine functioning correctly w/ current vs next trial type and
+FIX MAIN LOOP FLOW!!
+Is state machine/main loop functioning correctly w/ current vs next trial type and
 outcome/reward?
 
 infoSide!! need to be able to switch
 
-trial counts and outcomes etc to update plots
-
-FIX MAIN LOOP FLOW!!
+trial counts and outcomes etc to update plots--faster. Do we need this?
 
 FIX figures, put them all w/ GUIData, Handles, Protocol Figures within
 their own fxns? Or put that for spacing w/in protocol??

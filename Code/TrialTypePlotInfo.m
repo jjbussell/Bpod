@@ -27,10 +27,11 @@ function TrialTypePlot(AxesHandle, Action, varargin)
 %Example usage:
 % TrialTypePlot(AxesHandle,'init',TrialTypes)
 % TrialTypePlot(AxesHandle,'init',TrialTypes,'ntrials',90)
-% TrialTypePlot(AxesHandle,'update',CurrentTrial,TrialTypes,OutcomeRecord)
+% TrialTypePlot(AxesHandle,'update',CurrentTrial,TrialTypes,PastTrialTypes,OutcomeRecord)
 
 % varargins:
 % TrialTypes: Vector of trial types (integers)
+% PastTrialTypes: Vector of past trial types (integers)
 % OutcomeRecord:  Vector of trial outcomes
 %                 Simplest case: 
 %                               1: correct trial (green)
@@ -71,7 +72,7 @@ switch Action
         yticklabelsinfo = {'RandForced','InfoForced','Choice'};
         labelFontSize = 16;
         axes(AxesHandle);
-        MaxTrialType = max(TrialTypeList);
+        MaxTrialType = numel(yticklabelsinfo);
         %plot in specified axes
         Xdata = 1:nTrialsToShow;
         if ~isrow(TrialTypeList)
@@ -104,9 +105,13 @@ switch Action
         TrialTypeList = varargin{2};
         if ~isrow(TrialTypeList)
             TrialTypeList = TrialTypeList';
-        end               
-        OutcomeRecord = varargin{3};
-        MaxTrialType = max(TrialTypeList);
+        end
+        PastTrialTypes = varargin{3};
+        if ~isrow(TrialTypeList)
+           PastTrialTypes = PastTrialTypes'; 
+        end
+        OutcomeRecord = varargin{4};
+        MaxTrialType = 3;
         yticklabelsinfo = {'RandForced','InfoForced','Choice'};
         if numel(unique(TrialTypeList)) == 3
             set(AxesHandle,'YLim',[-MaxTrialType-.5, -.5], 'YTick', -MaxTrialType:1:-1,'YTickLabel', yticklabelsinfo);
@@ -117,6 +122,8 @@ switch Action
             CurrentTrial = 1;
         end
         TrialTypeList  = -TrialTypeList;
+        PastTrialTypes = -PastTrialTypes;
+        TrialTypeList = [PastTrialTypes(1:CurrentTrial) TrialTypeList(CurrentTrial+1:end)];
         
         % recompute xlim
         [mn, mx] = rescaleX(AxesHandle,CurrentTrial,nTrialsToShow);
@@ -128,7 +135,7 @@ switch Action
         DisplayXdata = Xdata-offset;
         set(BpodSystem.GUIHandles.FutureTrialLine, 'xdata', [DisplayXdata,DisplayXdata], 'ydata', [Ydata,Ydata]);
         %Plot current trial
-        displayCurrentTrial = CurrentTrial-offset;
+        displayCurrentTrial = CurrentTrial-offset+1;
         set(BpodSystem.GUIHandles.CurrentTrialCircle, 'xdata', [displayCurrentTrial,displayCurrentTrial], 'ydata', [TrialTypeList(CurrentTrial),TrialTypeList(CurrentTrial)]);
         set(BpodSystem.GUIHandles.CurrentTrialCross, 'xdata', [displayCurrentTrial,displayCurrentTrial], 'ydata', [TrialTypeList(CurrentTrial),TrialTypeList(CurrentTrial)]);
         

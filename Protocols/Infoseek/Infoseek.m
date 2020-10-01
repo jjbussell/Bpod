@@ -73,8 +73,6 @@ infoSide = S.GUI.InfoSide; % 0 = info on left
 S = SetTrialTypes(S); % Sets S.TrialTypes
 S = SetRewardTypes(S); % Sets S.RewardTypes, S.RandOdorTypes
 
-
-
 %% SET INITIAL TYPE COUNTS
 
 TrialCounts = [0,0,0,0];
@@ -137,7 +135,7 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% INITIALIZE STATE MACHINE
 
-[sma,S,nextTrialType,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -146,13 +144,13 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 %% MAIN TRIAL LOOP
 
 for currentTrial = 1:S.GUI.SessionTrials
-    currentTrialEvents = TrialManager.getCurrentEvents({'InterTrialInterval'}); 
+    currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); 
                                        % Hangs here until Bpod enters one of the listed trigger states, 
                                        % then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors()             
         return; end % If user hit console "stop" button, end session 
-    [sma, S, nextTrialType, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -168,13 +166,14 @@ for currentTrial = 1:S.GUI.SessionTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = S.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.AllTrialTypes{currentTrial} = S.TrialTypes;
+        % get reward amount from rawevents!!
         [outcome, rewardAmount] = UpdateOutcome(S.TrialTypes(currentTrial),RewardLeft,RewardRight,BpodSystem.Data,infoSide,S);
         TotalRewardDisplay('add',rewardAmount);
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         [TrialCounts,PlotOutcomes] = UpdateCounts(S.TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes, infoSide);
         EventsPlot('update');
-        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',BpodSystem.Data.nTrials+1,S.TrialTypes,PlotOutcomes);
+        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes,BpodSystem.Data.TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -185,7 +184,7 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, nextTrialType, RewardLeft, RewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, nextTrial, currentTrialEvents)
+function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, infoSide, TrialCounts, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
@@ -587,7 +586,7 @@ end
 
 function S = UpdateTrialTypes(i,S)
     TrialTypes = S.TrialTypes;
-    S.TrialTypes = [TrialTypes(1:i); TrialTypes(i); TrialTypes(i+1:end-1)];
+    S.TrialTypes = [TrialTypes(1:i-1); TrialTypes(i-1); TrialTypes(i:end-1)];
 end
 
 function S = SetTrialTypes(S)
@@ -662,7 +661,7 @@ function S = SetTrialTypes(S)
         end
     end
 
-    TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
+%     TrialTypes = [2; 2; 3; 3; 2; 2; 3; 3; TrialTypes];
     TrialTypes=TrialTypes(1:maxTrials);
     
     S.TrialTypes = TrialTypes;
