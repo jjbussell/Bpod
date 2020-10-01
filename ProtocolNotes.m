@@ -2,8 +2,6 @@
 
 double check turning side odor off
 
-NEED TO FIX plotting trial types
-
 FIX MAIN LOOP FLOW!!
 Is state machine/main loop functioning correctly w/ current vs next trial type and
 outcome/reward?
