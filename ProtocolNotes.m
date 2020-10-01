@@ -1,5 +1,8 @@
 %{
 
+implement single outcome function! do we need to pass these things, or do
+they live in BpodSystemData? Do the plotting!
+
 
 SMA state machine returns trial params!
 
@@ -8,13 +11,13 @@ trial only to calc outcome, trial type counts, add water amount
 
 --> save current trial's S and use its data when complete
 
+trial counts and outcomes etc to update plots--faster. Do we need this?
+
 double check turning side odor off
 
 FIX MAIN LOOP FLOW!!
 Is state machine/main loop functioning correctly w/ current vs next trial type and
 outcome/reward?
-
-trial counts and outcomes etc to update plots--faster. Do we need this?
 
 FIX figures, put them all w/ GUIData, Handles, Protocol Figures within
 their own fxns? Or put that for spacing w/in protocol??
