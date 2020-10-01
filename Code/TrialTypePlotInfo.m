@@ -27,11 +27,10 @@ function TrialTypePlot(AxesHandle, Action, varargin)
 %Example usage:
 % TrialTypePlot(AxesHandle,'init',TrialTypes)
 % TrialTypePlot(AxesHandle,'init',TrialTypes,'ntrials',90)
-% TrialTypePlot(AxesHandle,'update',CurrentTrial,TrialTypes,PastTrialTypes,OutcomeRecord)
+% TrialTypePlot(AxesHandle,'update',CurrentTrial,TrialTypes,OutcomeRecord)
 
 % varargins:
 % TrialTypes: Vector of trial types (integers)
-% PastTrialTypes: Vector of past trial types (integers)
 % OutcomeRecord:  Vector of trial outcomes
 %                 Simplest case: 
 %                               1: correct trial (green)
@@ -106,11 +105,7 @@ switch Action
         if ~isrow(TrialTypeList)
             TrialTypeList = TrialTypeList';
         end
-        PastTrialTypes = varargin{3};
-        if ~isrow(TrialTypeList)
-           PastTrialTypes = PastTrialTypes'; 
-        end
-        OutcomeRecord = varargin{4};
+        OutcomeRecord = varargin{3};
         MaxTrialType = 3;
         yticklabelsinfo = {'RandForced','InfoForced','Choice'};
         if numel(unique(TrialTypeList)) == 3
@@ -122,8 +117,6 @@ switch Action
             CurrentTrial = 1;
         end
         TrialTypeList  = -TrialTypeList;
-        PastTrialTypes = -PastTrialTypes;
-        TrialTypeList = [PastTrialTypes(1:CurrentTrial) TrialTypeList(CurrentTrial+1:end)];
         
         % recompute xlim
         [mn, mx] = rescaleX(AxesHandle,CurrentTrial,nTrialsToShow);
