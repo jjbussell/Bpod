@@ -168,7 +168,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplay('add',rewardAmount);
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
-        [TrialCounts,PlotOutcomes] = UpdateCounts(S.TrialTypes(currentTrial), BpodSystem.Data, TrialCounts, PlotOutcomes,S.GUI.InfoSide);
+        [TrialCounts,PlotOutcomes] = UpdateCounts(S.TrialTypes(currentTrial),BpodSystem.Data,TrialCounts,PlotOutcomes,S.GUI.InfoSide);
         EventsPlot('update');
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes,PlotOutcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??

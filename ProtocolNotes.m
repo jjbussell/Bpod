@@ -1,14 +1,10 @@
 %{
 
 
-make redoing trial types and reward and rand odors only from that trial
-forward! Same as repeating trials (b/c what about the reward??) OK
-
 SMA state machine returns trial params!
 
 then have a single function that takes S and the params and data from that
 trial only to calc outcome, trial type counts, add water amount
-
 double check turning side odor off
 
 FIX MAIN LOOP FLOW!!
@@ -20,6 +16,7 @@ trial counts and outcomes etc to update plots--faster. Do we need this?
 FIX figures, put them all w/ GUIData, Handles, Protocol Figures within
 their own fxns? Or put that for spacing w/in protocol??
 
+double check turning side odor off
 
 BpodSystem.GUIData.ParameterGUI.ParamNames
 BpodSystem.GUIData.ParameterGUI.nParams
