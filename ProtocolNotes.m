@@ -2,7 +2,7 @@
 
 
 make redoing trial types and reward and rand odors only from that trial
-forward! Same as repeating trials (b/c what about the reward??)
+forward! Same as repeating trials (b/c what about the reward??) OK
 
 SMA state machine returns trial params!
 
