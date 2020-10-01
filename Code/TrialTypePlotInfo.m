@@ -130,7 +130,7 @@ switch Action
         
         %plot future trials
         offset = mn-1;
-        FutureTrialsIndx = CurrentTrial:mx;
+        FutureTrialsIndx = CurrentTrial+1:mx;
         Xdata = FutureTrialsIndx; Ydata = TrialTypeList(Xdata);
         DisplayXdata = Xdata-offset;
         set(BpodSystem.GUIHandles.FutureTrialLine, 'xdata', [DisplayXdata,DisplayXdata], 'ydata', [Ydata,Ydata]);
@@ -141,7 +141,7 @@ switch Action
         
         %Plot past trials
         if ~isempty(OutcomeRecord)
-            indxToPlot = mn:CurrentTrial-1;
+            indxToPlot = mn:CurrentTrial;
             %Plot Error, unpunished NOT PRESENT
             EarlyWithdrawalTrialsIndx =(OutcomeRecord(indxToPlot) == -1);
             Xdata = indxToPlot(EarlyWithdrawalTrialsIndx); Ydata = TrialTypeList(Xdata);
