@@ -59,16 +59,20 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ImageType = 0;
 end
 
-BpodSystem.ProtocolSettings = S;
-SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
 
 %% SET INFO SIDE
 
 infoSide = S.GUI.InfoSide; % 0 = info on left
 
+MaxTrials = S.GUI.SessionTrials;
+
 %% Set up trial types and rewards
 
-S = SetTrialTypes(S); % Sets S.TrialTypes, S.RewardTypes, S.RandOdorTypes
+S = SetTrialTypes(S); % Sets S.TrialTypes
+S = SetRewardTypes(S); % Sets S.RewardTypes, S.RandOdorTypes
+
+BpodSystem.ProtocolSettings = S;
+SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 BpodSystem.Data.Outcomes = [];
@@ -76,19 +80,25 @@ BpodSystem.Data.Outcomes = [];
 BpodSystem.Data.OrigTrialTypes = S.TrialTypes;
 BpodSystem.Data.OrigRewardTypes = S.RewardTypes;
 
+%% SET INITIAL TYPE COUNTS
+
+TrialCounts = [0,0,0,0];
+
+%% SAVE EVENT NAMES AND NUMBER
+
+BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
+BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
+SaveBpodSessionData;
+
 %% Initialize plots
 
 BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',TrialTypes,min([MaxTrials 40])); % trial choice types  
+TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([MaxTrials 40])); % trial choice types  
 EventsPlot('init', getStateColors(infoSide)); % events within trial
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
-
-%% SET INITIAL TYPE COUNTS
-
-TrialCounts = [0,0,0,0];
 
 %% INITIALIZE SERIAL MESSAGES
 
@@ -123,11 +133,6 @@ TrialCounts = [0,0,0,0];
 % controls for odor
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
-%% SAVE EVENT NAMES AND NUMBER
-
-BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
-BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
-SaveBpodSessionData;
 
 %% INITIALIZE STATE MACHINE
 
@@ -179,11 +184,16 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, nextTrialType, TrialTypes, RewardLeft, RewardRight] = PrepareStateMachine(S, TrialTypes, TrialCounts, infoSide, RewardTypes, RandOdorTypes, nextTrial, currentTrialEvents)
+function [sma, S, nextTrialType, RewardLeft, RewardRight] = PrepareStateMachine(S, TrialCounts, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
+lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
+
+if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
+    
+end
 
 % Water parameters
 R = GetValveTimes(4, [1 3]);
@@ -192,28 +202,6 @@ LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 MaxValveTime = max(R);
 maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
 RewardPauseTime = 0.05;
-
-% % pins
-% LEDPin = 11;
-% % for sending side odor on and reward on to scope
-% syncPins = [12, 13];
-% buzzer1 = [254 1];
-% buzzer2 = [253 1];
-% 
-% modules = BpodSystem.Modules.Name;
-% DIOmodule = [modules(strncmp('DIO',modules,3))];
-% DIOmodule = DIOmodule{1};
-
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC
-% other Bpod out BNC at center odor start
-
-% Set serial messages 1,2,3,4
-% LoadSerialMessages('DIOLicks1', {[254 1],[253 1],[5 1], [5 0]});
-% LoadSerialMessages('DIOLicks1', {[5 1]});
-% LoadSerialMessages(1, {[5 8], [2 3 4]});
 
 
 % DETERMINE TRIAL TYPE
@@ -684,6 +672,13 @@ function settingsStructUpdated = SetTrialTypes(settingsStruct)
     
     S.TrialTypes = TrialTypes;
 
+end
+
+
+function settingsStructUpdated = SetRewardTypes(settingsStruct)
+
+    maxTrials = S.GUI.SessionTrials;
+    typeBlockSize = 8;    
     
     %% SET REWARD BLOCKS
 
@@ -696,7 +691,7 @@ function settingsStructUpdated = SetTrialTypes(settingsStruct)
     infoBlockShuffle(1:infoBigCount) = 1;
     randBlockShuffle(1:randBigCount) = 1;
 
-    typeBlockCount = ceil(MaxTrials/typeBlockSize);
+    typeBlockCount = ceil(maxTrials/typeBlockSize);
     RewardTypes = zeros(typeBlockCount*typeBlockSize,4);
     RandOdorTypes = zeros(typeBlockCount*typeBlockSize,1);
 
@@ -780,12 +775,12 @@ function settingsStructUpdated = SetTrialTypes(settingsStruct)
     end
 
     % Trial types (rewards) to pull from
-    RewardTypes = RewardTypes(1:MaxTrials,:);
+    RewardTypes = RewardTypes(1:maxTrials,:);
     S.RewardTypes = RewardTypes;
 
     % Rand Odors to pull from
     % RandOdorTypes = repmat(RandOdorTypes,1,4);
-    RandOdorTypes = RandOdorTypes(1:MaxTrials);
+    RandOdorTypes = RandOdorTypes(1:maxTrials);
     
     S.RandOdorTypes = RandOdorTypes;
 

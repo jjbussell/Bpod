@@ -20,7 +20,7 @@ CCfinal = [0.2,0.2,0.2; %choice no choice
 1,0,1; %infosmall
 1,192/255,203/255; %info small not present
 0.0,0.0,0.0; %infoincorrect
-0.2,0.2,0.2;% rand no choice
+0.6,0.6,0.6;% rand no choice
 0,0,1; %rand big
 135/255,206/255,1; % rand big NP
 0,1,1; %rand small
