@@ -5,6 +5,9 @@ SMA state machine returns trial params!
 
 then have a single function that takes S and the params and data from that
 trial only to calc outcome, trial type counts, add water amount
+
+--> save current trial's S and use its data when complete
+
 double check turning side odor off
 
 FIX MAIN LOOP FLOW!!
