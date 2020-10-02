@@ -137,8 +137,14 @@ switch Action
         set(BpodSystem.GUIHandles.CurrentTrialCross, 'xdata', [displayCurrentTrial,displayCurrentTrial], 'ydata', [TrialTypeList(CurrentTrial+1),TrialTypeList(CurrentTrial+1)]);
         
         %Plot past trials
-        if ~isempty(OutcomeRecord)
+        if numel(OutcomeRecord) == CurrentTrial
             indxToPlot = mn:CurrentTrial;
+%         if ~isempty(OutcomeRecord)
+%             if numel(OutcomeRecord) == CurrentTrial
+%                 indxToPlot = mn:CurrentTrial;
+%             else
+%                 indxToPlot = mn:CurrentTrial-1;
+%             end
             %Plot Error, unpunished NOT PRESENT
             EarlyWithdrawalTrialsIndx =(OutcomeRecord(indxToPlot) == -1);
             Xdata = indxToPlot(EarlyWithdrawalTrialsIndx); Ydata = TrialTypeList(Xdata);

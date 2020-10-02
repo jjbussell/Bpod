@@ -170,6 +170,7 @@ switch Op
         end
         set(BpodSystem.ProtocolFigures.ParameterGUI, 'Position', [900 100 HPos+450 MaxVPos+10]);
     case 'sync'
+        syncingparamgui = 0
         ParamNames = BpodSystem.GUIData.ParameterGUI.ParamNames;
         nParams = BpodSystem.GUIData.ParameterGUI.nParams;
         for p = 1:nParams
