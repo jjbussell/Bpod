@@ -141,20 +141,18 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
-    Sforcurrenttosave = currentS.GUI
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
-        TurnOffAllOdors()             
+        TurnOffAllOdors();      
         return; end % If user hit console "stop" button, end session 
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
-        TurnOffAllOdors()       
+        TurnOffAllOdors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
-    nowRunningTrial = currentTrial+1
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
@@ -166,9 +164,6 @@ for currentTrial = 1:S.GUI.SessionTrials
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         EventsPlot('update');
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        updatingplotinmain = 0
-        savingS = currentS.GUI
-        otherS = S.GUI
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -180,19 +175,14 @@ end % end of protocol main function
 
 function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, currentTrialEvents)
 
-nextStateMachine = nextTrial
-
-
 global BpodSystem;
 
 lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
-Sforthatstatemachine = S.GUI
 
 if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
    S = SetTrialTypes(S,nextTrial);
-   trialtypesset = S.TrialTypes(nextTrial:nextTrial+5)
 end
 
 if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
@@ -207,7 +197,7 @@ if nextTrial>1
     end
 end
 
-nextTrialType = S.TrialTypes(nextTrial)
+nextTrialType = S.TrialTypes(nextTrial);
 
 infoSide = S.GUI.InfoSide;
 TrialCounts = BpodSystem.Data.TrialCounts;
@@ -668,7 +658,6 @@ function S = SetTrialTypes(S,currentTrial)
     else
         S.TrialTypes = [S.TrialTypes(1:currentTrial-1); TrialTypes(1:end-currentTrial+1)];
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        updatingplotinttfxn = 0
     end
     
 
