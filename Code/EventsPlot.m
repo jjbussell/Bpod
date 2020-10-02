@@ -83,11 +83,9 @@ switch action
         
   %% update    
   case 'update'
-      
     figure(BpodSystem.ProtocolFigures.EventsPlot);axes(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis)
     current_trial = BpodSystem.Data.nTrials;
     last_n = str2double(get(BpodSystem.GUIHandles.EventsPlot.Lastn,'String'));
-    
 %    fnames = fieldnames(BpodSystem.Data.RawEvents.Trial{1,BpodSystem.Data.nTrials}.States);
         
     for j=1:last_n
@@ -98,11 +96,11 @@ switch action
         if trial_toplot>0
             thisTrialStateNames = get(BpodSystem.GUIHandles.EventsPlot.AlignOnMenu,'String');
             thisStateName = thisTrialStateNames{get(BpodSystem.GUIHandles.EventsPlot.AlignOnMenu, 'Value')};
-            aligning_time = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(thisStateName)(1);
-            
+            aligning_time = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(thisStateName)(1);            
             for i=1:length(fnames)
-                
+%                 tic
                 t = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(fnames{i})-aligning_time;
+%                 toc
                 if t(2)-t(1)<0.0001
                     x_vertices = [t(1)-0.1 t(2)+0.1 t(2)+0.1 t(1)-0.1]';
                 else
@@ -125,10 +123,7 @@ switch action
                 set(BpodSystem.GUIHandles.EventsPlot.StateHandle(last_n-j+1).(fnames{i}),'Vertices', [x_vertices y_vertices],'Visible', 'on');
             end
         end
-    end
-    
+    end    
     set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis, 'XLim', [str2double(get(BpodSystem.GUIHandles.EventsPlot.LeftEdge,'String')), str2double(get(BpodSystem.GUIHandles.EventsPlot.RightEdge,'String'))]);
-    set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis,'YLim', [0 last_n]);
-%     chi=get(gca, 'Children');
-%     chi
+    set(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis,'YLim', [0 last_n]);    
 end

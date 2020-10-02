@@ -1,8 +1,5 @@
 %{
 
-does S update at the right times? How to plot and save faster??
-Settings saved in trial settings are not correct!!
-
 FIX MAIN LOOP FLOW!!
 Is state machine/main loop functioning correctly w/ current vs next trial type and
 outcome/reward?

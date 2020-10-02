@@ -161,11 +161,10 @@ for currentTrial = 1:S.GUI.SessionTrials
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
-        TotalRewardDisplay('add',rewardAmount);    
+        TotalRewardDisplay('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
-        EventsPlot('update');
+%         EventsPlot('update');
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        toc
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
         toc
     end
