@@ -67,13 +67,13 @@ end
 S.TrialTypes = [];
 S.RewardTypes = [];
 S.RandOdorTypes = [];
-S = SetTrialTypes(S,1); % Sets S.TrialTypes
-S = SetRewardTypes(S,1); % Sets S.RewardTypes, S.RandOdorTypes
+S = SetTrialTypes(S,1); % Sets S.TrialTypes from trial 1 to maxTrials
+S = SetRewardTypes(S,1); % Sets S.RewardTypes, S.RandOdorTypes from trial 1 to maxTrials
 
 %% SET INITIAL TYPE COUNTS
 
-TrialCounts = [0,0,0,0];
-PlotOutcomes = [];
+BpodSystem.Data.TrialCounts = [0,0,0,0];
+BpodSystem.Data.PlotOutcomes = [];
 
 %% SAVE EVENT NAMES AND NUMBER
 
@@ -82,7 +82,6 @@ BpodSystem.Data.Outcomes = [];
 
 BpodSystem.Data.OrigTrialTypes = S.TrialTypes;
 BpodSystem.Data.OrigRewardTypes = S.RewardTypes;
-BpodSystem.Data.nEvents = BpodSystem.StateMachineInfo.nEvents;
 BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
 SaveBpodSessionData;
 
@@ -132,7 +131,7 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% INITIALIZE STATE MACHINE
 
-[sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(TrialCounts, S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -142,25 +141,23 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
-    currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); 
-                                       % Hangs here until Bpod enters one of the listed trigger states, 
-                                       % then returns current trial's states visited + events captured to this point                       
+    Sforcurrenttosave = currentS.GUI
+    currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors()             
         return; end % If user hit console "stop" button, end session 
-    [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(TrialCounts, S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
-    % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
-    % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
-    SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
+    [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors()       
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
-    TrialManager.startTrial(); % Start processing the next trial's events (call with no argument since SM was already sent)
+    TrialManager.startTrial(); % Start processing the next trial's events
+    nowRunningTrial = currentTrial+1
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        [rewardAmount,outcome,TrialCounts,PlotOutcomes] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight,TrialCounts,PlotOutcomes); 
+        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -168,7 +165,10 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplay('add',rewardAmount);    
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         EventsPlot('update');
-        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,currentS.TrialTypes,PlotOutcomes);
+        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
+        updatingplotinmain = 0
+        savingS = currentS.GUI
+        otherS = S.GUI
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -178,15 +178,21 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(TrialCounts, S, nextTrial, currentTrialEvents)
+function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, currentTrialEvents)
+
+nextStateMachine = nextTrial
+
 
 global BpodSystem;
 
 lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
+Sforthatstatemachine = S.GUI
+
 if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
    S = SetTrialTypes(S,nextTrial);
+   trialtypesset = S.TrialTypes(nextTrial:nextTrial+5)
 end
 
 if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
@@ -201,9 +207,10 @@ if nextTrial>1
     end
 end
 
-nextTrialType = S.TrialTypes(nextTrial);
+nextTrialType = S.TrialTypes(nextTrial)
 
 infoSide = S.GUI.InfoSide;
+TrialCounts = BpodSystem.Data.TrialCounts;
 
 % Determine trial-specific state matrix fields
 % Set trialParams (reward and odor)
@@ -582,6 +589,8 @@ end
 
 function S = SetTrialTypes(S,currentTrial)
 
+    global BpodSystem;
+
     %% Define trial choice types
 
     maxTrials = S.GUI.SessionTrials;
@@ -657,8 +666,11 @@ function S = SetTrialTypes(S,currentTrial)
     if currentTrial==1
         S.TrialTypes = TrialTypes;
     else
-        S.TrialTypes = [S.TrialTypes(1:currentTrial); TrialTypes(1:end-currentTrial)];
+        S.TrialTypes = [S.TrialTypes(1:currentTrial-1); TrialTypes(1:end-currentTrial+1)];
+        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
+        updatingplotinttfxn = 0
     end
+    
 
 end
 
@@ -845,11 +857,13 @@ end
 
 %% OUTCOME
 
-function [rewardAmount, Outcome, newTrialCounts, newPlotOutcomes] = UpdateOutcome(currentTrial,S,RewardLeft,RewardRight,TrialCounts, PlotOutcomes)
+function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,RewardRight)
 
     global BpodSystem
     % BpodSystem.Data.RawEvents(currentTrial)
     TrialData = BpodSystem.Data.RawEvents.Trial{currentTrial};
+    TrialCounts = BpodSystem.Data.TrialCounts;
+    PlotOutcomes = BpodSystem.Data.PlotOutcomes;
     
     trialType = S.TrialTypes(currentTrial);
     infoSide = S.GUI.InfoSide;
@@ -1080,7 +1094,8 @@ function [rewardAmount, Outcome, newTrialCounts, newPlotOutcomes] = UpdateOutcom
                 end
         end            
     end    
-    
+    BpodSystem.Data.TrialCounts = newTrialCounts;
+    BpodSystem.Data.PlotOutcomes = newPlotOutcomes;
 end
 
 

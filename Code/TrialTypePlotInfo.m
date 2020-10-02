@@ -105,7 +105,11 @@ switch Action
         if ~isrow(TrialTypeList)
             TrialTypeList = TrialTypeList';
         end
-        OutcomeRecord = varargin{3};
+        if nargin>4
+            OutcomeRecord = varargin{3};
+        else
+            OutcomeRecord = BpodSystem.Data.PlotOutcomes;
+        end
         MaxTrialType = 3;
         yticklabelsinfo = {'RandForced','InfoForced','Choice'};
         if numel(unique(TrialTypeList)) == 3
