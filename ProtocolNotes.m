@@ -1,12 +1,13 @@
 %{
 
-FIX MAIN LOOP FLOW!!
-Is state machine/main loop functioning correctly w/ current vs next trial type and
-outcome/reward?
-
 FIX figures, put them all w/ GUIData, Handles, Protocol Figures within
 their own fxns? Or put that for spacing w/in protocol??
-Outcomes plot
+
+Add outcome plot
+
+FIX MAIN LOOP FLOW!! OK if change warning in trial manager object!!
+Is state machine/main loop functioning correctly w/ current vs next trial type and
+outcome/reward?
 
 double check turning side odor off
 

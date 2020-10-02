@@ -47,7 +47,7 @@ switch action
         BpodSystem.GUIHandles.EventsPlot.RightEdge = uicontrol('Style', 'edit','String',14, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
          
         BpodSystem.GUIHandles.EventsPlot.LastnLabel = uicontrol('Style', 'text','String','N trials', 'Position', [130 33 50 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
-        BpodSystem.GUIHandles.EventsPlot.Lastn = uicontrol('Style', 'edit','String',10, 'Position', [185 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
+        BpodSystem.GUIHandles.EventsPlot.Lastn = uicontrol('Style', 'edit','String',5, 'Position', [185 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@EventsPlot, 'time_axis'});
         
         BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis = axes('Position', [0.1 0.38 0.8 0.54],'Color', 0.3*[1 1 1]);
 
