@@ -80,8 +80,8 @@ BpodSystem.Data.PlotOutcomes = [];
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 BpodSystem.Data.Outcomes = [];
 
-BpodSystem.Data.OrigTrialTypes = S.TrialTypes;
-BpodSystem.Data.OrigRewardTypes = S.RewardTypes;
+BpodSystem.Data.OrigTrialTypes = S.TrialTypes; % take out if working?
+BpodSystem.Data.OrigRewardTypes = S.RewardTypes; % take out if working?
 BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
 SaveBpodSessionData;
 
@@ -355,7 +355,10 @@ sma = SetCondition(sma, 6, 'Port3', 0); % Condition 6: Port 3 low (is out) (righ
 % TIMERS
 sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
 
-sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY
+% sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY + GO CUE
+sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05,...
+    'OnsetDelay', 0, 'Channel', 'Serial5', 'OnMessage', 0, 'OffMessage', 0,...
+    'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0,'OnsetTrigger','010000'); %also turn on timer 5
 
 % TIMER 2 FOR MAX REWARD
 if maxDrops > 1
@@ -368,6 +371,10 @@ else
         'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0); % timer to stay in reward state    
 end
 sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
+
+OdorHeadstart = 0.500;
+sma = SetGlobalTimer(sma,'TimerID',5,'Duration',S.GUI.OdorDelay+0.05-OdorHeadstart,'OnsetDelay',0,...
+   'Channel','Serial5','OnMessage', 0, 'OffMessage', 0);
 
 % reward states all wait for timers to end
 % set multiple timers for each outcome--one for drops, one for blanks
