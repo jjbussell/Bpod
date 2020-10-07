@@ -103,6 +103,7 @@ LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 
+modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
