@@ -908,7 +908,7 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     if infoSide == 0
         switch trialType
             case 1
-                if ~isnan(TrialData.NoChoice(1))
+                if ~isnan(TrialData.States.NoChoice(1))
                     newPlotOutcomes(x) = 2;
                     Outcome = 1; % choice no choice
                 elseif ~isnan(TrialData.States.WaitForOdorLeft(1))
