@@ -826,7 +826,8 @@ function Actions = PresentOdor(port)
             cmd2 = {'ValveModule3',4};
         case 2 % right
             cmd1 = {'ValveModule3',5};
-            cmd2 = {'ValveModule3',6};            
+            cmd2 = {'ValveModule3',6};
+    end
 end
 
 function TurnOffAllOdors()
