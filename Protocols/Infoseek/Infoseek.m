@@ -63,7 +63,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 %% Set Latch Valves
-SetLatchValves(S.GUI.InfoSide)
+SetLatchValves(S)
 
 %% Set up trial types and rewards
 
@@ -199,7 +199,7 @@ if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= l
 end
 
 if (S.GUI.InfoSide ~= lastS.GUI.InfoSide)
-   SetLatchValves(S.GUI.InfoSide) 
+   SetLatchValves(S) 
 end
 
 % DETERMINE TRIAL TYPE
@@ -848,9 +848,10 @@ function TurnOffAllOdors()
 end
 
 %% SET ODOR SIDES (LATCH VALVES)
-function SetLatchValves(infoSide)
+function SetLatchValves(S)
     global BpodSystem
     
+    infoSide = S.GUI.InfoSide;
     modules = BpodSystem.Modules.Name;
     latchValves = [10 9 8 7 6 5 4 3]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
     latchModule = [modules(strncmp('DIO',modules,3))];
