@@ -877,8 +877,9 @@ function SetLatchValves(S)
         ModuleWrite(latchModule,[pins(i) 0]);
         pause(500/1000);
     end
+    pins
     
-    print('should be doing latch valves')
+    BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
 end
 
 %% OUTCOME

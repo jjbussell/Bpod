@@ -82,7 +82,7 @@ switch action
         
         
   %% update    
-  case 'update'
+  case 'update'      
     figure(BpodSystem.ProtocolFigures.EventsPlot);axes(BpodSystem.GUIHandles.EventsPlot.EventsPlotAxis)
     current_trial = BpodSystem.Data.nTrials;
     last_n = str2double(get(BpodSystem.GUIHandles.EventsPlot.Lastn,'String'));
