@@ -427,7 +427,7 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
 sma = AddState(sma, 'Name', 'CenterOdorPreload',...
     'Timer', OdorHeadstart,...
     'StateChangeConditions', {'Tup', 'StartTrial'},...
-    'OutputActions',{}); %Preloadcenter odor
+    'OutputActions',{PreloadOdor(ThisCenterOdor)}); %Preloadcenter odor
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
@@ -443,15 +443,17 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'BNC2',1,'DIOLicks1',3,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions',[{'BNC2',1,'DIOLicks1',3,'PWM2',50},PresentOdor(0)]);
 sma = AddState(sma, 'Name', 'CenterOdorOff',...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','WaitForCenter'},...
-    'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions', [{'DIOLicks1',4,'PWM2',50},PresentOdor(0),...
+    PreloadOdor(ThisCenterOdor)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
-    'OutputActions', [{'DIOLicks1',4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions', [{'DIOLicks1',4,'PWM2',50},PresentOdor(0),...
+    PreloadOdor(ThisCenterOdor)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response'},...
@@ -479,15 +481,15 @@ sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
 sma = AddState(sma, 'Name', 'PreloadOdorLeft', ...
     'Timer', OdorHeadstart,...
     'StateChangeConditions', {'Tup','OdorLeft'},...
-    'OutputActions', {}); % preload left side odor
+    'OutputActions', {PreloadOdor(LeftSideOdor)}); % preload left side odor
 sma = AddState(sma, 'Name', 'OdorLeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
-    'OutputActions', [{'DIOLicks1',5}, RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{'DIOLicks1',5}, RunOdor(1)]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', [{'DIOLicks1',6},RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{'DIOLicks1',6},RunOdor(1),PreloadOdor(LeftSideOdor)]);
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
@@ -520,15 +522,16 @@ sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
 sma = AddState(sma, 'Name', 'PreloadOdorRight', ...
     'Timer', OdorHeadstart,...
     'StateChangeConditions', {'Tup','OdorRight'},...
-    'OutputActions', {}); % preload left side odor
+    'OutputActions', {PreloadOdor(RightSideOdor)}); % preload left side odor
 sma = AddState(sma, 'Name', 'OdorRight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
-    'OutputActions', [{'DIOLicks1',7}, RunOdor(RightSideOdor,2)]);
+    'OutputActions', [{'DIOLicks1',7}, PresentOdor(2)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', [{'DIOLicks1',8},RunOdor(RightSideOdor,2)]);
+    'OutputActions', [{'DIOLicks1',8},PresentOdor(2),...
+    PreloadOdor(RightSideOdor)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
@@ -802,58 +805,28 @@ end
 
 %% ODOR CONTROL
 
-function OdorOutputActions = RunOdor(odorID,port)
+% to preload, turn off control and turn on other odor (still going to
+% exhaust)
+
+function Actions = PreloadOdor(odorID)
+    cmd1 = {'ValveModule1',1};
+    cmd2 = {'ValveModule2',1};
+    cmd3 = {'ValveModule1',odorID+1};
+    cmd4 = {'ValveModule2',odorID+1};    
+    actions = [cmd1,cmd2,cmd3,cmd4];
+end
+
+function Actions = PresentOdor(port)
     switch port
-        case 0
-            cmd1 = {'ValveModule1',1}; % center control  
-            switch odorID
-                case 0
-                    cmd2 = {'ValveModule2',1};
-                    cmd3 = {'ValveModule3',1};
-                case 1
-                    cmd2 = {'ValveModule2',2};
-                    cmd3 = {'ValveModule3',2};
-                case 2
-                    cmd2 = {'ValveModule2',3};
-                    cmd3 = {'ValveModule3',3};                    
-                case 3
-                    cmd2 = {'ValveModule2',4};
-                    cmd3 = {'ValveModule3',4};                    
-            end
-        case 1 % LEFT
-            cmd1 = {'ValveModule1',2}; % left control
-            switch odorID
-                case 0
-                    cmd2 = {'ValveModule2',5};
-                    cmd3 = {'ValveModule3',5};
-                case 1
-                    cmd2 = {'ValveModule2',6};
-                    cmd3 = {'ValveModule3',6};
-                case 2
-                    cmd2 = {'ValveModule2',7};
-                    cmd3 = {'ValveModule3',7};                    
-                case 3
-                    cmd2 = {'ValveModule2',8};
-                    cmd3 = {'ValveModule3',8};                    
-            end            
-        case 2 % RIGHT
-            cmd1 = {'ValveModule1',3}; % right control
-            switch odorID
-                case 0
-                    cmd2 = {'ValveModule2',5};
-                    cmd3 = {'ValveModule3',5};
-                case 1
-                    cmd2 = {'ValveModule2',6};
-                    cmd3 = {'ValveModule3',6};
-                case 2
-                    cmd2 = {'ValveModule2',7};
-                    cmd3 = {'ValveModule3',7};                    
-                case 3
-                    cmd2 = {'ValveModule2',8};
-                    cmd3 = {'ValveModule3',8};
-            end
-    end
-    OdorOutputActions = [cmd1,cmd2,cmd3];
+        case 0 % center
+            cmd1 = {'ValveModule3',1};
+            cmd2 = {'ValveModule3',2};
+        case 1 % left
+            cmd1 = {'ValveModule3',3};
+            cmd2 = {'ValveModule3',4};
+        case 2 % right
+            cmd1 = {'ValveModule3',5};
+            cmd2 = {'ValveModule3',6};            
 end
 
 function TurnOffAllOdors()
