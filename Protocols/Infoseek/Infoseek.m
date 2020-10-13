@@ -877,6 +877,8 @@ function SetLatchValves(S)
         ModuleWrite(latchModule,[pins(i) 0]);
         pause(500/1000);
     end
+    
+    print('should be doing latch valves')
 end
 
 %% OUTCOME
