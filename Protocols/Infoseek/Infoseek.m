@@ -63,7 +63,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 %% Set Latch Valves
-SetLatchValves(S)
+SetLatchValves(S);
 
 %% Set up trial types and rewards
 
@@ -878,6 +878,7 @@ function SetLatchValves(S)
         pause(500/1000);
     end
     pins
+    infoSide
     
 %     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
     EventsPlot('init', getStateColors(infoSide));
