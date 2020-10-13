@@ -83,7 +83,7 @@ switch Action
         BpodSystem.GUIHandles.CurrentTrialCircle = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.CurrentTrialCross = line([0,0],[0,0], 'LineStyle','none','Marker','+','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.IncorrectLine = line([0,0],[0,0], 'LineStyle','none','Marker','x','MarkerEdge','r','MarkerFace','r', 'MarkerSize',6);
-        BpodSystem.GUIHandles.InfoCorrectLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge',[128	0 128]./255,'MarkerFace',[128	0 128]./255, 'MarkerSize',6);
+        BpodSystem.GUIHandles.InfoCorrectLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge',[128 0 128]./255,'MarkerFace',[128   0 128]./255, 'MarkerSize',6);
         BpodSystem.GUIHandles.RandCorrectLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge',[255 140 0]./255,'MarkerFace',[255 140 0]./255, 'MarkerSize',6);
         BpodSystem.GUIHandles.NotPresentLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.NoChoiceLine = line([0,0],[0,0], 'LineStyle','none','Marker','x','MarkerEdge','b','MarkerFace','b', 'MarkerSize',6);
