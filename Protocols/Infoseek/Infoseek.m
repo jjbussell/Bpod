@@ -62,6 +62,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
+%% Set Latch Valves
+SetLatchValves(S);
+
 %% Set up trial types and rewards
 
 S.TrialTypes = [];
@@ -103,6 +106,7 @@ LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 
+modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
@@ -178,6 +182,10 @@ function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, c
 
 global BpodSystem;
 
+modules = BpodSystem.Modules.Name;
+DIOmodule = [modules(strncmp('DIO',modules,3))];
+DIOmodule = DIOmodule{1};
+
 lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
@@ -188,6 +196,10 @@ end
 
 if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
     S = SetRewardTypes(S,nextTrial);
+end
+
+if (S.GUI.InfoSide ~= lastS.GUI.InfoSide)
+   SetLatchValves(S) 
 end
 
 % DETERMINE TRIAL TYPE
@@ -864,6 +876,42 @@ function TurnOffAllOdors()
     end 
 end
 
+%% SET ODOR SIDES (LATCH VALVES)
+function SetLatchValves(S)
+    global BpodSystem
+    
+    infoSide = S.GUI.InfoSide;
+    modules = BpodSystem.Modules.Name;
+    latchValves = [10 9 8 7 6 5 4 3]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
+    latchModule = [modules(strncmp('DIO',modules,3))];
+    latchModule = latchModule{1};
+
+    if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
+        odorApin = latchValves((S.GUI.OdorA+1)*2-1);
+        odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
+        odorCpin = latchValves((S.GUI.OdorC+1)*2);
+        odorDpin = latchValves((S.GUI.OdorD+1)*2); 
+    else
+        odorApin = latchValves((S.GUI.OdorA+1)*2);
+        odorBpin = latchValves((S.GUI.OdorB+1)*2);
+        odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
+        odorDpin = latchValves((S.GUI.OdorD+1)*2-1);     
+    end
+
+    pins = [odorApin odorBpin odorCpin odorDpin];
+
+    for i = 1:4
+        ModuleWrite(latchModule,[pins(i) 1]);
+        pause(200/1000);
+        ModuleWrite(latchModule,[pins(i) 0]);
+        pause(500/1000);
+    end
+    pins
+    infoSide
+    
+%     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
+    EventsPlot('init', getStateColors(infoSide));
+end
 
 %% OUTCOME
 
@@ -889,7 +937,7 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     if infoSide == 0
         switch trialType
             case 1
-                if ~isnan(TrialData.NoChoice(1))
+                if ~isnan(TrialData.States.NoChoice(1))
                     newPlotOutcomes(x) = 2;
                     Outcome = 1; % choice no choice
                 elseif ~isnan(TrialData.States.WaitForOdorLeft(1))
