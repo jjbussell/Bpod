@@ -879,7 +879,8 @@ function SetLatchValves(S)
     end
     pins
     
-    BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
+%     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
+    EventsPlot('init', getStateColors(infoSide));
 end
 
 %% OUTCOME
