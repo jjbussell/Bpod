@@ -46,8 +46,12 @@ ylabel('Trial Outcomes (% of trials)');
 ax.YLim = [0 1];
 ax.YTick = [0:0.25:1];
 ax.XLim = [0 1.5];
-colormap(fig,CCfinal);
-bar(outcomesToPlot,'stacked');
+figstacked = gcf;
+colormap(figstacked,CCfinal);
+b = bar(outcomesToPlot,'stacked');
+for i = 1:numel(outcomeCounts)
+    b(i).FaceColor = CCfinal(i,:);
+end
 set(gca, 'ydir', 'reverse');
 lgd = legend(ax,a.finalOutcomeLabels,'Location','eastoutside');
 lgd.Box = 'off';
