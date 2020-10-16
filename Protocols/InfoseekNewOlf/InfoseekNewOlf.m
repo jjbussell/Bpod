@@ -375,7 +375,7 @@ end
 sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
 
 % TIMERS TO PRELOAD ODORS
-OdorHeadstart =  ;
+OdorHeadstart = 0.500;
 sma = SetGlobalTimer(sma,'TimerID',5,'Duration',S.GUI.OdorDelay+0.05-OdorHeadstart,'OnsetDelay',0,...
    'Channel','Serial5','OnMessage', 0, 'OffMessage', 0);
 sma = SetCondition(sma, 8, 'GlobalTimer5', 0);
