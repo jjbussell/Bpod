@@ -70,9 +70,20 @@ for f = 1:numFiles
     b.day(f,1) = cellstr(filename(breaks(2)+1:breaks(3)-1));
     b.startTime(f,1) = cellstr(filename(breaks(3)+1:strfind(filename,'.')-1));
     
-    load(fname);
-    
+    % Pull raw data from matfile
+    load(fname);    
     b.data(f,1) = SessionData;
+    
+    % Break down session data into per-file variables
+    sessionVariables = {'nTrials','SettingsFile','TrialSettings','Notes',...
+        'TrialCounts','EventNames','TrialTypes','Outcomes','TrialStartTimestamp','TrialEndTimestamp','RawEvents'};
+    
+    for i = 1:numel(sessionVariables)
+        name = sessionVariables{i};
+       if isfield(SessionData,name)
+          b.(name){f,1} = SessionData.(name); 
+       end
+    end
     
 end
     
@@ -103,12 +114,12 @@ end
 
 % then, unpack per-trial data
 
-fields = fieldnames(a.data);
-for i = 1:length(fieldnames(a.data))
-    a.(fields{i}) = [a.data(:).(fields{i})]';    
-end
+% fields = fieldnames(a.data);
+% for i = 1:length(fieldnames(a.data))
+%     a.(fields{i}) = [a.data(:).(fields{i})]';    
+% end
 
-a.trialCt = [a.data(:).nTrials];
+% a.trialCt = [a.data(:).nTrials];
 
 save('infoSeekBpodData.mat','a');
 % uisave({'a'},'infoSeekFSMData.mat');
