@@ -82,12 +82,12 @@ for ff = 1:numFiles
     end    
     
     
-%     breaks = strfind(filename,'_');
+    breaks = strfind(filename,'_');
     
 %     b.filename(f,1) = cellstr(filename);
-%     b.mouse(f,1) = cellstr(filename(1:breaks(1)-1));
+    mouse = cellstr(filename(1:breaks(1)-1));
 %     b.protocol(f,1) = cellstr(filename(breaks(1)+1:breaks(2)-1));
-%     b.day(f,1) = cellstr(filename(breaks(2)+1:breaks(3)-1));
+    day = cellstr(filename(breaks(2)+1:breaks(3)-1));
 %     b.startTime(f,1) = cellstr(filename(breaks(3)+1:strfind(filename,'.')-1));    
     
     % Pull raw data from matfile
@@ -109,6 +109,10 @@ for ff = 1:numFiles
     
     % Session-level data    
     session(ff,1).name = filename;
+    session(ff,1).date = filename(breaks(2)+1:breaks(3)-1);
+    session(ff,1).mouse = filename(1:breaks(1)-1);
+    session(ff,1).protocol = filename(breaks(1)+1:breaks(2)-1);
+    session(ff,1).time =filename(breaks(3)+1:strfind(filename,'.')-1);
     session(ff,1).settings = SessionData.SettingsFile.GUI;
     session(ff,1).eventNames = SessionData.EventNames;
     session(ff,1).nTrials = SessionData.nTrials;
@@ -117,7 +121,9 @@ for ff = 1:numFiles
     
     % Trial-level data
     for t = 1:SessionData.nTrials
-       b.file(t,1) = f;  
+       b.file(t,1) = f; 
+       b.mouse(t,1) = mouse;
+       b.day(t,1) = day;
     end
     b.trialSettings = [SessionData.TrialSettings(:)];
 %     b.trialSettings = [settings{:}]';
@@ -201,6 +207,8 @@ for ff = 1:numFiles
         
     else
        a.file = [a.file; b.file];
+       a.mouse = [a.mouse; b.mouse];
+       a.day = [a.day; b.day];
        a.trialSettings = [a.trialSettings; b.trialSettings];
        a.trialType = [a.trialType; b.trialType];
        a.startTime = [a.startTime; b.startTime];
