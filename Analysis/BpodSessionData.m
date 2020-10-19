@@ -56,18 +56,31 @@ pathname=uigetdir;
 files=dir([pathname,'/*.mat']);
 numFiles = size(files,1);
 
-f = 3;
+ff = 3;
 
-for f = 1:numFiles
+for ff = 1:numFiles
 
-    clearvars -except a names pathname files numFiles f loadData;
+    clearvars -except a names pathname files session numFiles ff loadData;
 
-    filename = files(f).name;
+    filename = files(ff).name;
 
     filepath = fullfile(pathname,filename);
     
-    
     % need to check for duplicates!!!
+    
+    if loadData == 1
+        if sum(strcmp(filename,names)) > 0
+            disp(fprintf(['Skipping duplicate file ' filename]));
+            files(ff) = [];
+            ff = ff+1;
+            filename = files(ff).name;
+            numFiles = numFiles - 1;
+        end
+        f = a.numFiles + ff;
+    else
+        f = ff;
+    end    
+    
     
 %     breaks = strfind(filename,'_');
     
@@ -95,10 +108,10 @@ for f = 1:numFiles
 %     end
     
     % Session-level data    
-    session(f).name = filename;
-    session(f).settings = SessionData.SettingsFile.GUI;
-    session(f).eventNames = SessionData.EventNames;
-    session(f).nTrials = SessionData.nTrials;
+    session(ff,1).name = filename;
+    session(ff,1).settings = SessionData.SettingsFile.GUI;
+    session(ff,1).eventNames = SessionData.EventNames;
+    session(ff,1).nTrials = SessionData.nTrials;
     
 
     
@@ -113,8 +126,74 @@ for f = 1:numFiles
     b.endTime = SessionData.TrialEndTimestamp';
     b.outcome = SessionData.Outcomes';
     trialData = [SessionData.RawEvents(:).Trial];
-    b.trialData = [trialData{:}]'; 
-    b.States = [b.trialData(:)];
+    b.trialData = [trialData{:}]';
+    
+    
+    % STATES
+    stateList = {'InterTrialInterval',...
+            'CenterOdorPreload',...
+            'StartTrial',...
+            'WaitForCenter',...
+            'CenterDelay',...
+            'CenterOdor',...
+            'CenterOdorOff',...
+            'CenterPostOdorDelay',...
+            'GoCue',...
+            'Response',...
+            'GracePeriod',...
+            'WaitForOdorLeft',...
+            'PreloadOdorLeft',...            
+            'OdorLeft',...
+            'RewardDelayLeft',...
+            'LeftPortCheck',...
+            'LeftBigReward',...
+            'LeftSmallReward',...
+            'IncorrectLeft',...
+            'LeftNotPresent',...
+            'WaitForOdorRight',...
+            'PreloadOdorRight',...
+            'OdorRight',...
+            'RewardDelayRight',...
+            'RightPortCheck',...
+            'RightBigReward',...
+            'RightSmallReward',...
+            'IncorrectRight',...    
+            'RightNotPresent',...
+            'OutcomeDelivery',...
+            'NoChoice',...
+            'Incorrect',...
+            'TimeoutOdor',...
+            'TimeoutRewardDelay',...
+            'TimeoutOutcome',...
+            'EndTrial'};
+    
+    
+    for t = 1:SessionData.nTrials
+        for s = 1:numel(stateList)
+            if isfield(b.trialData(t).States,(stateList{s}))
+                b.(stateList{s}){t,1} = b.trialData(t).States.(stateList{s});
+%                 b.(stateList{s}){t,2} = t;
+%                 b.(stateList{s}){t,3} = f;
+            else
+                b.(stateList{s}){t,1} = [];
+%                 b.(stateList{s}){t,2} = t;
+%                 b.(stateList{s}){t,3} = f;
+            end
+        end
+        eventList = session(ff).eventNames;
+        for e = 1:numel(eventList)
+            if isfield(b.trialData(t).Events,(eventList{e}))
+                b.(eventList{e}){t,1} = b.trialData(t).Events.(eventList{e});
+%                 b.(eventList{e}){t,2} = t;
+%                 b.(eventList{e}){t,3} = f;
+            else
+               b.(eventList{e}){t,1} = [];
+%                b.(eventList{e}){t,2} = t;
+%                b.(eventList{e}){t,3} = f; 
+            end
+        end
+    end
+    
     
     % Add this file's data to struct 'a'
     if exist('a','var') == 0
@@ -128,10 +207,31 @@ for f = 1:numFiles
        a.endTime = [a.endTime; b.endTime];
        a.outcome = [a.outcome; b.outcome];
        a.trialData = [a.trialData; b.trialData];
-    end    
+       for s = 1:numel(stateList)
+           if isfield(b,(stateList{s}))
+               if isfield(a,(stateList{s}))
+                    a.(stateList{s}) = [a.(stateList{s}); b.(stateList{s})];
+               else
+                   a.(stateList{s}) = b.(stateList{s});
+               end
+           end
+       end
+       allEvents = unique([[session(:).eventNames] eventList]);
+       for e = 1:numel(allEvents)
+           event = allEvents{e};
+           if isfield(b,(event))
+               if isfield(a,(event))
+                    a.(event) = [a.(event); b.(event)];
+               else
+                   a.(event) = b.(event);
+               end
+           end
+       end       
+    end 
     
 end % end for each file
 
+% THIS IS STILL BROKEN
 if isfield(a,'files') == 0
    a.files = session;
 else       
