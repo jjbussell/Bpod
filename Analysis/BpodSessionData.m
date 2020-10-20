@@ -38,13 +38,13 @@ close all;
 
 %% LOAD DATA
 
-% loadData = 1;
-loadData = 0;
+loadData = 1;
+% loadData = 0;
 
 if loadData == 1
     fname = 'infoSeekBpodData.mat';
     load(fname); % opens structure "a" with previous data, if available
-    for fn = 1:a.numFiles
+    for fn = 1:numel(a.files)
         names{fn} = a.files(fn).name; 
     end
 end
@@ -76,7 +76,7 @@ for ff = 1:numFiles
             filename = files(ff).name;
             numFiles = numFiles - 1;
         end
-        f = a.numFiles + ff;
+        f = numel(a.files) + ff;
     else
         f = ff;
     end    
@@ -175,7 +175,9 @@ for ff = 1:numFiles
             'EndTrial'};
         b.stateList = stateList;
     
-    
+
+    eventList = session(ff).eventNames;
+    b.eventList = eventList;
     for t = 1:SessionData.nTrials
         for s = 1:numel(stateList)
             if isfield(b.trialData(t).States,(stateList{s}))
@@ -188,8 +190,7 @@ for ff = 1:numFiles
 %                 b.(stateList{s}){t,3} = f;
             end
         end
-        eventList = session(ff).eventNames;
-        b.eventList = eventList;
+
         for e = 1:numel(eventList)
             if isfield(b.trialData(t).Events,(eventList{e}))
                 b.(eventList{e}){t,1} = b.trialData(t).Events.(eventList{e});
@@ -218,6 +219,9 @@ for ff = 1:numFiles
        a.endTime = [a.endTime; b.endTime];
        a.outcome = [a.outcome; b.outcome];
        a.trialData = [a.trialData; b.trialData];
+%        if isrow(b.eventList)
+%            b.eventList = b.eventList'
+%        end
        a.eventList = unique([a.eventList; b.eventList]);
        for s = 1:numel(stateList)
            if isfield(b,(stateList{s}))
