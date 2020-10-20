@@ -123,8 +123,8 @@ for ff = 1:numFiles
     % Trial-level data
     for t = 1:SessionData.nTrials
        b.file(t,1) = f; 
-       b.mouse{t,1} = mouse;
-       b.day{t,1} = day;
+       b.mouse(t,1) = mouse;
+       b.day(t,1) = day;
     end
     b.trialSettings = [SessionData.TrialSettings(:)];
 %     b.trialSettings = [settings{:}]';
@@ -189,6 +189,7 @@ for ff = 1:numFiles
             end
         end
         eventList = session(ff).eventNames;
+        b.eventList = eventList;
         for e = 1:numel(eventList)
             if isfield(b.trialData(t).Events,(eventList{e}))
                 b.(eventList{e}){t,1} = b.trialData(t).Events.(eventList{e});
@@ -217,7 +218,7 @@ for ff = 1:numFiles
        a.endTime = [a.endTime; b.endTime];
        a.outcome = [a.outcome; b.outcome];
        a.trialData = [a.trialData; b.trialData];
-       a.stateList = [a.stateList; b.stateList];
+       a.eventList = unique([a.eventList; b.eventList]);
        for s = 1:numel(stateList)
            if isfield(b,(stateList{s}))
                if isfield(a,(stateList{s}))
