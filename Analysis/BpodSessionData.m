@@ -88,6 +88,7 @@ for ff = 1:numFiles
     mouse = cellstr(filename(1:breaks(1)-1));
 %     b.protocol(f,1) = cellstr(filename(breaks(1)+1:breaks(2)-1));
     day = cellstr(filename(breaks(2)+1:breaks(3)-1));
+%     day = filename(breaks(2)+1:breaks(3)-1);
 %     b.startTime(f,1) = cellstr(filename(breaks(3)+1:strfind(filename,'.')-1));    
     
     % Pull raw data from matfile
@@ -122,8 +123,8 @@ for ff = 1:numFiles
     % Trial-level data
     for t = 1:SessionData.nTrials
        b.file(t,1) = f; 
-       b.mouse(t,1) = mouse;
-       b.day(t,1) = day;
+       b.mouse{t,1} = mouse;
+       b.day{t,1} = day;
     end
     b.trialSettings = [SessionData.TrialSettings(:)];
 %     b.trialSettings = [settings{:}]';
@@ -172,6 +173,7 @@ for ff = 1:numFiles
             'TimeoutRewardDelay',...
             'TimeoutOutcome',...
             'EndTrial'};
+        b.stateList = stateList;
     
     
     for t = 1:SessionData.nTrials
@@ -215,6 +217,7 @@ for ff = 1:numFiles
        a.endTime = [a.endTime; b.endTime];
        a.outcome = [a.outcome; b.outcome];
        a.trialData = [a.trialData; b.trialData];
+       a.stateList = [a.stateList; b.stateList];
        for s = 1:numel(stateList)
            if isfield(b,(stateList{s}))
                if isfield(a,(stateList{s}))

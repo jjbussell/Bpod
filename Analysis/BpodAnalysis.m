@@ -12,11 +12,37 @@
 % prob of in port
 % LICKS!!!!
 
+%% EXPAND MULTIPLE STATE OCCURRANCES
+
+% state = a.WaitForCenter;
+% state = a.WaitForOdorLeft;
+
+for s = 1:numel(a.stateList)
+
+    statename = a.stateList{s};
+    state = a.(stateList{s});
+% multicheck = cell2mat(cellfun(@(x) size(x,1),state,'UniformOutput',false));
+% if(sum(multicheck>1)>0)
+%     multistates = 1
+% end
+
+    maxLength = max(cellfun(@numel,state));
+
+    result=cellfun(@(x) [reshape(x,1,[]),NaN(1,maxLength-numel(x))],state,'UniformOutput',false);
+    result2=vertcat(result{:});
+
+%     statename='WaitForOdorLeft';
+    a.statesExpanded.(statename) = result2;
+    result = [];
+    result2 = [];
+end
+
 %% INFOSIDE
 
 a.infoSide = [a.trialSettings.InfoSide]';
 
 %% DAY AND MOUSE
+a.day2 = reshape([a.day{:}],[8],[])';
 datevec=[a.files(:).date];
 a.fileDay=cellstr(reshape(datevec,[8],[23])');
 % days=unique(a.filedays);
@@ -46,7 +72,22 @@ a.trialCt = numel(a.trialType);
 
 a.choice = NaN(a.trialCt,1);
 
-a.left 
+a.leftChoice = a.statesExpanded.WaitForOdorLeft(:,1);
+a.rightChoice = a.statesExpanded.WaitForOdorRight(:,1);
+a.incorrectChoice = a.statesExpanded.Incorrect(:,1);
+a.noChoice = a.statesExpanded.NoChoice(:,1);
+
+a.choice(~isnan(a.leftChoice)) = a.leftChoice(~isnan(a.leftChoice));
+a.choice(~isnan(a.rightChoice)) = a.rightChoice(~isnan(a.rightChoice));
+a.choice(~isnan(a.incorrectChoice)) = a.incorrectChoice(~isnan(a.incorrectChoice));
+a.choice(~isnan(a.noChoice)) = a.noChoice(~isnan(a.noChoice));
+
+a.rxn = a.choice-a.statesExpanded.GoCue(:,1);
+
+a.trialLength = a.endTime - a.startTime;
+a.trialLengthGoCue = a.endTime - a.statesExpanded.GoCue(:,1);
+
+%% REWARD
 
 dropSize = 4; % microliters per drop
 
