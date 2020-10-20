@@ -73,13 +73,16 @@ end
 
 a.infoSide = [a.trialSettings.InfoSide]';
 
+%% TRIAL COUNT
+a.trialCt = numel(a.trialType);
+
 %% DAY AND MOUSE
-% a.day2 = reshape([a.day{:}],[8],[])';
+a.day2 = reshape([a.day{:}],[8],[])';
 datevec=[a.files(:).date];
-a.fileDay=cellstr(reshape(datevec,[8],[23])');
-% days=unique(a.filedays);
+a.fileDayCell=cellstr(reshape(datevec,[8],[])');
+days=unique(a.fileDayCell);
 mousevec=[a.files(:).mouse];
-a.fileMouse=cellstr(reshape(mousevec,[],[23])');
+a.fileMouseCell=cellstr(reshape(mousevec,[],[numel(a.files)])');
 
 % find(ismember(days,a.filedays))
 
@@ -88,8 +91,8 @@ a.mouseCt = numel(a.mouseList);
 
 for m = 1:a.mouseCt
    a.mice(:,m) = strcmp(a.mouse,a.mouseList(m)) == 1;
-   mouseFileIdx = strcmp(a.fileMouse,a.mouseList{m});
-   a.mouseDays{m} = unique(a.fileDay(mouseFileIdx)); % sorts
+   mouseFileIdx = strcmp(a.fileMouseCell,a.mouseList{m});
+   a.mouseDays{m} = unique(a.fileDayCell(mouseFileIdx)); % sorts
    a.mouseDayCt(m) = size(a.mouseDays{m},1);
    mouseFirstDay = find(strcmp(a.mouse,a.mouseList{m})& strcmp(a.day,a.mouseDays{m}(1)),1);
    a.initinfoside(m) = a.infoSide(mouseFirstDay);
@@ -105,8 +108,6 @@ for t = 1:a.trialCt
 end
 
 %% INITIAL INFO SIDE
-
-a.trialCt = numel(a.trialType);
 
 % infoSide = 0, info left
 
@@ -320,3 +321,10 @@ for m = 1:a.mouseCt
     
     end
 end
+
+%%
+save('infoSeekBpodDataAnalyzed.mat','a');
+% uisave({'a'},'infoSeekFSMData.mat');
+
+save(['infoSeekFSMBpodDataAnalyzed' datestr(now,'yyyymmdd')],'a');
+
