@@ -87,7 +87,8 @@ switch Action
         BpodSystem.GUIHandles.RandCorrectLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge',[255 140 0]./255,'MarkerFace',[255 140 0]./255, 'MarkerSize',6);
         BpodSystem.GUIHandles.NotPresentLine = line([0,0],[0,0], 'LineStyle','none','Marker','o','MarkerEdge','k','MarkerFace',[1 1 1], 'MarkerSize',6);
         BpodSystem.GUIHandles.NoChoiceLine = line([0,0],[0,0], 'LineStyle','none','Marker','x','MarkerEdge','b','MarkerFace','b', 'MarkerSize',6);
-        BpodSystem.GUIHandles.TTOP_Ylabel = strsplit(num2str(MaxTrialType:-1:-1));        
+%         BpodSystem.GUIHandles.TTOP_Ylabel = strsplit(num2str(MaxTrialType:-1:-1));
+        BpodSystem.GUIHandles.TTOP_Ylabel = split(num2str(MaxTrialType:-1:-1));
         if numel(unique(TrialTypeList)) == 3
             set(AxesHandle,'TickDir', 'out','YLim', [-MaxTrialType-.5, -.5], 'YTick', -MaxTrialType:1:-1, 'YTickLabel', yticklabelsinfo, 'FontSize', 16);
         else
