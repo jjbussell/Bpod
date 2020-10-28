@@ -17,8 +17,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorTime = 4;
     S.GUI.OdorInterval = 10;
     S.GUI.OdorHeadstart = 4;
-    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 0; % 0 = odor 1
+    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorID = 2; % 0 = odor 1
 end
 
 
@@ -50,7 +50,7 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'PreloadOdor', ...
         'Timer', S.GUI.OdorHeadstart,...
         'StateChangeConditions', {'Tup', 'OdorOn'},...
-        'OutputActions', PreloadOdor(odor));    
+        'OutputActions', PreloadOdor(odor,port));    
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
@@ -58,7 +58,7 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
-        'OutputActions', [PresentOdor(port),PreloadOdor(odor)]);
+        'OutputActions', [PresentOdor(port),PreloadOdor(odor,port)]);
 
 %     sma = AddState(sma, 'Name', 'OdorOn', ...
 %         'Timer', S.GUI.OdorTime,...
@@ -107,7 +107,7 @@ end
 %     actions = [cmd1,cmd2];
 % end
 
-function Actions = PreloadOdor(odorID)
+function Actions = PreloadOdor(odorID,port)
     switch port
         case 0            
             cmd1 = {'ValveModule1',odorID};
