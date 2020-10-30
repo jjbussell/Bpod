@@ -116,6 +116,17 @@ DIOmodule = DIOmodule{1};
 % Set serial messages 1,2,3,4,5,6,7,8
 LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
+
+LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
+    [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
+    [13 1], [13 0]});
+
+
+% *COULD* setup house light leds!
+
+%{
+need 7 pins, 14 msgs + 2 buzzer messages
+%}
 %{
     1 buzzer 1
     2 buzzer 2
