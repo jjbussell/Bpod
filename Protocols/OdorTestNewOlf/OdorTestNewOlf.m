@@ -14,10 +14,10 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.OdorTime = 4;
+    S.GUI.OdorTime = 0.250;
     S.GUI.OdorInterval = 10;
-    S.GUI.OdorHeadstart = 4;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorHeadstart = 0.500;
+    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 2; % 0 = odor 1
 end
 
@@ -29,6 +29,10 @@ LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); 
 LoadSerialMessages('ValveModule3',{[1,2],[3,4],[5,6]}); % final valves switch control and odor, left, center, right
 LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
+buzzer1 = [254 1];
+buzzer2 = [253 1];
+LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
+    [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
 %% Initialize plots
 
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
@@ -54,7 +58,7 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions', PresentOdor(port));
+        'OutputActions', [PresentOdor(port), {'DIOLicks1',1}]);
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
