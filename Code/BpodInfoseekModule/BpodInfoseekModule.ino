@@ -23,7 +23,7 @@ Servo myservo;
 byte out = 15;
 int buzzer = 20;
 int irqpin = 2;
-int motorPin = 17;
+int motorPin = 5;
 
 // DOOR MOTOR
 bool door_open = true;
@@ -44,7 +44,7 @@ int ntouchChannels = (sizeof(touchChannels)/sizeof(uint8_t));
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIOLicks"; // Name of module for manual override UI and state machine assembler
+char moduleName[] = "Infoseek"; // Name of module for manual override UI and state machine assembler
 //char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo"};
 char* eventNames[] = {"Lick_Left", "Lick_Right", "Lick_Center"};
 #define FirmwareVersion 1
@@ -115,6 +115,10 @@ void loop()
     }else if (opCode == 253){
       tone(buzzer,4500,50);
       state = Serial1COM.readByte();
+    }else if (opCode == 252){
+      closeDoor();
+    }else if (opCode == 251){
+      openDoor();
     }else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
@@ -162,4 +166,22 @@ void returnModuleInfo() {
 
 boolean checkInterrupt(void){
   return digitalRead(irqpin);
+}
+
+void openDoor(){
+  myservo.attach(motorPin);
+  for (int i = close_angle; i >= open_angle; i--) { 
+    myservo.write(i);  
+    delay(servo_delay);                 
+  }
+  myservo.detach();
+}
+
+void closeDoor(){
+  myservo.attach(motorPin);
+  for (int i = open_angle; i <= close_angle; i++) { 
+    myservo.write(i);  
+    delay(servo_delay);                   
+  }
+  myservo.detach();
 }
