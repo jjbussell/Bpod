@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekNewOlf
+function Association
 
 global BpodSystem
 
@@ -29,115 +29,40 @@ TrialManager = TrialManagerObject;
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.SessionTrials = 1000;%
-    S.GUI.TrialTypes = 2;%
-    S.GUI.InfoSide = 0;%
-    S.GUI.InfoOdor = 2;
-    S.GUI.RandOdor = 0;
-    S.GUI.ChoiceOdor = 3;
-    S.GUI.OdorA = 3;
-    S.GUI.OdorB = 2;
-    S.GUI.OdorC = 0;
-    S.GUI.OdorD = 1;
-    S.GUI.CenterDelay = 0;
-    S.GUI.CenterOdorTime = 0.2;
-    S.GUI.StartDelay = 0;
-    S.GUI.OdorDelay = 0;
-    S.GUI.OdorTime = 0;
-    S.GUI.RewardDelay = 0.5;
-    S.GUI.InfoBigDrops = 1;
-    S.GUI.InfoSmallDrops = 1;
-    S.GUI.RandBigDrops = 1;
-    S.GUI.RandSmallDrops = 1;
-    S.GUI.InfoRewardProb = 1;%
-    S.GUI.RandRewardProb = 1;%
-    S.GUI.GracePeriod = 100000000; 
+    S.GUI.PreOdorDelay = 0.2;
+    S.GUI.CS+Odor = 2;
+    S.GUI.CS-Odor = 1;
+    S.GUI.OdorTime = 0.25;
+    S.GUI.RewardDelay = 1;
+    S.GUI.RewardSize = 4;
     S.GUI.Interval = 1; 
-    S.GUI.OptoFlag = 0;
-    S.GUI.OptoType = 0;
-    S.GUI.ImageFlag = 0;
-    S.GUI.ImageType = 0;
     
     BpodSystem.ProtocolSettings = S;
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
-%% Set up trial types and rewards
-
-S.TrialTypes = [];
-S.RewardTypes = [];
-S.RandOdorTypes = [];
-S = SetTrialTypes(S,1); % Sets S.TrialTypes from trial 1 to maxTrials
-S = SetRewardTypes(S,1); % Sets S.RewardTypes, S.RandOdorTypes from trial 1 to maxTrials
-
-%% SET INITIAL TYPE COUNTS
-
-BpodSystem.Data.TrialCounts = [0,0,0,0];
-BpodSystem.Data.PlotOutcomes = [];
-
-%% SAVE EVENT NAMES AND NUMBER
-
-BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
-BpodSystem.Data.Outcomes = [];
-
-BpodSystem.Data.OrigTrialTypes = S.TrialTypes; % take out if working?
-BpodSystem.Data.OrigRewardTypes = S.RewardTypes; % take out if working?
-BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
-SaveBpodSessionData;
+%% Define trial types
+MaxTrials = 1000;
+TrialTypes = ceil(rand(1,MaxTrials)*2);
+BpodSystem.Data.TrialTypes = [];
 
 %% Initialize plots
 
-BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
-BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
-TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([S.GUI.SessionTrials 40])); % trial choice types  
-EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
+EventsPlot('init', getStateColors); % events within trial
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES
 
-% NOTE: LEDPin not connected to LEDs? For syncing center odor?
-% pins
-LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 doorOpen = [252 1];
 doorClose = [251 1];
 
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
-
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC 1
-% Bpod out BNC 2 at center odor start
-
-% Set serial messages 1,2,3,4,5,6,7,8
-% LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
-%     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
-
-LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2, doorOpen, doorClose, ...
+LoadSerialMessages('Infoseek1', {buzzer1, buzzer2, doorOpen, doorClose, ...
     [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
     [13 1], [13 0]});
-
-% *COULD* setup house light leds!
-
-%{
-need 7 pins, 14 msgs + 2 buzzer messages
-%}
-%{
-    1 buzzer 1
-    2 buzzer 2
-    3 LEDs on
-    4 LEDs off
-    5 scope signal 1 on side odor
-    6 scope signal 1 off side odor
-    7 scope signal 2 on reward
-    8 scope signal 2 off reward
-    %}
 
 %%    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -150,21 +75,19 @@ LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
 %% INITIALIZE STATE MACHINE
 
-[sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
+[sma,S] = PrepareStateMachine(S); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
-RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 %% MAIN TRIAL LOOP
 
-for currentTrial = 1:S.GUI.SessionTrials
-    currentS = S;
+for currentTrial = 1:MaxTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();      
         return; end % If user hit console "stop" button, end session
-    [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    sma = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
@@ -174,14 +97,10 @@ for currentTrial = 1:S.GUI.SessionTrials
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
-        BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
-        BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        BpodSystem.Data.Outcomes(currentTrial) = outcome;
+        BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
+        BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial);
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         TotalRewardDisplay('add',rewardAmount);
-        RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
-        TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
