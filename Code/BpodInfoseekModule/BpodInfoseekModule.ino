@@ -29,7 +29,7 @@ int motorPin = 5;
 bool door_open = true;
 int open_angle = 9;
 int close_angle = 63;
-int servo_delay = 10;
+int speed_delay = 10;
 
 // touch sensor
 Adafruit_MPR121 cap = Adafruit_MPR121();
@@ -116,9 +116,11 @@ void loop()
       tone(buzzer,4500,50);
       state = Serial1COM.readByte();
     }else if (opCode == 252){
-      closeDoor();
+      speed_delay = Serial1COM.readByte();
+      closeDoor(speed_delay);
     }else if (opCode == 251){
-      openDoor();
+      speed_delay = Serial1COM.readByte();
+      openDoor(speed_delay);
     }else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
@@ -168,20 +170,20 @@ boolean checkInterrupt(void){
   return digitalRead(irqpin);
 }
 
-void openDoor(){
+void openDoor(int speed_delay){
   myservo.attach(motorPin);
   for (int i = close_angle; i >= open_angle; i--) { 
     myservo.write(i);  
-    delay(servo_delay);                 
+    delay(speed_delay);                 
   }
   myservo.detach();
 }
 
-void closeDoor(){
+void closeDoor(int speed_delay){
   myservo.attach(motorPin);
   for (int i = open_angle; i <= close_angle; i++) { 
     myservo.write(i);  
-    delay(servo_delay);                   
+    delay(speed_delay);                   
   }
   myservo.detach();
 }
