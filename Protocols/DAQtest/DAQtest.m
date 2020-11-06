@@ -5,19 +5,28 @@ T
 
 ----------------------------------------------------------------------------
 %}
-function DoorTest
+function OdorTestNewOlf
 
 global BpodSystem
 
 %% Define parameters
 
+dq = daq("ni");
+addinput(dq, "Dev1", "ai0", "Voltage");
+addinput(dq, "Dev1", "ai1", "Voltage");
+dq.Rate = 100;
+dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+dq.ScansAvailableFcnCount = 500;
+
+
+
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.Delay1 = 2;
-
-    S.GUI.OdorHeadstart = 2;
-    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorTime = 0.250;
+    S.GUI.OdorInterval = 10;
+    S.GUI.OdorHeadstart = 0.500;
+    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 2; % 0 = odor 1
 end
 
@@ -31,7 +40,7 @@ LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
+LoadSerialMessages('Infoseek1', {buzzer1, buzzer2,...
     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
 %% Initialize plots
 
@@ -42,7 +51,11 @@ BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 MaxTrials = S.GUI.SessionTrials;
 
 %% Main loop (runs once per trial)
+start(dq,"continuous");
+
 for currentTrial = 1:MaxTrials
+    start(dq,"continuous");
+
     S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 
     MaxTrials = S.GUI.SessionTrials;
@@ -54,11 +67,11 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'PreloadOdor', ...
         'Timer', S.GUI.OdorHeadstart,...
         'StateChangeConditions', {'Tup', 'OdorOn'},...
-        'OutputActions', PreloadOdor(odor,port));    
+        'OutputActions', PreloadOdor(odor,port));
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions', [PresentOdor(port), {'DIOLicks1',1}]);
+        'OutputActions', [PresentOdor(port), {'Infoseek1',1}]);
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
@@ -94,6 +107,7 @@ for currentTrial = 1:MaxTrials
         return
     end
 end
+stop(dq);
 end
 
 
@@ -147,5 +161,10 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule2',['C' v]);
         ModuleWrite('ValveModule3',['C' v]);
     end 
+end
+
+function recordDataAvailable(src,~)
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, "OutputFormat","Matrix");
+    dlmwrite('testmat.csv',data,'-append');
 end
 
