@@ -34,7 +34,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.CS-Odor = 1;
     S.GUI.OdorTime = 0.25;
     S.GUI.RewardDelay = 1;
-    S.GUI.RewardSize = 4;
+    S.GUI.RewardDrops = 1;
     S.GUI.Interval = 1; 
     
     BpodSystem.ProtocolSettings = S;
@@ -75,7 +75,7 @@ LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
 %% INITIALIZE STATE MACHINE
 
-[sma,S] = PrepareStateMachine(S); % Prepare state machine for trial 1 with empty "current events" variable
+sma = PrepareStateMachine(S, TrialTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -87,7 +87,7 @@ for currentTrial = 1:MaxTrials
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();      
         return; end % If user hit console "stop" button, end session
-    sma = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    sma = PrepareStateMachine(S, TrialTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
@@ -111,223 +111,38 @@ end % end of protocol main function
 
 %% PREPARE STATE MACHINE
 
-function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, currentTrialEvents)
+function sma = PrepareStateMachine(S, TrialTypes, nextTrial, currentTrialEvents)
 
 global BpodSystem;
 
-lastS = S;
-S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
-
-
-if S.GUI.TrialTypes ~= lastS.GUI.TrialTypes
-   S = SetTrialTypes(S,nextTrial);
-end
-
-if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= lastS.GUI.RandRewardProb)
-    S = SetRewardTypes(S,nextTrial);
-end
-
-% DETERMINE TRIAL TYPE
-if nextTrial>1
-    previousStates = currentTrialEvents.StatesVisited;
-    if sum(contains(previousStates,'NoChoice') | contains(previousStates,'Incorrect'))>0
-        S = UpdateTrialTypes(nextTrial,S);
-    end
-end
-
-nextTrialType = S.TrialTypes(nextTrial);
-
-infoSide = S.GUI.InfoSide;
-TrialCounts = BpodSystem.Data.TrialCounts;
+nextTrialType = TrialTypes(nextTrial);
 
 % Determine trial-specific state matrix fields
 % Set trialParams (reward and odor)
 switch nextTrialType
-    case 1 % CHOICE
-        ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight';
-        ThisCenterOdor = S.GUI.ChoiceOdor;
-        CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
-        if infoSide == 0 % INFO LEFT            
-            RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
-            if RightSideOdorFlag == 0
-                RightSideOdor = S.GUI.OdorC;
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
-            else
-                RightSideOdor = S.GUI.OdorD;
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
-            end
-            if RewardLeft == 1
-                OutcomeStateLeft = 'LeftBigReward';
-                LeftRewardDrops = S.GUI.InfoBigDrops;
-                LeftSideOdor = S.GUI.OdorA;
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
-            else
-                OutcomeStateLeft = 'LeftSmallReward';
-                LeftRewardDrops = S.GUI.InfoSmallDrops;
-                LeftSideOdor = S.GUI.OdorB;
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
-            end
-            if RewardRight == 1
-                OutcomeStateRight = 'RightBigReward';
-                RightRewardDrops = S.GUI.RandBigDrops;
-            else
-                OutcomeStateRight = 'RightSmallReward';
-                RightRewardDrops = S.GUI.RandSmallDrops;
-            end
-        else
-            RewardLeft = S.RewardTypes(TrialCounts(2)+1,2); RewardRight = S.RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
-            if LeftSideOdorFlag == 0
-                LeftSideOdor = S.GUI.OdorC;
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
-            else
-                LeftSideOdor = S.GUI.OdorD;
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
-            end            
-            if RewardLeft == 1
-                OutcomeStateLeft = 'LeftBigReward';
-                LeftRewardDrops = S.GUI.RandBigDrops;
-            else
-                OutcomeStateLeft = 'LeftSmallReward';
-                LeftRewardDrops = S.GUI.RandSmallDrops;
-            end
-            if RewardRight == 1
-                OutcomeStateRight = 'RightBigReward';
-                RightRewardDrops = S.GUI.InfoBigDrops;
-                RightSideOdor = S.GUI.OdorA;
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
-            else
-                OutcomeStateRight = 'RightSmallReward';
-                RightRewardDrops = S.GUI.InfoSmallDrops;
-                RightSideOdor = S.GUI.OdorB;
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
-            end            
-        end
-             
-    case 2 % INFO FORCED
-        ThisCenterOdor = S.GUI.InfoOdor;
-        CenterDIOmsg1 = 7; CenterDIOmsg2 = 8;
-        if infoSide == 0
-            % info on left
-            RewardLeft = S.RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
-            ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
-            RightSideOdor = 0;
-            if RewardLeft == 1
-                OutcomeStateLeft = 'LeftBigReward';
-                LeftRewardDrops = S.GUI.InfoBigDrops;
-                LeftSideOdor = S.GUI.OdorA;
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
-            else
-                OutcomeStateLeft = 'LeftSmallReward';
-                LeftRewardDrops = S.GUI.InfoSmallDrops;
-                LeftSideOdor = S.GUI.OdorB;
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
-            end
-            OutcomeStateRight = 'IncorrectRight';
-            RightRewardDrops = 0;
-        else
-            RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
-            ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
-            LeftSideOdor = 0;
-            if RewardRight == 1
-                OutcomeStateRight = 'RightBigReward';
-                RightRewardDrops = S.GUI.InfoBigDrops;
-                RightSideOdor = S.GUI.OdorA;
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
-            else
-                OutcomeStateRight = 'RightSmallReward';
-                RightRewardDrops = S.GUI.InfoSmallDrops;
-                RightSideOdor = S.GUI.OdorB;
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
-            end
-            OutcomeStateLeft = 'IncorrectLeft';
-            LeftRewardDrops = 0;
-        end
-    case 3 % RAND FORCED
-        ThisCenterOdor = S.GUI.RandOdor;
-        CenterDIOmsg1 = 9; CenterDIOmsg2 = 10;
-        if infoSide == 0 % INFO ON LEFT
-            RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
-            ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(4)+1,1);
-            if RightSideOdorFlag == 0
-                RightSideOdor = S.GUI.OdorC;
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
-            else
-                RightSideOdor = S.GUI.OdorD;
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
-            end            
-            LeftSideOdor = 0;
-            if RewardRight == 1
-                OutcomeStateRight = 'RightBigReward';
-                RightRewardDrops = S.GUI.RandBigDrops;
-            else
-                OutcomeStateRight = 'RightSmallReward';
-                RightRewardDrops = S.GUI.RandSmallDrops;
-            end
-            OutcomeStateLeft = 'IncorrectLeft';
-            LeftRewardDrops = 0;
-        else
-            RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
-            ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(1)+1,1);
-            if LeftSideOdorFlag == 0
-                LeftSideOdor = S.GUI.OdorC;
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
-            else
-                LeftSideOdor = S.GUI.OdorD;
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
-            end             
-            RightSideOdor = 0;
-            if RewardLeft == 1
-                OutcomeStateLeft = 'LeftBigReward';
-                LeftRewardDrops = S.GUI.RandBigDrops;
-            else
-                OutcomeStateLeft = 'LeftSmallReward';
-                LeftRewardDrops = S.GUI.RandSmallDrops;
-            end
-            OutcomeStateRight = 'IncorrectRight';
-            RightRewardDrops = 0;
-        end
+    case 1 % WATER
+        Odor = S.GUI.CS+Odor;
+        DIOmsg1 = 5; DIOmsg2 = 6;
+        RewardDrops = S.GUI.RewardDrops;
+        OutcomeState = 'Reward';
+    case 2 % NO WATER
+        Odor = S.GUI.CS-Odor;
+        DIOmsg1 = 7; DIOmsg2 = 8;
+        RewardDrops = 0;
+        OutcomeState = 'NoReward';
 end
 
 % Water parameters
-R = GetValveTimes(4, [1 3]);
-% R = [0.100 0.100];
-LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
-MaxValveTime = max(R);
-maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
+R = GetValveTimes(4, 2);
+ValveTime = R(1);
 RewardPauseTime = 0.05;
 
 sma = NewStateMatrix(); % Assemble state matrix
 
-sma = SetCondition(sma, 1, 'Port1', 1); % Condition 1: Port 1 high (is in) (left)
-sma = SetCondition(sma, 2, 'Port2', 1); % Condition 2: Port 2 high (is in) (center)
-sma = SetCondition(sma, 3, 'Port3', 1); % Condition 3: Port 3 high (is in) (right)
-sma = SetCondition(sma, 4, 'Port1', 0); % Condition 4: Port 1 low (is out) (left)
-sma = SetCondition(sma, 5, 'Port2', 0); % Condition 5: Port 2 low (is out) (center)
-sma = SetCondition(sma, 6, 'Port3', 0); % Condition 6: Port 3 low (is out) (right)
+sma = SetCondition(sma, 1, 'Port2', 1); % Condition 1: Port 1 high (is in) (left)
+sma = SetCondition(sma, 2, 'Port2', 0); % Condition 2: Port 2 high (is in) (center)
 
 % TIMERS
-sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
-
-% sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY + GO CUE
-sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05,...
-    'OnsetDelay', 0, 'Channel', 'none', 'OnMessage', 0, 'OffMessage', 0,...
-    'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0,'OnsetTrigger','010000'); %also turn on timer 5
-
-% TIMER 2 FOR MAX REWARD
-if maxDrops > 1
-    sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'none', 'OnMessage',0, 'OffMessage', 0,...
-        'Loop', maxDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime); % timer to stay in reward state
-else
-    sma = SetGlobalTimer(sma, 'TimerID', 2, 'Duration', MaxValveTime,...
-        'OnsetDelay', 0, 'Channel', 'none', 'OnMessage', 0, 'OffMessage', 0,...
-        'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0); % timer to stay in reward state    
-end
-sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
 
 % TIMERS TO PRELOAD ODORS
 OdorHeadstart = 0.500;
@@ -339,39 +154,21 @@ sma = SetGlobalTimer(sma,'TimerID',6,'Duration',S.GUI.Interval-OdorHeadstart,'On
    'Channel','none','OnMessage', 0, 'OffMessage', 0);
 sma = SetCondition(sma, 9, 'GlobalTimer6', 0);
 
-% reward states all wait for timers to end
-% set multiple timers for each outcome--one for drops, one for blanks
-% get rid of reward states
 
 % Timers for delivering reward drops
-if LeftRewardDrops > 1
-   sma = SetGlobalTimer(sma,'TimerID',3,'Duration',LeftValveTime,'OnsetDelay',0,...
-       'Channel', 'Valve1', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
-       LeftRewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
-   sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', LeftRewardDrops);
-elseif LeftRewardDrops == 1
-   sma = SetGlobalTimer(sma,'TimerID',3,'Duration',LeftValveTime,'OnsetDelay',0,...
-       'Channel','Valve1','OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+if RewardDrops > 1
+   sma = SetGlobalTimer(sma,'TimerID',3,'Duration',ValveTime,'OnsetDelay',0,...
+       'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
+       RewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
+   sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', RewardDrops);
+elseif RewardDrops == 1
+   sma = SetGlobalTimer(sma,'TimerID',3,'Duration',ValveTime,'OnsetDelay',0,...
+       'Channel','Valve2','OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 else
    sma = SetGlobalTimer(sma,'TimerID',3,'Duration',0,'OnsetDelay',0,...
-       'Channel','Valve1','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+       'Channel','Valve2','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
-end
-
-if RightRewardDrops > 1
-    sma = SetGlobalTimer(sma,'TimerID',4,'Duration', RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
-        RightRewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
-    sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', RightRewardDrops);
-elseif RightRewardDrops == 1
-    sma = SetGlobalTimer(sma,'TimerID',4,'Duration',RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
-    sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
-else
-    sma = SetGlobalTimer(sma,'TimerID',4,'Duration',0,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
-    sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
 
 
