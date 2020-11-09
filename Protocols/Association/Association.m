@@ -340,7 +340,10 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule1',['C' v]);
         ModuleWrite('ValveModule2',['C' v]);
         ModuleWrite('ValveModule3',['C' v]);
-    end 
+    end
+    for v = 1:3
+        ModuleWrite('ValveModule4',['C' v]);
+    end
 end
 
 
