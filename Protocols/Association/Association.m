@@ -62,8 +62,8 @@ TotalRewardDisplay('init');
 
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-openSpeed = 10;
-closeSpeed = 200;
+openSpeed = 5;
+closeSpeed =100;
 doorOpen = [251 openSpeed];
 doorClose = [252 closeSpeed];
 
@@ -346,6 +346,7 @@ function TurnOffAllOdors()
     for v = 1:3
         ModuleWrite('ValveModule4',['C' v]);
     end
+    ModuelWrite('Infoseek1',[251 10]);
 end
         
 %% TRIAL EVENT PLOTTING COLORS
