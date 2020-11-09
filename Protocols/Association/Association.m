@@ -32,14 +32,14 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RewardProb = 1;
     S.GUI.CSPlusOdor = 2;
     S.GUI.CSMinusOdor = 1;    
-    S.GUI.PreOdorDelay = 0.2;
+    S.GUI.PreOdorDelay = 0;
     S.GUI.OdorTime = 0.25;
     S.GUI.PostOdorDelay = 1; % time for door to close    
     S.GUI.RewardDelay = 1;
-    S.GUI.TimeToReturn = 2;
-    S.GUI.RewardDrops = 2;
+    S.GUI.TimeToReturn = 1;
+    S.GUI.RewardDrops = 1;
     S.GUI.Timeout = 0;
-    S.GUI.Interval = 1; 
+    S.GUI.Interval = 1;
     
     BpodSystem.ProtocolSettings = S;
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
@@ -62,8 +62,10 @@ TotalRewardDisplay('init');
 
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-doorOpen = [251 10];
-doorClose = [252 200];
+openSpeed = 10;
+closeSpeed = 200;
+doorOpen = [251 openSpeed];
+doorClose = [252 closeSpeed];
 
 LoadSerialMessages('Infoseek1', {buzzer1, buzzer2, doorOpen, doorClose, ...
     [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
@@ -202,18 +204,18 @@ InterTrialInterval
 OdorPreload
 StartTrial
 WaitForCenter
-CenterDelay
+CenterDelay (time = PreOdorDelay)
 OdorCSPlus
 OdorCSMinus
 OdorOff--if leave early
 CloseDoor (time=PostOdorDelay)
 Delay
-WaitForReturn
+WaitForReturn (time = TimeToReturn)
 PortCheck
 OutcomeReward--open door
 OutcomeNoReward--odor door
 NotPresentReward
-Timeout
+Timeout (time = timeout)
 NotPresentNoReward
 OutcomeDelivery
 EndTrial
@@ -256,12 +258,12 @@ sma = AddState(sma, 'Name', 'OdorOff',...
 sma = AddState(sma, 'Name', 'CloseDoor', ...
     'Timer', S.GUI.PostOdorDelay,...
     'StateChangeConditions', {'Tup', 'Delay'},...
-    'OutputActions', {'Infoseek1',4});
+    'OutputActions', [{'Infoseek1',4,'Infoseek1',DIOmsg2},PresentOdor(0),...
+    PreloadOdor(Odor,0)]);
 sma = AddState(sma, 'Name', 'Delay', ...
     'Timer', S.GUI.RewardDelay,...
-    'StateChangeConditions', {'Tup','PortCheck'},...
-    'OutputActions', [{'Infoseek1',DIOmsg2},PresentOdor(0),...
-    PreloadOdor(Odor,0)]);
+    'StateChangeConditions', {'Tup','WaitForReturn'},...
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'WaitForReturn',...
     'Timer',S.GUI.TimeToReturn,...
     'StateChangeConditions',{'Tup','PortCheck'},...
@@ -345,11 +347,6 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule4',['C' v]);
     end
 end
-
-
-
-
-
         
 %% TRIAL EVENT PLOTTING COLORS
 
