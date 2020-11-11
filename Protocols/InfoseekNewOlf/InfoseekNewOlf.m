@@ -281,7 +281,7 @@ switch nextTrialType
                 LeftSideOdor = S.GUI.OdorB;
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
-            OutcomeStateRight = 'IncorrectRight';
+            OutcomeStateRight = 'TimeoutOutcome';
             RightRewardDrops = 0;
         else
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
@@ -298,7 +298,7 @@ switch nextTrialType
                 RightSideOdor = S.GUI.OdorB;
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
-            OutcomeStateLeft = 'IncorrectLeft';
+            OutcomeStateLeft = 'TimeoutOutcome';
             LeftRewardDrops = 0;
         end
     case 3 % RAND FORCED
@@ -323,7 +323,7 @@ switch nextTrialType
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.RandSmallDrops;
             end
-            OutcomeStateLeft = 'IncorrectLeft';
+            OutcomeStateLeft = 'TimeoutOutcome';
             LeftRewardDrops = 0;
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
@@ -344,7 +344,7 @@ switch nextTrialType
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.RandSmallDrops;
             end
-            OutcomeStateRight = 'IncorrectRight';
+            OutcomeStateRight = 'TimeoutOutcome';
             RightRewardDrops = 0;
         end
 end
