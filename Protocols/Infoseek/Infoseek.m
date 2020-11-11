@@ -98,17 +98,13 @@ BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
 
-%% INITIALIZE SERIAL MESSAGES
+%% INITIALIZE SERIAL MESSAGES / DIO
 
 % NOTE: LEDPin not connected to LEDs? For syncing center odor?
 % pins
 LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -118,19 +114,12 @@ DIOmodule = DIOmodule{1};
 
 % Set serial messages 1,2,3,4,5,6,7,8
 LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
-    [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
-%{
-    1 buzzer 1
-    2 buzzer 2
-    3 LEDs on
-    4 LEDs off
-    5 scope signal 1 on side odor
-    6 scope signal 1 off side odor
-    7 scope signal 2 on reward
-    8 scope signal 2 off reward
-    %}
+    [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
+    [13 1], [13 0]});
+
     
-% controls for odor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 
@@ -181,10 +170,6 @@ end % end of protocol main function
 function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, currentTrialEvents)
 
 global BpodSystem;
-
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('DIO',modules,3))];
-DIOmodule = DIOmodule{1};
 
 lastS = S;
 S = InfoParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
@@ -906,8 +891,6 @@ function SetLatchValves(S)
         ModuleWrite(latchModule,[pins(i) 0]);
         pause(500/1000);
     end
-    pins
-    infoSide
     
 %     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
     EventsPlot('init', getStateColors(infoSide));

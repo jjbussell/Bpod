@@ -95,19 +95,16 @@ BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
 
-%% INITIALIZE SERIAL MESSAGES
+%% INITIALIZE SERIAL MESSAGES / DIO
 
-% NOTE: LEDPin not connected to LEDs? For syncing center odor?
-% pins
+% pins NOTE: LEDPin not connected - for house light?
 LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-doorOpen = [252 1];
-doorClose = [251 1];
-
-modules = BpodSystem.Modules.Name;
-DIOmodule = [modules(strncmp('Infoseek',modules,3))];
-DIOmodule = DIOmodule{1};
+openSpeed = 5;
+closeSpeed =100;
+doorOpen = [251 openSpeed];
+doorClose = [252 closeSpeed];
 
 % MINISCOPE
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
@@ -115,31 +112,10 @@ DIOmodule = DIOmodule{1};
 % scope trig to Bpod OUT BNC 1
 % Bpod out BNC 2 at center odor start
 
-% Set serial messages 1,2,3,4,5,6,7,8
-% LoadSerialMessages('DIOLicks1', {buzzer1, buzzer2,...
-%     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
-
 LoadSerialMessages('Infoseek1', {buzzer1, buzzer2, doorOpen, doorClose, ...
     [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
     [13 1], [13 0]});
-
-% *COULD* setup house light leds!
-
-%{
-need 7 pins, 14 msgs + 2 buzzer messages
-%}
-%{
-    1 buzzer 1
-    2 buzzer 2
-    3 LEDs on
-    4 LEDs off
-    5 scope signal 1 on side odor
-    6 scope signal 1 off side odor
-    7 scope signal 2 on reward
-    8 scope signal 2 off reward
-    %}
-
-%%    
+ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
