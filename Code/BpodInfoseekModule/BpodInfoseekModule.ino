@@ -6,9 +6,6 @@
 // Pin 2 is a multi-electrode lick sensor, pin 20 is a buzzer, pins 3-17 are configured as output channels.
 // A 2-byte serial message from the state machine sets the state of the output lines: [Channel (3-17), State(0 or 1)].
 
-// OLD
-// A 3-byte serial message from the state machine enables or disables input lines: ['E' Channel (2-7), State (0 = disabled, 1 = enabled)]
-
 #include "ArCOM.h" // Import serial communication wrapper
 #include <Wire.h>
 #include "Adafruit_MPR121.h"
