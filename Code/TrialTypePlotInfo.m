@@ -151,31 +151,33 @@ switch Action
 %             else
 %                 indxToPlot = mn:CurrentTrial-1;
 %             end
-            %Plot Error, unpunished NOT PRESENT
-            EarlyWithdrawalTrialsIndx =(OutcomeRecord(indxToPlot) == -1);
-            Xdata = indxToPlot(EarlyWithdrawalTrialsIndx); Ydata = TrialTypeList(Xdata);
-            DispData = Xdata-offset;
-            set(BpodSystem.GUIHandles.NotPresentLine, 'xdata', [DispData,DispData], 'ydata', [Ydata,Ydata]);
-            %Plot Error, punished INCORRECT
-            InCorrectTrialsIndx = (OutcomeRecord(indxToPlot) == 3);
-            Xdata = indxToPlot(InCorrectTrialsIndx); Ydata = TrialTypeList(Xdata);
-            DispData = Xdata-offset;
-            set(BpodSystem.GUIHandles.IncorrectLine, 'xdata', [DispData,DispData], 'ydata', [Ydata,Ydata]);
-            %Plot Correct, INFO
-            CorrectTrialsIndx = (OutcomeRecord(indxToPlot) == 1);
-            Xdata = indxToPlot(CorrectTrialsIndx); Ydata = TrialTypeList(Xdata);
-            DispData = Xdata-offset;
-            set(BpodSystem.GUIHandles.InfoCorrectLine, 'xdata', [DispData,DispData], 'ydata', [Ydata,Ydata]);
-            %Plot Correct, NO INFO
-            UnrewardedTrialsIndx = (OutcomeRecord(indxToPlot) == 0);
-            Xdata = indxToPlot(UnrewardedTrialsIndx); Ydata = TrialTypeList(Xdata);
-            DispData = Xdata-offset;
-            set(BpodSystem.GUIHandles.RandCorrectLine, 'xdata', [DispData,DispData], 'ydata', [Ydata,Ydata]);
-            %Plot DidNotChoose
-            DidNotChooseTrialsIndx = (OutcomeRecord(indxToPlot) == 2);
-            Xdata = indxToPlot(DidNotChooseTrialsIndx); Ydata = TrialTypeList(Xdata);
-            DispData = Xdata-offset;
-            set(BpodSystem.GUIHandles.NoChoiceLine, 'xdata', [DispData,DispData], 'ydata', [Ydata,Ydata]);
+
+           for i = 1:10
+               trialIdx = OutcomeRecord(indxToPlot) == i;
+               Xdatapast{i,1} = indxToPlot(trialIdx); Ydatapast{i,1} = TrialTypeList(Xdatapast{i,1});
+               DispDatapast{i,1} = Xdatapast{i,1}-offset;
+           end
+           
+           % INFO BIG
+           set(BpodSystem.GUIHandles.InfoCorrectBigLine, 'xdata', [DispDatapast{1,1},DispDatapast{1,1}], 'ydata', [Ydatapast{1,1},Ydatapast{1,1}]);
+           % INFO SMALL
+           set(BpodSystem.GUIHandles.InfoCorrectSmallLine, 'xdata', [DispDatapast{2,1},DispDatapast{2,1}], 'ydata', [Ydatapast{2,1},Ydatapast{2,1}]);
+           % RAND BIG
+           set(BpodSystem.GUIHandles.RandCorrectBigLine, 'xdata', [DispDatapast{5,1},DispDatapast{5,1}], 'ydata', [Ydatapast{5,1},Ydatapast{5,1}]);
+           % RAND SMALL
+           set(BpodSystem.GUIHandles.RandCorrectSmallLine, 'xdata', [DispDatapast{6,1},DispDatapast{6,1}], 'ydata', [Ydatapast{6,1},Ydatapast{6,1}]);
+           % INFO BIG NP
+           set(BpodSystem.GUIHandles.NotPresentInfoBigLine, 'xdata', [DispDatapast{3,1},DispDatapast{3,1}], 'ydata', [Ydatapast{3,1},Ydatapast{3,1}]);
+           % INFO SMALL NP
+           set(BpodSystem.GUIHandles.NotPresentInfoSmallLine, 'xdata', [DispDatapast{4,1},DispDatapast{4,1}], 'ydata', [Ydatapast{4,1},Ydatapast{4,1}]);
+           % RAND BIG NP
+           set(BpodSystem.GUIHandles.NotPresentRandBigLine, 'xdata', [DispDatapast{7,1},DispDatapast{7,1}], 'ydata', [Ydatapast{7,1},Ydatapast{7,1}]);
+           % RAND SMALL NP
+           set(BpodSystem.GUIHandles.NotPresentRandSmallLine, 'xdata', [DispDatapast{8,1},DispDatapast{8,1}], 'ydata', [Ydatapast{8,1},Ydatapast{8,1}]);
+           % INCORRECT
+           set(BpodSystem.GUIHandles.IncorrectLine, 'xdata', [DispDatapast{9,1},DispDatapast{9,1}], 'ydata', [Ydatapast{9,1},Ydatapast{9,1}]);
+           % NO CHOICE
+           set(BpodSystem.GUIHandles.NoChoiceLine, 'xdata', [DispDatapast{10,1},DispDatapast{10,1}], 'ydata', [Ydatapast{10,1},Ydatapast{10,1}]);
         end
 end
 
