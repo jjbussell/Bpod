@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeek
+function InfoSeekVid
 
 global BpodSystem
 
@@ -64,16 +64,15 @@ end
 
 %% SETUP VIDEO
 
-% vid = videoinput('winvideo',1,'MJPG_960x720');
-vid = videoinput('winvideo',1,'MJPG_1280x720');
+vid = videoinput('winvideo',1,'MJPG_1024x768');
 src.AcquisitionFrameRateEnable = 'True';
 src.AcquisitionFrameRateAbs = 30;
 vid.FramesPerTrigger = Inf;
 triggerconfig(vid, 'manual');
-DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
+DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
 DateInfo = datestr(now, 30); 
 DateInfo(DateInfo == 'T') = '_';
-VidName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo '.avi'];
+VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo '.avi'];
 logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
 set(logfile,'FrameRate',30);
 vid.DiskLogger = logfile;
@@ -147,6 +146,8 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 [sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
+start(vid);
+trigger(vid);
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
@@ -183,14 +184,14 @@ for currentTrial = 1:S.GUI.SessionTrials
 end
 
 %% SHUT DOWN
-% NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
-% ManualOverride('OB',1);
 
 stop(vid);
-
 flushdata(vid);
+stoppreview(vid);
+closepreview(vid);
 delete(vid);
 clear vid;
+
 end % end of protocol main function
 
 
