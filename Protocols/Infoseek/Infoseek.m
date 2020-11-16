@@ -62,23 +62,23 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
-%% SETUP VIDEO
-
-% vid = videoinput('winvideo',1,'MJPG_960x720');
-vid = videoinput('winvideo',1,'MJPG_1280x720');
-src.AcquisitionFrameRateEnable = 'True';
-src.AcquisitionFrameRateAbs = 30;
-vid.FramesPerTrigger = Inf;
-triggerconfig(vid, 'manual');
-DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
-DateInfo = datestr(now, 30); 
-DateInfo(DateInfo == 'T') = '_';
-VidName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo '.avi'];
-logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
-set(logfile,'FrameRate',30);
-vid.DiskLogger = logfile;
-set(vid,'LoggingMode','disk');
-preview(vid);
+% %% SETUP VIDEO
+% 
+% % vid = videoinput('winvideo',1,'MJPG_960x720');
+% vid = videoinput('winvideo',1,'MJPG_1280x720');
+% src.AcquisitionFrameRateEnable = 'True';
+% src.AcquisitionFrameRateAbs = 30;
+% vid.FramesPerTrigger = Inf;
+% triggerconfig(vid, 'manual');
+% DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
+% DateInfo = datestr(now, 30); 
+% DateInfo(DateInfo == 'T') = '_';
+% VidName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo '.avi'];
+% logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
+% set(logfile,'FrameRate',30);
+% vid.DiskLogger = logfile;
+% set(vid,'LoggingMode','disk');
+% preview(vid);
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -977,6 +977,12 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     x = currentTrial;
     newTrialCounts = TrialCounts;
     newPlotOutcomes = PlotOutcomes;
+    
+    % Plot outcomes: 2 = no choice, incorrect, info correct, rand correct,
+    % not present
+    
+    % change to no choice, incorrect, info correct big info correct small
+    % rand correct big/ not present info big not present info small
     
     if infoSide == 0
         switch trialType
