@@ -64,20 +64,23 @@ end
 
 %% SETUP VIDEO
 
-vid = videoinput('winvideo',1,'MJPG_1024x768');
-src.AcquisitionFrameRateEnable = 'True';
-src.AcquisitionFrameRateAbs = 30;
-vid.FramesPerTrigger = Inf;
-triggerconfig(vid, 'manual');
-DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
-DateInfo = datestr(now, 30); 
-DateInfo(DateInfo == 'T') = '_';
-VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo '.avi'];
-logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
-set(logfile,'FrameRate',30);
-vid.DiskLogger = logfile;
-set(vid,'LoggingMode','disk');
-preview(vid);
+vidOn = 0;
+if vidOn == 1
+    vid = videoinput('winvideo',1,'MJPG_800x600');
+    src.AcquisitionFrameRateEnable = 'True';
+    src.AcquisitionFrameRateAbs = 30;
+    vid.FramesPerTrigger = Inf;
+    triggerconfig(vid, 'manual');
+    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
+    DateInfo = datestr(now, 30); 
+    DateInfo(DateInfo == 'T') = '_';
+    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
+    logfile = VideoWriter(fullfile(DataFolder,VidName),'MPEG-4');
+    set(logfile,'FrameRate',30);
+    vid.DiskLogger = logfile;
+    set(vid,'LoggingMode','disk');
+    preview(vid);
+end
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -146,8 +149,10 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 [sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
-start(vid);
-trigger(vid);
+if vidOn == 1
+    start(vid);
+    trigger(vid);
+end
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
@@ -184,13 +189,17 @@ for currentTrial = 1:S.GUI.SessionTrials
 end
 
 %% SHUT DOWN
-
-stop(vid);
-flushdata(vid);
-stoppreview(vid);
-closepreview(vid);
-delete(vid);
-clear vid;
+if vidOn == 1
+    stoppreview(vid);
+    closepreview();
+    stop(vid);
+    while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
+        pause(.1)
+    end
+    % flushdata(vid);
+    delete(vid);
+    clear vid;
+end
 
 end % end of protocol main function
 
