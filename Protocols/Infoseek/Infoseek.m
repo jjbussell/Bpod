@@ -108,13 +108,18 @@ SaveBpodSessionData;
 
 %% Initialize plots
 
-BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 640 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
 TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([S.GUI.SessionTrials 40])); % trial choice types  
 % EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
+
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 100 600 400],'name','TrialOutcomes','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
+InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
+
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
-TotalRewardDisplay('init');
+TotalRewardDisplayInfo('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
@@ -174,9 +179,10 @@ for currentTrial = 1:S.GUI.SessionTrials
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
-        TotalRewardDisplay('add',rewardAmount);
+        TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
+        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
