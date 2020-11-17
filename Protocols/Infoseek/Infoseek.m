@@ -192,11 +192,11 @@ end
 % NEED CODE FOR TURNING OFF SCOPE AND SHUTTING DOWN HERE!
 % ManualOverride('OB',1);
 
-stop(vid);
-
-flushdata(vid);
-delete(vid);
-clear vid;
+% stop(vid);
+% 
+% flushdata(vid);
+% delete(vid);
+% clear vid;
 end % end of protocol main function
 
 
@@ -1221,8 +1221,6 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     BpodSystem.Data.TrialCounts = newTrialCounts;
     BpodSystem.Data.PlotOutcomes = newPlotOutcomes;
 end
-
-
 
         
 %% TRIAL EVENT PLOTTING COLORS

@@ -90,7 +90,12 @@ SaveBpodSessionData;
 BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
 TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([S.GUI.SessionTrials 40])); % trial choice types  
-EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
+% EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
+
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 100 600 400],'name','TrialOutcomes','numbertitle','off', 'MenuBar', 'none');
+BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
+InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'init');
+
 BpodNotebook('init');
 InfoParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
@@ -162,7 +167,8 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplay('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        EventsPlot('update');
+        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
@@ -919,29 +925,37 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     newTrialCounts = TrialCounts;
     newPlotOutcomes = PlotOutcomes;
     
+    % Plot outcomes: 2 = no choice, incorrect, info correct, rand correct,
+    % not present
+    
+    % change to no choice, incorrect, info correct big info correct small
+    % rand correct big/ not present info big not present info small
+    
     if infoSide == 0
         switch trialType
             case 1
-                if ~isnan(TrialData.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                if ~isnan(TrialData.States.NoChoice(1))
+                    newPlotOutcomes(x) = 10;
                     Outcome = 1; % choice no choice
                 elseif ~isnan(TrialData.States.WaitForOdorLeft(1))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
-                    newPlotOutcomes(x) = 1;
+                    
                     if RewardLeft == 1
                         if ~isnan(TrialData.States.LeftBigReward(1))
                             Outcome = 2; % choice info big
                             rewardAmount = infoBigReward;
+                            newPlotOutcomes(x) = 1;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 3;
                             Outcome = 3; % choice info big NP
                         end
                     else
                         if ~isnan(TrialData.States.LeftSmallReward(1))
                             Outcome = 4; % choice info small
                             rewardAmount = infoSmallReward;
+                            newPlotOutcomes(x) = 2;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 4;
                             Outcome = 5; % choice info small NP
                         end
                     end
@@ -952,16 +966,18 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
                         if ~isnan(TrialData.States.RightBigReward(1))
                             Outcome = 6; % choice rand big
                             rewardAmount = randBigReward;
+                            newPlotOutcomes(x) = 5;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 7;
                             Outcome = 7; % choice rand big NP
                         end                       
                    else
                         if ~isnan(TrialData.States.RightSmallReward(1))
                             Outcome = 8; % choice rand small
                             rewardAmount = randSmallReward;
+                            newPlotOutcomes(x) = 6;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 8;
                             Outcome = 9; % choice rand small NP
                         end                       
                    end
@@ -969,60 +985,62 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
                 
             case 2
                 if ~isnan(TrialData.States.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                    newPlotOutcomes(x) = 10;
                     Outcome = 10; % info no choice
                 elseif ~isnan(TrialData.States.WaitForOdorLeft(1))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newPlotOutcomes(x) = 1;
                     if RewardLeft == 1
                         if ~isnan(TrialData.States.LeftBigReward(1))
                             Outcome = 11; % info big
                             rewardAmount = infoBigReward;
+                            newPlotOutcomes(x) = 1;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 3;
                             Outcome = 12; % info big NP
                         end
                     else
                         if ~isnan(TrialData.States.LeftSmallReward(1))
                             Outcome = 13; % info small
                             rewardAmount = infoSmallReward;
+                            newPlotOutcomes(x) = 2;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 4;
                             Outcome = 14; % info small NP
                         end
                     end
                 else
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newPlotOutcomes(x) = 3;
+                    newPlotOutcomes(x) = 9;
                     Outcome = 15; % info incorrect
                 end
                 
             case 3
                 if ~isnan(TrialData.States.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                    newPlotOutcomes(x) = 10;
                     Outcome = 16; % rand no choice
                 elseif ~isnan(TrialData.States.WaitForOdorRight(1))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                    newPlotOutcomes(x) = 0;
                     if RewardRight == 1
                         if ~isnan(TrialData.States.RightBigReward(1))
                             Outcome = 17; % rand big
                             rewardAmount = randBigReward;
+                            newPlotOutcomes(x) = 5;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 7;
                             Outcome = 18; % rand big NP
                         end
                     else
                         if ~isnan(TrialData.States.RightSmallReward(1))
                             Outcome = 19; % rand small
                             rewardAmount = randSmallReward;
+                            newPlotOutcomes(x) = 6;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 8;
                             Outcome = 20; % rand small NP
                         end
                     end
                 else
-                    newPlotOutcomes(x) = 3;
+                    newPlotOutcomes(x) = 9;
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
                     Outcome = 21; % rand incorrect
                 end
@@ -1032,45 +1050,47 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
         switch trialType
             case 1
                 if ~isnan(TrialData.States.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                    newPlotOutcomes(x) = 10;
                     Outcome = 1; % choice no choice
                 elseif ~isnan(TrialData.States.WaitForOdorRight(1))
                     newTrialCounts(1) = TrialCounts(1) + 1; % infochoice
-                    newPlotOutcomes(x) = 1;
                     if RewardRight == 1
                         if ~isnan(TrialData.States.RightBigReward(1))
                             Outcome = 2; % choice info big
                             rewardAmount = infoBigReward;
+                            newPlotOutcomes(x) = 1;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 3;
                             Outcome = 3; % choice info big NP
                         end
                     else
                         if ~isnan(TrialData.States.RightSmallReward(1))
                             Outcome = 4; % choice info small
                             rewardAmount = infoSmallReward;
+                            newPlotOutcomes(x) = 2;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 4;
                             Outcome = 5; % choice info small NP
                         end
                     end
                 else
                     newTrialCounts(2) = TrialCounts(2) + 1; % randChoice
-                    newPlotOutcomes(x) = 0;
                    if RewardLeft == 1
                         if ~isnan(TrialData.States.LeftBigReward(1))
                             Outcome = 6; % choice rand big
                             rewardAmount = randBigReward;
+                            newPlotOutcomes(x) = 5;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 7;
                             Outcome = 7; % choice rand big NP
                         end                       
                    else
                         if ~isnan(TrialData.States.LeftSmallReward(1))
                             Outcome = 8; % choice rand small
                             rewardAmount = randSmallReward;
+                            newPlotOutcomes(x) = 6;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 8;
                             Outcome = 9; % choice rand small NP
                         end                       
                    end
@@ -1078,61 +1098,63 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
                 
             case 2
                 if ~isnan(TrialData.States.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                    newPlotOutcomes(x) = 10;
                     Outcome = 10; % info no choice
                 elseif ~isnan(TrialData.States.WaitForOdorRight(1))
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newPlotOutcomes(x) = 1;
                     if RewardRight == 1
                         if ~isnan(TrialData.States.RightBigReward(1))
                             Outcome = 11; % info big
                             rewardAmount = infoBigReward;
+                            newPlotOutcomes(x) = 1;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 3;
                             Outcome = 12; % info big NP
                         end
                     else
                         if ~isnan(TrialData.States.RightSmallReward(1))
                             Outcome = 13; % info small
                             rewardAmount = infoSmallReward;
+                            newPlotOutcomes(x) = 2;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 4;
                             Outcome = 14; % info small NP
                         end
                     end
                 else
                     newTrialCounts(3) = TrialCounts(3) + 1; % infoforced
-                    newPlotOutcomes(x) = 3;
+                    newPlotOutcomes(x) = 9;
                     Outcome = 15; % info incorrect
                 end
                 
             case 3
                 if ~isnan(TrialData.States.NoChoice(1))
-                    newPlotOutcomes(x) = 2;
+                    newPlotOutcomes(x) = 10;
                     Outcome = 16; % rand no choice
                 elseif ~isnan(TrialData.States.WaitForOdorLeft(1))
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                    newPlotOutcomes(x) = 0;
                     if RewardLeft == 1
                         if ~isnan(TrialData.States.LeftBigReward(1))
                             Outcome = 17; % rand big
                             rewardAmount = randBigReward;
+                            newPlotOutcomes(x) = 5;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 7;
                             Outcome = 18; % rand big NP
                         end
                     else
                         if ~isnan(TrialData.States.LeftSmallReward(1))
                             Outcome = 19; % rand small
                             rewardAmount = randSmallReward;
+                            newPlotOutcomes(x) = 6;
                         else
-                            newPlotOutcomes(x) = -1;
+                            newPlotOutcomes(x) = 8;
                             Outcome = 20; % rand small NP
                         end
                     end
                 else
                     newTrialCounts(4) = TrialCounts(4) + 1; % randforced
-                    newPlotOutcomes(x) = 3;
+                    newPlotOutcomes(x) = 9;
                     Outcome = 21; % rand incorrect
                 end
         end            
@@ -1140,9 +1162,6 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
     BpodSystem.Data.TrialCounts = newTrialCounts;
     BpodSystem.Data.PlotOutcomes = newPlotOutcomes;
 end
-
-
-
         
 %% TRIAL EVENT PLOTTING COLORS
 
