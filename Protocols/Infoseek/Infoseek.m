@@ -64,7 +64,7 @@ end
 
 %% SETUP VIDEO
 
-vidOn = 1;
+vidOn = 0;
 if vidOn == 1
     vid = videoinput('winvideo',1,'MJPG_800x600');
     src.AcquisitionFrameRateEnable = 'True';
@@ -189,7 +189,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
