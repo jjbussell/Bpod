@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeek
+function InfoSeekTimeout
 
 global BpodSystem
 
@@ -45,6 +45,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorDelay = 0;
     S.GUI.OdorTime = 0;
     S.GUI.RewardDelay = 0.5;
+    S.GUI.Timeout = 10;
     S.GUI.InfoBigDrops = 1;
     S.GUI.InfoSmallDrops = 1;
     S.GUI.RandBigDrops = 1;
