@@ -20,6 +20,7 @@
 byte out = 15;
 int buzzer = 20;
 int irqpin = 2;
+int houseLight = 21;
 
 Adafruit_MPR121 cap = Adafruit_MPR121();
 // Keeps track of the last pins touched
@@ -79,6 +80,8 @@ void setup()
     pinMode(i, OUTPUT);
   }
 
+  pinMode(houseLight, OUTPUT);
+
   pinMode(irqpin,INPUT);
   digitalWrite(irqpin, HIGH); //enable pullup resistor
   
@@ -117,6 +120,9 @@ void loop()
     }else if (opCode == 253){
       tone(buzzer,4500,50);
       state = Serial1COM.readByte();
+    }else if (opCode == houseLight){
+      state = Serial1COM.readByte(); 
+      digitalWrite(opCode,state); 
     }else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
