@@ -58,6 +58,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
     S.GUI.ImageType = 0;
+    S.GUI.Timeout = 0;
     
     BpodSystem.ProtocolSettings = S;
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
@@ -661,7 +662,7 @@ sma = AddState(sma, 'Name', 'LeavingTimeout', ...
     'StateChangeConditions', {'Tup','EndTrial'},...
     'OutputActions', {DIOmodule, 19});
 
-MyGracePeriod = 0.5;
+MyGracePeriod = 1;
 sma = SetGlobalTimer(sma, 'TimerID', 10, 'Duration', MyGracePeriod);
 sma = AddState(sma, 'Name', 'PokeOutDetected', ...
     'Timer', 0,...
