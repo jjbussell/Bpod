@@ -58,6 +58,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
     S.GUI.ImageType = 0;
+    S.GUI.Timeout = 0;
     
     BpodSystem.ProtocolSettings = S;
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
