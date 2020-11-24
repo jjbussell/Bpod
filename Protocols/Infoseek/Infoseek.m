@@ -769,9 +769,17 @@ function S = SetRewardTypes(S,currentTrial)
 
     infoBlockShuffle = zeros(typeBlockSize,1);
     randBlockShuffle = zeros(typeBlockSize,1);
+    randOdorBlock = zeros(typeBlockSize,1);
 
     infoBlockShuffle(1:infoBigCount) = 1;
     randBlockShuffle(1:randBigCount) = 1;
+    
+    if randBigCount == 0 | randBigCount == 1
+        randOdorBigCount = ceil(typeBlockSize/2);
+    else
+        randOdorBigCount = randBigCount;
+    end
+    randOdorBlockShuffle(1:randOdorBigCount) = 1;
 
     typeBlockCount = ceil(maxTrials/typeBlockSize);
     RewardTypes = zeros(typeBlockCount*typeBlockSize,4);
@@ -779,7 +787,7 @@ function S = SetRewardTypes(S,currentTrial)
 
     infoBlock = infoBlockShuffle;
     randBlock = randBlockShuffle;
-    randOdorBlock = randBlockShuffle;
+    randOdorBlock = randOdorBlockShuffle;
 
     % info choice
     for n = 1:typeBlockCount
