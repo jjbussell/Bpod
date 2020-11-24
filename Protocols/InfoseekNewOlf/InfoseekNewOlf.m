@@ -753,7 +753,7 @@ function S = SetRewardTypes(S,currentTrial)
 
     infoBlockShuffle = zeros(typeBlockSize,1);
     randBlockShuffle = zeros(typeBlockSize,1);
-    randOdorBlock = zeros(typeBlockSize,1);
+    randOdorBlockShuffle = zeros(typeBlockSize,1);
 
     infoBlockShuffle(1:infoBigCount) = 1;
     randBlockShuffle(1:randBigCount) = 1;
