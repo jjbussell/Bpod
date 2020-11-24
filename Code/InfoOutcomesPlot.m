@@ -60,9 +60,9 @@ switch Action
         [outcomeCountsNorm,outcomeBins] = histcounts(outcomes,[0.5:1:21.5],'Normalization','probability');
         outcomesToPlot = [outcomeCountsNorm; outcomeCountsNorm];
         ax = AxesHandle;
-        colormap(ax,CC);
+%         colormap(ax,CC);
         b = bar(ax,outcomesToPlot,'stacked');
-        for i = 1:numel(outcomes)
+        for i = 1:numel(outcomeCountsNorm)
             b(i).FaceColor = CC(i,:);
         end
         set(ax, 'ydir', 'reverse');
