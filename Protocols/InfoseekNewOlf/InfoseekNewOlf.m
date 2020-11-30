@@ -758,7 +758,7 @@ function S = SetRewardTypes(S,currentTrial)
     infoBlockShuffle(1:infoBigCount) = 1;
     randBlockShuffle(1:randBigCount) = 1;
     
-    if randBigCount == 0 | randBigCount == 1
+    if S.GUI.RandRewardProb == 0 | S.GUI.RandRewardProb == 1
         randOdorBigCount = ceil(typeBlockSize/2);
     else
         randOdorBigCount = randBigCount;
