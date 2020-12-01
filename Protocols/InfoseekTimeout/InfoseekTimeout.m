@@ -419,7 +419,7 @@ switch nextTrialType
 end
 
 % PORT EXIT GRACE PERIOD
-gracePeriod = 0.3
+gracePeriod = 0.5
 
 % Water parameters
 R = GetValveTimes(4, [1 3]);
