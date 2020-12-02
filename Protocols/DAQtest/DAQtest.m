@@ -38,10 +38,10 @@ LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); 
 LoadSerialMessages('ValveModule3',{[1,2],[3,4],[5,6]}); % final valves switch control and odor, left, center, right
 LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
-buzzer1 = [254 1];
-buzzer2 = [253 1];
-LoadSerialMessages('Infoseek1', {buzzer1, buzzer2,...
-    [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
+% buzzer1 = [254 1];
+% buzzer2 = [253 1];
+% LoadSerialMessages('Infoseek1', {buzzer1, buzzer2,...
+%     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
 %% Initialize plots
 
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin

@@ -103,6 +103,7 @@ TotalRewardDisplay('init');
 %% INITIALIZE SERIAL MESSAGES / DIO
 
 % pins NOTE: LEDPin not connected - for house light?
+houseLight = 21;
 LEDPin = 11;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
