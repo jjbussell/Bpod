@@ -122,8 +122,8 @@ DIOmodule = DIOmodule{1};
 % Bpod out BNC 2 at center odor start
 
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, doorOpen, doorClose, ...
-    [7 1],[7,0],[8 1],[8 0],[9 1],[9 0],[10 1],[10 0],[11 1],[11 0],[12 1],[12 0],...
-    [13 1], [13 0]});
+    [11 1],[11,0],[12 1],[12 0],[13 1],[13 0],[14 1],[14 0],[15 1],[15 0],...
+    [16 1],[16 0],[17 1], [17 0],[houseLight 1],[houseLight 0]});
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
