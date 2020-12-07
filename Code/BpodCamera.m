@@ -3,8 +3,9 @@ dev_info = info.DeviceInfo(1);
 dev_info.SupportedFormats;
 
 vid = videoinput('winvideo',1,'MJPG_1920x1080');
-src.AcquisitionFrameRateEnable = 'True';
-src.AcquisitionFrameRateAbs = 30;
+src = getselectedsource(vid);
+% src.AcquisitionFrameRateEnable = 'True';
+% src.AcquisitionFrameRateAbs = 30;
 vid.FramesPerTrigger = Inf;
 triggerconfig(vid, 'manual');
 
@@ -26,8 +27,15 @@ logfile = VideoWriter('testvid.avi','Motion JPEG AVI');
 set(logfile,'FrameRate',30);
 vid.DiskLogger = logfile;
 set(vid,'LoggingMode','disk');
+% imaqmem(4e9);
 
-preview(vid);
+vidRes = get(vid, 'VideoResolution');
+imWidth = vidRes(1);
+imHeight = vidRes(2);
+nBands = get(vid, 'NumberOfBands');
+hImage = image( zeros(imHeight, imWidth, nBands) );
+
+preview(vid,hImage);
 
 start(vid);
 trigger(vid);
@@ -40,7 +48,15 @@ flushdata(vid);
 delete(vid);
 clear vid;
 
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% global vid
+% 
+% makeVidObject;
 % generatePreviewInGui;
+% 
 % figSize = get(gca,'Position');
 % figWidth = figSize(3);
 % figHeight = figSize(4);
@@ -107,6 +123,33 @@ clear vid;
 % fileStruct.trueStartTimes = [];
 % trialParams.presentedOdor = [];
 % trialParams.isAversiveTrial = [];
+% 
+% function makeVidObject
+% global vid vidCounter fileStruct logfile
+% 
+% 
+% 
+% % -- BASLER GigE CAMERA ----------------
+% vid = videoinput('gige', 1, 'Mono8');
+% src = getselectedsource(vid);
+% %src.AcquisitionFrameRateAbs = 25;
+% src.AcquisitionFrameRateEnable = 'True';
+% src.AcquisitionFrameRateAbs = 25;
+% vid.FramesPerTrigger = Inf;
+% triggerconfig(vid, 'manual');
+% 
+% vid.ROIPosition = [930 350 360 1100]; 
+% %vid.ROIPosition = [760 420 427 1100]; %[760 720 425 800];
+% 
+% vidCounter = vidCounter+1;
+% fileStruct.thisTrialState = fileStruct.trialStructure{1}; 
+% %folder = ('C:\2014_02_04\'); %I changed this
+% fileStruct.fileName = strcat(fileStruct.folder,fileStruct.genotype,'_exp_',fileStruct.expNum,'_',char(fileStruct.thisTrialState),'_vid_',num2str(vidCounter)) ;
+% logfile = VideoWriter([fileStruct.folder,'Edit Text_exp_1_testing_vid_2.avi'],'Motion JPEG AVI');
+% set(logfile,'FrameRate',25);
+% vid.DiskLogger = logfile;
+% set(vid,'LoggingMode','disk');
+% imaqmem(4e9);
 % 
 % function stopVid
 % global trialParams vid trialCounter
