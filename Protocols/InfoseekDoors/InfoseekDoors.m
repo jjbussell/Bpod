@@ -223,8 +223,8 @@ switch nextTrialType
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight';
         ThisCenterOdor = S.GUI.ChoiceOdor;
         CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
-        doorOpen = {DIOmodule,3,DIOmodule,7};
-        doorClose = {DIOmodule,4,DIOmodule,8};
+        doorOpen = [{DIOmodule,3,DIOmodule,7}];
+        doorClose = [{DIOmodule,4,DIOmodule,8}];
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
             RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
@@ -899,12 +899,14 @@ function Actions = PreloadOdor(odorID,port)
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
 %             cmd3 = {'ValveModule4',1};
-            Actions = [cmd1,cmd2,cmd3];
+%             Actions = [cmd1,cmd2,cmd3];
+            Actions = [cmd1,cmd2];
         case 2
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
 %             cmd3 = {'ValveModule4',2};
-            Actions = [cmd1,cmd2,cmd3];            
+%             Actions = [cmd1,cmd2,cmd3];
+            Actions = [cmd1,cmd2];
     end
 end
 
