@@ -181,7 +181,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
-
+stop(dq);
 
 end % end of protocol main function
 
@@ -1283,10 +1283,10 @@ end
 function recordDataAvailable(src,~)
     global BpodSystem
     [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
-    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
+    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName,'DAQData');
     DateInfo = datestr(now,30);
     DateInfo(DateInfo == 'T') = '_';
     DAQFileName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv'];
-    dlmwrite((fullfile(DataFolder, DAQFileName)), [data,timestamps],'-append');
-
+    dlmwrite('testcsv.txt',[1,2,3,4]);
+    %     dlmwrite(('testfile.txt'), data,'-append');
 end

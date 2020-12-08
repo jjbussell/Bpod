@@ -31,7 +31,12 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 
+
 %% LOAD SERIAL MESSAGES
+
+modules = BpodSystem.Modules.Name;
+DIOmodule = [modules(strncmp('DIO',modules,3))];
+DIOmodule = DIOmodule{1};
 
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
