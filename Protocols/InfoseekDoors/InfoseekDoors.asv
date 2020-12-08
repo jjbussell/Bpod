@@ -151,13 +151,13 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
-    if BpodSystem.Status.BeingUsed == 0;        
+    if BpodSystem.Status.BeingUsed == 0        
         TurnOffAllOdors();      
         return; end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
-    if BpodSystem.Status.BeingUsed == 0;        
+    if BpodSystem.Status.BeingUsed == 0   
         TurnOffAllOdors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
@@ -223,8 +223,8 @@ switch nextTrialType
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight';
         ThisCenterOdor = S.GUI.ChoiceOdor;
         CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
-        doorOpen = {DIOmodule,3,DIOmodule,7};
-        doorClose = {DIOmodule,4,DIOmodule,8};
+        doorOpen = [{DIOmodule,3,DIOmodule,7}];
+        doorClose = [{DIOmodule,4,DIOmodule,8}];
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
             RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
@@ -345,8 +345,8 @@ switch nextTrialType
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
             RightSideOdorFlag = S.RandOdorTypes(TrialCounts(4)+1,1);
-            doorOpen = {DIOmodule,rightDoorOpen};
-            doorClose = {DIOmodule,rightDoorClose};            
+            doorOpen = {DIOmodule,7};
+            doorClose = {DIOmodule,8};            
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
@@ -370,8 +370,8 @@ switch nextTrialType
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
             LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(1)+1,1);
-            doorOpen = {DIOmodule,leftDoorOpen};
-            doorClose = {DIOmodule,leftDoorClose};            
+            doorOpen = {DIOmodule,3};
+            doorClose = {DIOmodule,4};            
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
@@ -489,7 +489,7 @@ sma = AddState(sma, 'Name', 'CenterOdorPreload',...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {DIOmodule,1});
+    'OutputActions', {DIOmodule,5});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},...
@@ -521,7 +521,7 @@ sma = AddState(sma, 'Name', 'GoCue', ...
 sma = AddState(sma, 'Name', 'Response', ...
     'Timer', S.GUI.OdorDelay,...
     'StateChangeConditions', {'Tup','GracePeriod','Port1In',ChooseLeft,'Port3In',ChooseRight},...
-    'OutputActions', {});
+    'OutputActions', [{DIOmodule,6,},doorOpen]); % center door close and side door(s) open
 
 sma = AddState(sma, 'Name', 'GracePeriod',...
     'Timer', S.GUI.GracePeriod,...
@@ -899,12 +899,14 @@ function Actions = PreloadOdor(odorID,port)
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
 %             cmd3 = {'ValveModule4',1};
-            Actions = [cmd1,cmd2,cmd3];
+%             Actions = [cmd1,cmd2,cmd3];
+            Actions = [cmd1,cmd2];
         case 2
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
 %             cmd3 = {'ValveModule4',2};
-            Actions = [cmd1,cmd2,cmd3];            
+%             Actions = [cmd1,cmd2,cmd3];
+            Actions = [cmd1,cmd2];
     end
 end
 
