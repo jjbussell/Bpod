@@ -1,23 +1,3 @@
-%{
-----------------------------------------------------------------------------
-
-This code runs a 2AFC Information Seeking assay. The mouuse initiatess a
-trial by poking the center port to receive an odor directing to right or
-left port or free choice between the two. The mouse chooses side port by
-poking there and there receives either informative or un-
-informative odor, then after a delay, reward outcome at the same side port.
-
-The mouse only receives water if he is present in the corret chosen port
-at the outcome tiime.
-----------------------------------------------------------------------------
-
-Three valve control modules control airflow in the custom dilution
-olfactometer.
-
-One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
-a buzzer and lick sensor.
-
-%}
 function InfoSeekTimeout
 
 global BpodSystem
@@ -419,7 +399,7 @@ switch nextTrialType
 end
 
 % PORT EXIT GRACE PERIOD
-gracePeriod = 0.5;
+gracePeriod = 0.5
 
 % Water parameters
 R = GetValveTimes(4, [1 3]);
