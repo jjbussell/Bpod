@@ -125,6 +125,8 @@ TotalRewardDisplayInfo('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+% lick inputs 2, 3, 4
+% buzzer 20
 houseLight = 21;
 buzzer1 = [254 1];
 buzzer2 = [253 1];

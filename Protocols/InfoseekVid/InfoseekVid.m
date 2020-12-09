@@ -154,13 +154,19 @@ for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
-        TurnOffAllOdors();      
+        TurnOffAllOdors();
+        if vidOn==1
+            shutdownVideo();
+        end
         return; end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
+        if vidOn==1
+            shutdownVideo();
+        end
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -178,20 +184,6 @@ for currentTrial = 1:S.GUI.SessionTrials
 %         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
-end
-
-%% SHUT DOWN VIDEO
-if vidOn == 1
-%     stoppreview(vid);
-%     closepreview();
-    stop(vid);
-%     while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
-%         pause(.1)
-%     end
-    flushdata(vid);
-    delete(vid);
-    clear vid;
-%     setupVideo();
 end
 
 end % end of protocol main function
@@ -1327,10 +1319,31 @@ function setupVideo()
     set(logfile,'FrameRate',30);
     vid.DiskLogger = logfile;
     set(vid,'LoggingMode','disk');
+    figure('Toolbar','none',...
+       'Menubar', 'none',...
+       'NumberTitle','Off',...
+       'Name','Live Feed');
     vidRes = get(vid, 'VideoResolution');
     imWidth = vidRes(1);
     imHeight = vidRes(2);
     nBands = get(vid, 'NumberOfBands');
     hImage = image( zeros(imHeight, imWidth, nBands) );    
     preview(vid,hImage);
+end
+
+function shutdownVideo()
+    global vid
+%         stoppreview();
+%         closepreview();
+        hf=findobj('Name','Live Feed');
+        close(hf);
+        stop(vid);
+    %     while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
+    %         pause(.1)
+    %     end
+        flushdata(vid);
+        delete(vid);
+        clear vid;
+
+    %     setupVideo();
 end
