@@ -34,6 +34,7 @@ dq.Rate = 100;
 dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
 dq.ScansAvailableFcnCount = 500;
 
+start(dq,'continuous');
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -150,7 +151,6 @@ TrialManager.startTrial(sma); % Sends & starts running first trial's state machi
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 %% MAIN TRIAL LOOP
-start(dq,'continuous');
 
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
