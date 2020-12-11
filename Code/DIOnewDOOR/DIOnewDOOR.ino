@@ -213,11 +213,11 @@ void closeDoor(int door, int speed_delay){
   int motorPin = motorPins[door-1];
   myservo.attach(motorPin);
   int open_angle = 30;
-  int close_angle = 70;  
+  int close_angle = 80;  
   switch (door){
     case 1:
       open_angle = 30;
-      close_angle = 80;
+      close_angle = 70;
       break;
     case 2:
       open_angle = 35;
