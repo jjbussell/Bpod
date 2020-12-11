@@ -121,12 +121,12 @@ buzzer1 = [254 1];
 buzzer2 = [253 1];
 openSpeed = 5;
 closeSpeed =100;
-leftDoorOpen = [247 openSpeed]; %3
-leftDoorClose = [248 closeSpeed]; %4
+leftDoorOpen = [251 openSpeed]; %3
+leftDoorClose = [252 closeSpeed]; %4
 centerDoorOpen = [249 openSpeed]; %5
 centerDoorClose = [250 closeSpeed]; %6
-rightDoorOpen = [251 openSpeed]; %7
-rightDoorClose = [252 closeSpeed]; %8
+rightDoorOpen = [247 openSpeed]; %7
+rightDoorClose = [248 closeSpeed]; %8
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -241,7 +241,7 @@ switch nextTrialType
         doorClose = [{DIOmodule,4,DIOmodule,8}];
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
+            RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
@@ -273,7 +273,7 @@ switch nextTrialType
             end
         else
             RewardLeft = S.RewardTypes(TrialCounts(2)+1,2); RewardRight = S.RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
+            LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
@@ -313,8 +313,6 @@ switch nextTrialType
             RewardLeft = S.RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
             RightSideOdor = 0;
-            doorOpen = {DIOmodule,3};
-            doorClose = {DIOmodule,4};
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
@@ -333,9 +331,7 @@ switch nextTrialType
         else
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
-            LeftSideOdor = 0;
-            doorOpen = {DIOmodule,7};
-            doorClose = {DIOmodule,8};            
+            LeftSideOdor = 0;            
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
@@ -358,9 +354,7 @@ switch nextTrialType
         if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(4)+1,1);
-            doorOpen = {DIOmodule,7};
-            doorClose = {DIOmodule,8};            
+            RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
@@ -383,9 +377,7 @@ switch nextTrialType
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(1)+1,1);
-            doorOpen = {DIOmodule,3};
-            doorClose = {DIOmodule,4};            
+            LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
@@ -573,10 +565,6 @@ sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
     'OutputActions', [{DIOmodule,SideDIOmsg2},PresentOdor(1),PreloadOdor(LeftSideOdor,1)]);
-sma = AddState(sma, 'Name', 'DoorOpenGraceLeft', ...
-    'Timer', 1,...
-    'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', {DIOmodule,3});
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
