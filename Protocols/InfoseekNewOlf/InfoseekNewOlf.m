@@ -26,7 +26,8 @@ global BpodSystem
 TrialManager = TrialManagerObject;
 
 %% DAQ
-
+DAQ=0;
+if DAQ==1
 dq = daq('ni'); 
 addinput(dq, 'Dev1', 'ai0', 'Voltage');
 addinput(dq, 'Dev1', 'ai1', 'Voltage');
@@ -36,7 +37,7 @@ dq.ScansAvailableFcnCount = 500;
 
 start(dq,'continuous');
 
-
+end
 %% Define parameters
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S

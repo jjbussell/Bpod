@@ -109,12 +109,12 @@ buzzer1 = [254 1];
 buzzer2 = [253 1];
 openSpeed = 5;
 closeSpeed =100;
-leftDoorOpen = [247 openSpeed]; %3
-leftDoorClose = [248 closeSpeed]; %4
+leftDoorOpen = [251 openSpeed]; %3
+leftDoorClose = [252 closeSpeed]; %4
 centerDoorOpen = [249 openSpeed]; %5
 centerDoorClose = [250 closeSpeed]; %6
-rightDoorOpen = [251 openSpeed]; %7
-rightDoorClose = [252 closeSpeed]; %8
+rightDoorOpen = [247 openSpeed]; %7
+rightDoorClose = [248 closeSpeed]; %8
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -136,7 +136,7 @@ LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, leftDoorOpen, leftDoorClose, ..
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
 LoadSerialMessages('ValveModule3',{[1,2],[3,4],[5,6]}); % final valves switch control and odor, left, center, right
-% LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
+LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 
 
 %% INITIALIZE STATE MACHINE
@@ -908,15 +908,15 @@ function Actions = PreloadOdor(odorID,port)
         case 1
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
-%             cmd3 = {'ValveModule4',1};
-%             Actions = [cmd1,cmd2,cmd3];
-            Actions = [cmd1,cmd2];
+            cmd3 = {'ValveModule4',1};
+            Actions = [cmd1,cmd2,cmd3];
+%             Actions = [cmd1,cmd2];
         case 2
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
-%             cmd3 = {'ValveModule4',2};
-%             Actions = [cmd1,cmd2,cmd3];
-            Actions = [cmd1,cmd2];
+            cmd3 = {'ValveModule4',2};
+            Actions = [cmd1,cmd2,cmd3];
+%             Actions = [cmd1,cmd2];
     end
 end
 
@@ -938,7 +938,7 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule3',['C' v]);
     end
     for v = 1:3
-%         ModuleWrite('ValveModule4',['C' v]);
+        ModuleWrite('ValveModule4',['C' v]);
     end    
 end
 
