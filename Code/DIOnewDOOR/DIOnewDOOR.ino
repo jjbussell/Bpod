@@ -65,8 +65,6 @@ int door = 0;
 Servo myservo;
 
 int motorPins[]= {6,7,8};
-int open_angle = 9;
-int close_angle = 63;
 int speed_delay = 30;
 
 void setup()
@@ -186,8 +184,24 @@ void returnModuleInfo() {
 }
 
 void openDoor(int door,int speed_delay){
-  int motorPin = motorPins[door];
+  int motorPin = motorPins[door-1];
   myservo.attach(motorPin);
+  int open_angle = 30;
+  int close_angle = 70;
+  switch (door){
+    case 1:
+      open_angle = 30;
+      close_angle = 80;
+      break;
+    case 2:
+      open_angle = 35;
+      close_angle = 85;    
+      break;
+    case 3:
+      open_angle = 30;
+      close_angle = 70;    
+      break;
+  }
   for (int i = close_angle; i >= open_angle; i--) { 
     myservo.write(i);  
     delay(speed_delay);                 
@@ -196,8 +210,24 @@ void openDoor(int door,int speed_delay){
 }
 
 void closeDoor(int door, int speed_delay){
-  int motorPin = motorPins[door];
+  int motorPin = motorPins[door-1];
   myservo.attach(motorPin);
+  int open_angle = 30;
+  int close_angle = 70;  
+  switch (door){
+    case 1:
+      open_angle = 30;
+      close_angle = 80;
+      break;
+    case 2:
+      open_angle = 35;
+      close_angle = 85;    
+      break;
+    case 3:
+      open_angle = 30;
+      close_angle = 70;    
+      break;
+  }  
   for (int i = open_angle; i <= close_angle; i++) { 
     myservo.write(i);  
     delay(speed_delay);                   

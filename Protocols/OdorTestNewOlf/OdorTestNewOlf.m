@@ -14,11 +14,11 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.OdorTime = 0.250;
-    S.GUI.OdorInterval = 10;
+    S.GUI.OdorTime = 3;
+    S.GUI.OdorInterval = 4;
     S.GUI.OdorHeadstart = 0.500;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 2; % 0 = odor 1
+    S.GUI.Port = 2; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorID = 6; % 0 = odor 1
 end
 
 
