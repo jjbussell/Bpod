@@ -18,12 +18,26 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekDoors
+function InfoSeekNewOlf
 
 global BpodSystem
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
+
+%% DAQ
+DAQ=0;
+if DAQ==1
+
+dq = daq('ni'); 
+addinput(dq, 'Dev1', 'ai0', 'Voltage');
+addinput(dq, 'Dev1', 'ai1', 'Voltage');
+dq.Rate = 100;
+dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+dq.ScansAvailableFcnCount = 500;
+
+start(dq,'continuous');
+end
 
 %% Define parameters
 
@@ -42,15 +56,15 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.CenterDelay = 0;
     S.GUI.CenterOdorTime = 0.2;
     S.GUI.StartDelay = 0;
-    S.GUI.OdorDelay = 0;
-    S.GUI.OdorTime = 0;
-    S.GUI.RewardDelay = 0.5;
+    S.GUI.OdorDelay = 1.2;
+    S.GUI.OdorTime = 1;
+    S.GUI.RewardDelay = 3;
     S.GUI.InfoBigDrops = 1;
     S.GUI.InfoSmallDrops = 1;
     S.GUI.RandBigDrops = 1;
     S.GUI.RandSmallDrops = 1;
-    S.GUI.InfoRewardProb = 1;%
-    S.GUI.RandRewardProb = 1;%
+    S.GUI.InfoRewardProb = 0;%
+    S.GUI.RandRewardProb = 0;%
     S.GUI.GracePeriod = 100000000; 
     S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
@@ -152,13 +166,13 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
-    if BpodSystem.Status.BeingUsed == 0        
+    if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();      
         return; end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
-    if BpodSystem.Status.BeingUsed == 0   
+    if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
@@ -178,6 +192,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
 end
+
 
 end % end of protocol main function
 
@@ -223,33 +238,33 @@ switch nextTrialType
     case 1 % CHOICE
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight';
         ThisCenterOdor = S.GUI.ChoiceOdor;
-        CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
-        doorOpen = [{DIOmodule,3,DIOmodule,7}];
-        doorClose = [{DIOmodule,4,DIOmodule,8}];
+        CenterDIOmsg1 = 9; CenterDIOmsg2 = 10;
+%         doorOpen = [{DIOmodule,3,DIOmodule,7}];
+%         doorClose = [{DIOmodule,4,DIOmodule,8}];
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 19; SideDIOmsg2 = 20;
             else
                 RightSideOdor = S.GUI.OdorD;
                 SideOdorState = 'OdorDRight';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 21; SideDIOmsg2 = 22;
             end
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
                 SideOdorState = 'OdorALeft';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
                 SideOdorState = 'OdorBLeft';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
@@ -264,11 +279,11 @@ switch nextTrialType
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 19; SideDIOmsg2 = 20;
             else
                 LeftSideOdor = S.GUI.OdorD;
                 SideOdorState = 'OdorDLeft';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 21; SideDIOmsg2 = 22;
             end            
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
@@ -282,38 +297,38 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
                 SideOdorState = 'OdorARight';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
                 SideOdorState = 'OdorBRight';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end            
         end
              
     case 2 % INFO FORCED
         ThisCenterOdor = S.GUI.InfoOdor;
-        CenterDIOmsg1 = 7; CenterDIOmsg2 = 8;
+        CenterDIOmsg1 = 11; CenterDIOmsg2 = 12;
         if infoSide == 0
             % info on left
             RewardLeft = S.RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
             RightSideOdor = 0;
-            doorOpen = {DIOmodule,3};
-            doorClose = {DIOmodule,4};
+%             doorOpen = {DIOmodule,3};
+%             doorClose = {DIOmodule,4};
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
                 SideOdorState = 'OdorALeft';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
                 SideOdorState = 'OdorBLeft';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             OutcomeStateRight = 'TimeoutOutcome';
             RightRewardDrops = 0;
@@ -321,41 +336,41 @@ switch nextTrialType
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
             LeftSideOdor = 0;
-            doorOpen = {DIOmodule,7};
-            doorClose = {DIOmodule,8};            
+%             doorOpen = {DIOmodule,7};
+%             doorClose = {DIOmodule,8};            
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
                 SideOdorState = 'OdorARight';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
                 SideOdorState = 'OdorBRight';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
             LeftRewardDrops = 0;
         end
     case 3 % RAND FORCED
         ThisCenterOdor = S.GUI.RandOdor;
-        CenterDIOmsg1 = 9; CenterDIOmsg2 = 10;
+        CenterDIOmsg1 = 13; CenterDIOmsg2 = 14;
         if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
-            doorOpen = {DIOmodule,7};
-            doorClose = {DIOmodule,8};            
+%             doorOpen = {DIOmodule,7};
+%             doorClose = {DIOmodule,8};            
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 19; SideDIOmsg2 = 20;
             else
                 RightSideOdor = S.GUI.OdorD;
                 SideOdorState = 'OdorDRight';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 21; SideDIOmsg2 = 22;
             end            
             LeftSideOdor = 0;
             if RewardRight == 1
@@ -371,16 +386,16 @@ switch nextTrialType
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
             LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
-            doorOpen = {DIOmodule,3};
-            doorClose = {DIOmodule,4};            
+%             doorOpen = {DIOmodule,3};
+%             doorClose = {DIOmodule,4};            
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 19; SideDIOmsg2 = 20;
             else
                 LeftSideOdor = S.GUI.OdorD;
                 SideOdorState = 'OdorDLeft';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 21; SideDIOmsg2 = 22;
             end             
             RightSideOdor = 0;
             if RewardLeft == 1
@@ -490,28 +505,28 @@ sma = AddState(sma, 'Name', 'CenterOdorPreload',...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0.2,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {DIOmodule,5}); % open center door
+    'OutputActions', {DIOmodule,1});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},...
-    'OutputActions', {'PWM2',50});
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
-    'OutputActions', {'PWM2',50});
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'BNC2',1,DIOmodule,CenterDIOmsg1,'PWM2',50},PresentOdor(0)]);
+    'OutputActions',[{'BNC2',1,DIOmodule,CenterDIOmsg1},PresentOdor(0)]);
 sma = AddState(sma, 'Name', 'CenterOdorOff',...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','WaitForCenter'},...
-    'OutputActions', [{DIOmodule,CenterDIOmsg2,'PWM2',50},PresentOdor(0),...
+    'OutputActions', [{DIOmodule,CenterDIOmsg2},PresentOdor(0),...
     PreloadOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},...
-    'OutputActions', [{DIOmodule,CenterDIOmsg2,'PWM2',50},PresentOdor(0),...
+    'OutputActions', [{DIOmodule,CenterDIOmsg2},PresentOdor(0),...
     PreloadOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
@@ -522,7 +537,7 @@ sma = AddState(sma, 'Name', 'GoCue', ...
 sma = AddState(sma, 'Name', 'Response', ...
     'Timer', S.GUI.OdorDelay,...
     'StateChangeConditions', {'Tup','GracePeriod','Port1In',ChooseLeft,'Port3In',ChooseRight},...
-    'OutputActions', [{DIOmodule,6,},doorOpen]); % center door close and side door(s) open
+    'OutputActions', {});
 
 sma = AddState(sma, 'Name', 'GracePeriod',...
     'Timer', S.GUI.GracePeriod,...
@@ -559,12 +574,11 @@ sma = AddState(sma, 'Name', 'OdorDLeft', ...
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','DoorOpenGraceLeft'},...
-    'OutputActions', [{DIOmodule,SideDIOmsg2},doorClose,PresentOdor(1),PreloadOdor(LeftSideOdor,1)]);
+    'OutputActions', [{DIOmodule,SideDIOmsg2},{DIOmodule,4},PresentOdor(1),PreloadOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'DoorOpenGraceLeft', ...
     'Timer', 1,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
     'OutputActions', {DIOmodule,3});
-
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
@@ -613,12 +627,12 @@ sma = AddState(sma, 'Name', 'OdorDRight', ...
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','DoorOpenGraceRight'},...
-    'OutputActions', [{DIOmodule,SideDIOmsg2},doorClose,PresentOdor(2),...
+    'OutputActions', [{DIOmodule,SideDIOmsg2},{DIOmodule,8},PresentOdor(2),...
     PreloadOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'DoorOpenGraceRight', ...
     'Timer', 1,...
-    'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', {DIOmodule,6});
+    'StateChangeConditions', {'Tup','RightPortCheck'},...
+    'OutputActions', {DIOmodule,7});
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
@@ -910,13 +924,11 @@ function Actions = PreloadOdor(odorID,port)
             cmd2 = {'ValveModule2',odorID};
             cmd3 = {'ValveModule4',1};
             Actions = [cmd1,cmd2,cmd3];
-%             Actions = [cmd1,cmd2];
         case 2
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
             cmd3 = {'ValveModule4',2};
-            Actions = [cmd1,cmd2,cmd3];
-%             Actions = [cmd1,cmd2];
+            Actions = [cmd1,cmd2,cmd3];            
     end
 end
 
@@ -1301,3 +1313,13 @@ function state_colors = getStateColors(thisInfoSide)
 end
 
 
+function recordDataAvailable(src,~)
+    global BpodSystem
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
+    DateInfo = datestr(now,30);
+    DateInfo(DateInfo == 'T') = '_';
+    DAQFileName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv'];
+    dlmwrite((fullfile(DataFolder, DAQFileName)), [data,timestamps],'-append');
+
+end

@@ -239,7 +239,7 @@ switch nextTrialType
         CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
+            RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
@@ -271,7 +271,7 @@ switch nextTrialType
             end
         else
             RewardLeft = S.RewardTypes(TrialCounts(2)+1,2); RewardRight = S.RewardTypes(TrialCounts(1)+1,1);
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(2)+1,1);
+            LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
@@ -352,7 +352,7 @@ switch nextTrialType
         if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
-            RightSideOdorFlag = S.RandOdorTypes(TrialCounts(4)+1,1);
+            RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCRight';
@@ -375,7 +375,7 @@ switch nextTrialType
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
-            LeftSideOdorFlag = S.RandOdorTypes(TrialCounts(1)+1,1);
+            LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorState = 'OdorCLeft';
@@ -399,7 +399,7 @@ switch nextTrialType
 end
 
 % PORT EXIT GRACE PERIOD
-gracePeriod = 0.5
+gracePeriod = 0.5;
 
 % Water parameters
 R = GetValveTimes(4, [1 3]);
@@ -876,7 +876,7 @@ function S = SetRewardTypes(S,currentTrial)
 
     % Rand Odors to pull from
     % RandOdorTypes = repmat(RandOdorTypes,1,4);
-    RandOdorTypes = RandOdorTypes(1:maxTrials);
+    RandOdorTypes = RandOdorTypes(1:maxTrials)
 
     if currentTrial == 1
         S.RandOdorTypes = RandOdorTypes;
@@ -962,15 +962,15 @@ function SetLatchValves(S)
     latchModule = latchModule{1};
 
     if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
-        odorApin = latchValves((S.GUI.OdorA+1)*2-1);
-        odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
-        odorCpin = latchValves((S.GUI.OdorC+1)*2);
-        odorDpin = latchValves((S.GUI.OdorD+1)*2); 
+        odorApin = latchValves((S.GUI.OdorA+1)*2-1)
+        odorBpin = latchValves((S.GUI.OdorB+1)*2-1)
+        odorCpin = latchValves((S.GUI.OdorC+1)*2)
+        odorDpin = latchValves((S.GUI.OdorD+1)*2)
     else
-        odorApin = latchValves((S.GUI.OdorA+1)*2);
-        odorBpin = latchValves((S.GUI.OdorB+1)*2);
-        odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
-        odorDpin = latchValves((S.GUI.OdorD+1)*2-1);     
+        odorApin = latchValves((S.GUI.OdorA+1)*2)
+        odorBpin = latchValves((S.GUI.OdorB+1)*2)
+        odorCpin = latchValves((S.GUI.OdorC+1)*2-1)
+        odorDpin = latchValves((S.GUI.OdorD+1)*2-1)     
     end
 
     pins = [odorApin odorBpin odorCpin odorDpin];
