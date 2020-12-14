@@ -124,7 +124,7 @@ DIOmodule = DIOmodule{1};
 % miniscope has 4 I/O BNC Pins, and scope sync and trig
 % scope sync connects to Bpod IN BNC
 % scope trig to Bpod OUT BNC 1
-% Bpod out BNC 2 at center odor start
+t% Bpod out BNC 2 at center odor start
 
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, leftDoorOpen, leftDoorClose, ...
     centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose, ...
