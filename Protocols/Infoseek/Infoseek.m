@@ -958,15 +958,15 @@ function SetLatchValves(S)
     latchModule = latchModule{1};
 
     if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
-        odorApin = latchValves((S.GUI.OdorA+1)*2-1)
-        odorBpin = latchValves((S.GUI.OdorB+1)*2-1)
-        odorCpin = latchValves((S.GUI.OdorC+1)*2)
-        odorDpin = latchValves((S.GUI.OdorD+1)*2) 
+        odorApin = latchValves((S.GUI.OdorA+1)*2-1);
+        odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
+        odorCpin = latchValves((S.GUI.OdorC+1)*2);
+        odorDpin = latchValves((S.GUI.OdorD+1)*2);
     else
-        odorApin = latchValves((S.GUI.OdorA+1)*2)
-        odorBpin = latchValves((S.GUI.OdorB+1)*2)
-        odorCpin = latchValves((S.GUI.OdorC+1)*2-1)
-        odorDpin = latchValves((S.GUI.OdorD+1)*2-1)     
+        odorApin = latchValves((S.GUI.OdorA+1)*2);
+        odorBpin = latchValves((S.GUI.OdorB+1)*2);
+        odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
+        odorDpin = latchValves((S.GUI.OdorD+1)*2-1);    
     end
 
     pins = [odorApin odorBpin odorCpin odorDpin];
