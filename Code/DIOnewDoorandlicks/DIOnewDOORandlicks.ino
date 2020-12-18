@@ -31,7 +31,7 @@
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 char moduleName[] = "DIOnewDOOR"; // Name of module for manual override UI and state machine assembler
-char* eventNames[] = {"Lick_Left", "Lick_Center", "Lick_Right"};
+char* eventNames[] = {"Lick_Left_Hi", "Lick_Left_Lo","Lick_Center_Hi", "Lick_Center_Lo","Lick_Right_Hi","Lick_Right_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
 #define OutputOffset 5
@@ -43,6 +43,8 @@ char* eventNames[] = {"Lick_Left", "Lick_Center", "Lick_Right"};
 #define OutputChRangeHigh OutputOffset+nOutputChannels
 
 byte nEventNames = (sizeof(eventNames)/sizeof(char *));
+byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
+byte nEvents = 0; // Number of events captured in the current cycle
 
 
 // Variables
@@ -50,8 +52,6 @@ byte opCode = 0;
 byte channel = 0;
 byte state = 0;
 byte thisEvent = 0;
-byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
-byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
 
 int irqpin = 2;
@@ -139,26 +139,31 @@ void loop()
     
     uint16_t touched = ((MSB << 8) | LSB); //16bits that make up the touch states
 
-    
-    for (int i=0; i < 12; i++){  // Check what electrodes were pressed
-//      touchPin = lickSensors[i];
-      if(touched & (1<<i)){
+    thisEvent = 1;
+    //change this to be for the 3
+    for (int i=0; i < 3; i++){  // Check what electrodes were pressed
+      touchPin = lickSensors[i];
+      if(touched & (1<<touchPin)){
       
-        if(touchStates[i] == 0){
-          toWrite = (byte) i;
-          Serial1COM.writeByte(toWrite);
-        }else if(touchStates[i] == 1){
+        if(touchStates[touchPin] == 0){
+          events[nEvents] = thisEvent; nEvents++;
+        }else if(touchStates[touchPin] == 1){
           //pin touchpin is still being touched
         }  
       
-        touchStates[i] = 1;      
+        touchStates[touchPin] = 1;      
       }else{
-        if(touchStates[i] == 1){        
-          //pin touchpin is no longer being touched
+        if(touchStates[touchPin] == 1){        
+          events[nEvents] = thisEvent+1; nEvents++;
        }        
         touchStates[i] = 0;
       }    
-    }    
+    }
+    thisEvent += 2;    
+  }
+  if (nEvents > 0) {
+    Serial1COM.writeByteArray(events, nEvents);
+    nEvents = 0;
   }
 }
 
@@ -169,7 +174,7 @@ void returnModuleInfo() {
   Serial1COM.writeCharArray(moduleName, sizeof(moduleName)-1); // Module name
   Serial1COM.writeByte(1); // 1 if more info follows, 0 if not
   Serial1COM.writeByte('#'); // Op code for: Number of behavior events this module can generate
-  Serial1COM.writeByte(nInputChannels); // 2 states for each input channel
+  Serial1COM.writeByte(nInputChannels*2); // 2 states for each input channel
   Serial1COM.writeByte(1); // 1 if more info follows, 0 if not
   Serial1COM.writeByte('E'); // Op code for: Behavior event names
   Serial1COM.writeByte(nEventNames);
