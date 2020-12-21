@@ -266,7 +266,7 @@ switch nextTrialType
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 RightSideOdor = S.GUI.OdorD;
-                SideOdorStatRight = 'OdorDRight';
+                SideOdorStateRight = 'OdorDRight';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             if RewardLeft == 1
