@@ -262,24 +262,24 @@ switch nextTrialType
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCRight';
+                SideOdorStateRight = 'OdorCRight';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 RightSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDRight';
+                SideOdorStatRight = 'OdorDRight';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorALeft';
+                SideOdorStateLeft = 'OdorALeft';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBLeft';
+                SideOdorStateLeft = 'OdorBLeft';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             if RewardRight == 1
@@ -294,11 +294,11 @@ switch nextTrialType
             LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCLeft';
+                SideOdorStateLeft = 'OdorCLeft';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 LeftSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDLeft';
+                SideOdorStateLeft = 'OdorDLeft';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end            
             if RewardLeft == 1
@@ -312,13 +312,13 @@ switch nextTrialType
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorARight';
+                SideOdorStateRight = 'OdorARight';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBRight';
+                SideOdorStateRight = 'OdorBRight';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end            
         end
@@ -335,13 +335,13 @@ switch nextTrialType
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorALeft';
+                SideOdorStateLeft = 'OdorALeft';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBLeft';
+                SideOdorStateLeft = 'OdorBLeft';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateRight = 'TimeoutOutcome';
@@ -354,13 +354,13 @@ switch nextTrialType
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorARight';
+                SideOdorStateRight = 'OdorARight';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBRight';
+                SideOdorStateRight = 'OdorBRight';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
@@ -375,11 +375,11 @@ switch nextTrialType
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCRight';
+                SideOdorStateRight = 'OdorCRight';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 RightSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDRight';
+                SideOdorStateRight = 'OdorDRight';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end            
             LeftSideOdor = 0;
@@ -398,11 +398,11 @@ switch nextTrialType
             LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCLeft';
+                SideOdorStateLeft = 'OdorCLeft';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 LeftSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDLeft';
+                SideOdorStateLeft = 'OdorDLeft';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end             
             RightSideOdor = 0;
@@ -541,7 +541,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 % LEFT
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
-    'StateChangeConditions', {'GlobalTimer1_End',SideOdorState,'Condition7',SideOdorState},...
+    'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
     'OutputActions', {});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
@@ -586,7 +586,7 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 % CHOOSE RIGHT
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
-    'StateChangeConditions', {'GlobalTimer1_End',SideOdorState,'Condition7',SideOdorState},...
+    'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight},...
     'OutputActions', {});
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
