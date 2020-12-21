@@ -30,7 +30,7 @@
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIOnewDOOR"; // Name of module for manual override UI and state machine assembler
+char moduleName[] = "DIOnewDOORLICKS"; // Name of module for manual override UI and state machine assembler
 char* eventNames[] = {"Lick_Left_Hi", "Lick_Left_Lo","Lick_Center_Hi", "Lick_Center_Lo","Lick_Right_Hi","Lick_Right_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
@@ -42,9 +42,6 @@ char* eventNames[] = {"Lick_Left_Hi", "Lick_Left_Lo","Lick_Center_Hi", "Lick_Cen
 #define InputChRangeHigh InputOffset+nInputChannels
 #define OutputChRangeHigh OutputOffset+nOutputChannels
 
-byte nEventNames = (sizeof(eventNames)/sizeof(char *));
-byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
-byte nEvents = 0; // Number of events captured in the current cycle
 
 
 // Variables
@@ -52,6 +49,9 @@ byte opCode = 0;
 byte channel = 0;
 byte state = 0;
 byte thisEvent = 0;
+byte nEventNames = (sizeof(eventNames)/sizeof(char *));
+byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
+byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
 
 int irqpin = 2;
