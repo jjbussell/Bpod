@@ -17,7 +17,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorTime = 3;
     S.GUI.OdorInterval = 4;
     S.GUI.Port = 2; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 3; % 0 = odor 1
+    S.GUI.OdorID = 0; % 0 = odor 1
 end
 
 %% Initialize plots
