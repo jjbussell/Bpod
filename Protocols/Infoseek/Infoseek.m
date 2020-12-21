@@ -345,7 +345,8 @@ switch nextTrialType
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateRight = 'TimeoutOutcome';
-            RightRewardDrops = 0;            
+            RightRewardDrops = 0;
+            SideOdorStateRight = 'TimeoutOdor';
         else
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
@@ -364,7 +365,8 @@ switch nextTrialType
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
-            LeftRewardDrops = 0;            
+            LeftRewardDrops = 0;
+            SideOdorStateLeft = 'TimeoutOdor';
         end
     case 3 % RAND FORCED
         ThisCenterOdor = S.GUI.RandOdor;
@@ -391,7 +393,8 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
-            LeftRewardDrops = 0;            
+            LeftRewardDrops = 0;
+            SideOdorStateLeft = 'TimeoutOdor';
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
@@ -414,7 +417,8 @@ switch nextTrialType
                 LeftRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateRight = 'TimeoutOutcome';
-            RightRewardDrops = 0;            
+            RightRewardDrops = 0;
+            SideOdorStateRight = 'TimeoutOdor';
         end
 end
 
