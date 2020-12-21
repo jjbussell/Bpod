@@ -20,7 +20,7 @@ a buzzer and lick sensor.
 %}
 function InfoSeek
 
-global BpodSystem
+global BpodSystem vid
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
@@ -66,20 +66,7 @@ end
 
 vidOn = 0;
 if vidOn == 1
-    vid = videoinput('winvideo',1,'MJPG_800x600');
-    src.AcquisitionFrameRateEnable = 'True';
-    src.AcquisitionFrameRateAbs = 30;
-    vid.FramesPerTrigger = Inf;
-    triggerconfig(vid, 'manual');
-    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
-    DateInfo = datestr(now, 30); 
-    DateInfo(DateInfo == 'T') = '_';
-    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
-    logfile = VideoWriter(fullfile(DataFolder,VidName),'MPEG-4');
-    set(logfile,'FrameRate',30);
-    vid.DiskLogger = logfile;
-    set(vid,'LoggingMode','disk');
-    preview(vid);
+    setupVideo();
 end
 
 %% Set Latch Valves
@@ -176,6 +163,9 @@ for currentTrial = 1:S.GUI.SessionTrials
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
+        if vidOn==1
+            shutdownVideo();
+        end
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -1331,3 +1321,45 @@ function state_colors = getStateColors(thisInfoSide)
 end
 
 
+function setupVideo()
+    global BpodSystem vid
+    vid = videoinput('winvideo',1,'MJPG_1920x1080');
+    src = getselectedsource(vid);
+    vid.FramesPerTrigger = Inf;
+    triggerconfig(vid, 'manual');
+    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
+    DateInfo = datestr(now, 30); 
+    DateInfo(DateInfo == 'T') = '_';
+    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
+    logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
+    set(logfile,'FrameRate',30);
+    vid.DiskLogger = logfile;
+    set(vid,'LoggingMode','disk');
+    figure('Toolbar','none',...
+       'Menubar', 'none',...
+       'NumberTitle','Off',...
+       'Name','Live Feed');
+    vidRes = get(vid, 'VideoResolution');
+    imWidth = vidRes(1);
+    imHeight = vidRes(2);
+    nBands = get(vid, 'NumberOfBands');
+    hImage = image( zeros(imHeight, imWidth, nBands) );    
+    preview(vid,hImage);
+end
+
+function shutdownVideo()
+    global vid
+%         stoppreview();
+%         closepreview();
+        hf=findobj('Name','Live Feed');
+        close(hf);
+        stop(vid);
+    %     while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
+    %         pause(.1)
+    %     end
+        flushdata(vid);
+        delete(vid);
+        clear vid;
+
+    %     setupVideo();
+end
