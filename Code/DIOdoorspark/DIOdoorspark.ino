@@ -29,7 +29,7 @@
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 char moduleName[] = "DIOnewDOORLICKS"; // Name of module for manual override UI and state machine assembler
-char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo"};
+char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "CenterLick_Hi", "CenterLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
 #define OutputOffset 6
