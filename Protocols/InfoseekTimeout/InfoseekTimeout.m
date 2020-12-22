@@ -1,6 +1,6 @@
 function InfoSeekTimeout
 
-global BpodSystem
+global BpodSystem vid
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
@@ -48,21 +48,9 @@ end
 
 vidOn = 0;
 if vidOn == 1
-    vid = videoinput('winvideo',1,'MJPG_800x600');
-    src.AcquisitionFrameRateEnable = 'True';
-    src.AcquisitionFrameRateAbs = 30;
-    vid.FramesPerTrigger = Inf;
-    triggerconfig(vid, 'manual');
-    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
-    DateInfo = datestr(now, 30); 
-    DateInfo(DateInfo == 'T') = '_';
-    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
-    logfile = VideoWriter(fullfile(DataFolder,VidName),'MPEG-4');
-    set(logfile,'FrameRate',30);
-    vid.DiskLogger = logfile;
-    set(vid,'LoggingMode','disk');
-    preview(vid);
+    setupVideo();
 end
+
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -156,6 +144,9 @@ for currentTrial = 1:S.GUI.SessionTrials
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
+        if vidOn==1
+            shutdownVideo();
+        end        
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -242,24 +233,24 @@ switch nextTrialType
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCRight';
+                SideOdorStateRight = 'OdorCRight';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 RightSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDRight';
+                SideOdorStateRight = 'OdorDRight';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorALeft';
+                SideOdorStateLeft = 'OdorALeft';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBLeft';
+                SideOdorStateLeft = 'OdorBLeft';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             if RewardRight == 1
@@ -274,11 +265,11 @@ switch nextTrialType
             LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCLeft';
+                SideOdorStateLeft = 'OdorCLeft';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 LeftSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDLeft';
+                SideOdorStateLeft = 'OdorDLeft';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end            
             if RewardLeft == 1
@@ -292,13 +283,13 @@ switch nextTrialType
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorARight';
+                SideOdorStateRight = 'OdorARight';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBRight';
+                SideOdorStateRight = 'OdorBRight';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end            
         end
@@ -315,16 +306,17 @@ switch nextTrialType
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorALeft';
+                SideOdorStateLeft = 'OdorALeft';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBLeft';
+                SideOdorStateLeft = 'OdorBLeft';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateRight = 'TimeoutOutcome';
+            SideOdorStateRight = 'TimeoutOdor';
             RightRewardDrops = 0;            
         else
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
@@ -334,16 +326,17 @@ switch nextTrialType
                 OutcomeStateRight = 'RightBigReward';
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
-                SideOdorState = 'OdorARight';
+                SideOdorStateRight = 'OdorARight';
                 SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
-                SideOdorState = 'OdorBRight';
+                SideOdorStateRight = 'OdorBRight';
                 SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
+            SideOdorStateLeft = 'TimeoutOdor';
             LeftRewardDrops = 0;            
         end
     case 3 % RAND FORCED
@@ -355,11 +348,11 @@ switch nextTrialType
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCRight';
+                SideOdorStateRight = 'OdorCRight';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 RightSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDRight';
+                SideOdorStateRight = 'OdorDRight';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end            
             LeftSideOdor = 0;
@@ -371,6 +364,7 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
+            SideOdorStateLeft = 'TimeoutOdor';
             LeftRewardDrops = 0;            
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
@@ -378,11 +372,11 @@ switch nextTrialType
             LeftSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
-                SideOdorState = 'OdorCLeft';
+                SideOdorStateLeft = 'OdorCLeft';
                 SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             else
                 LeftSideOdor = S.GUI.OdorD;
-                SideOdorState = 'OdorDLeft';
+                SideOdorStateLeft = 'OdorDLeft';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end             
             RightSideOdor = 0;
@@ -394,6 +388,7 @@ switch nextTrialType
                 LeftRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateRight = 'TimeoutOutcome';
+            SideOdorStateRight = 'TimeoutOdor';
             RightRewardDrops = 0;            
         end
 end
@@ -524,7 +519,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 % LEFT
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
-    'StateChangeConditions', {'GlobalTimer1_End',SideOdorState,'Condition7',SideOdorState,'Condition4','TimeoutGraceLeft','Port1Out','TimeoutGraceLeft'},...
+    'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft,'Condition4','TimeoutGraceLeft','Port1Out','TimeoutGraceLeft'},...
     'OutputActions', {});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
@@ -573,7 +568,7 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 % CHOOSE RIGHT
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
-    'StateChangeConditions', {'GlobalTimer1_End',SideOdorState,'Condition7',SideOdorState,'Condition6','TimeoutGraceRight','Port3Out','TimeoutGraceRight'},...
+    'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight,'Condition6','TimeoutGraceRight','Port3Out','TimeoutGraceRight'},...
     'OutputActions', {});
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
@@ -1341,3 +1336,45 @@ function state_colors = getStateColors(thisInfoSide)
 end
 
 
+function setupVideo()
+    global BpodSystem vid
+    vid = videoinput('winvideo',1,'MJPG_1920x1080');
+    src = getselectedsource(vid);
+    vid.FramesPerTrigger = Inf;
+    triggerconfig(vid, 'manual');
+    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
+    DateInfo = datestr(now, 30); 
+    DateInfo(DateInfo == 'T') = '_';
+    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
+    logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
+    set(logfile,'FrameRate',30);
+    vid.DiskLogger = logfile;
+    set(vid,'LoggingMode','disk');
+    figure('Toolbar','none',...
+       'Menubar', 'none',...
+       'NumberTitle','Off',...
+       'Name','Live Feed');
+    vidRes = get(vid, 'VideoResolution');
+    imWidth = vidRes(1);
+    imHeight = vidRes(2);
+    nBands = get(vid, 'NumberOfBands');
+    hImage = image( zeros(imHeight, imWidth, nBands) );    
+    preview(vid,hImage);
+end
+
+function shutdownVideo()
+    global vid
+%         stoppreview();
+%         closepreview();
+        hf=findobj('Name','Live Feed');
+        close(hf);
+        stop(vid);
+    %     while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
+    %         pause(.1)
+    %     end
+        flushdata(vid);
+        delete(vid);
+        clear vid;
+
+    %     setupVideo();
+end

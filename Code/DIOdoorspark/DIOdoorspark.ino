@@ -25,40 +25,38 @@
 
 #include "ArCOM.h" // Import serial communication wrapper
 #include <Servo.h>
-#include "mpr121spark.h"
-#include <Wire.h>
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
 char moduleName[] = "DIOnewDOORLICKS"; // Name of module for manual override UI and state machine assembler
-char* eventNames[] = {"Lick_Left_Hi", "Lick_Left_Lo","Lick_Center_Hi", "Lick_Center_Lo","Lick_Right_Hi","Lick_Right_Lo"};
+char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
-#define OutputOffset 5
+#define OutputOffset 6
 #define nInputChannels 3
 #define nOutputChannels 15
+uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
+                                  // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
 // Constants
 #define InputChRangeHigh InputOffset+nInputChannels
 #define OutputChRangeHigh OutputOffset+nOutputChannels
 
-
+byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 
 // Variables
 byte opCode = 0;
 byte channel = 0;
 byte state = 0;
 byte thisEvent = 0;
-byte nEventNames = (sizeof(eventNames)/sizeof(char *));
+boolean readThisChannel = false; // For implementing refractory period (see variable above)
+byte inputChState[nInputChannels] = {0}; // Current state of each input channel
+byte lastInputChState[nInputChannels] = {0}; // Last known state of each input channel
+byte inputsEnabled[nInputChannels] = {0}; // For each input channel, enabled or disabled
+uint32_t inputChSwitchTime[nInputChannels] = {0}; // Time of last detected logic transition
 byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
 byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
-
-int irqpin = 2;
-boolean touchStates[12]; //to keep track of the previous touch states
-int lickSensors[] = {1,4,7};
-int touchPin = 0;
-byte toWrite;
 
 int buzzer = 5;
 int door = 0;
@@ -77,12 +75,13 @@ void setup()
     pinMode(i, OUTPUT);
   }
 
-  pinMode(irqpin, INPUT);
-  digitalWrite(irqpin, HIGH); //enable pullup resistor  
+  for (int i = 0; i < nInputChannels; i++) {
+    pinMode(i+InputOffset, INPUT_PULLUP);
+    inputsEnabled[i] = 1;
+    inputChState[i] = 1;
+    lastInputChState[i] = 1;
+  }  
 
-  Wire.begin();
-
-  mpr121_setup();  
 }
 
 void loop()
@@ -128,38 +127,32 @@ void loop()
     }
   }
 
-  // CHECK FOR LICKS
-  if(!checkInterrupt()){
-    
-    //read the touch state from the MPR121
-    Wire.requestFrom(0x5A,2); 
-    
-    byte LSB = Wire.read();
-    byte MSB = Wire.read();
-    
-    uint16_t touched = ((MSB << 8) | LSB); //16bits that make up the touch states
-
     thisEvent = 1;
-    //change this to be for the 3
-    for (int i=0; i < 3; i++){  // Check what electrodes were pressed
-      touchPin = lickSensors[i];
-      if(touched & (1<<touchPin)){
-      
-        if(touchStates[touchPin] == 0){
+  for (int i = 0; i < nInputChannels; i++) {
+    if (inputsEnabled[i] == 1) {
+      inputChState[i] = digitalRead(i+InputOffset);
+      readThisChannel = false;
+      if (currentTime > inputChSwitchTime[i]) {
+        if ((currentTime - inputChSwitchTime[i]) > refractoryPeriod) {
+          readThisChannel = true;
+        }
+      } else if ((currentTime + 4294967296-inputChSwitchTime[i]) > refractoryPeriod) {
+        readThisChannel = true;
+      }
+      if (readThisChannel) {
+        if ((inputChState[i] == 1) && (lastInputChState[i] == 0)) {
           events[nEvents] = thisEvent; nEvents++;
-        }else if(touchStates[touchPin] == 1){
-          //pin touchpin is still being touched
-        }  
-      
-        touchStates[touchPin] = 1;      
-      }else{
-        if(touchStates[touchPin] == 1){        
+          inputChSwitchTime[i] = currentTime;
+          lastInputChState[i] = inputChState[i];
+        }
+        if ((inputChState[i] == 0) && (lastInputChState[i] == 1)) {
           events[nEvents] = thisEvent+1; nEvents++;
-       }        
-        touchStates[i] = 0;
-      }    
+          inputChSwitchTime[i] = currentTime;
+          lastInputChState[i] = inputChState[i];
+        }
+      }
     }
-    thisEvent += 2;    
+    thisEvent += 2;
   }
   if (nEvents > 0) {
     Serial1COM.writeByteArray(events, nEvents);
@@ -237,91 +230,4 @@ void closeDoor(int door, int speed_delay){
     delay(speed_delay);                   
   }
   myservo.detach();
-}
-
-void mpr121_setup(void){
-
-  set_register(0x5A, ELE_CFG, 0x00); 
-  
-  // Section A - Controls filtering when data is > baseline.
-  set_register(0x5A, MHD_R, 0x01);
-  set_register(0x5A, NHD_R, 0x01);
-  set_register(0x5A, NCL_R, 0x00);
-  set_register(0x5A, FDL_R, 0x00);
-
-  // Section B - Controls filtering when data is < baseline.
-  set_register(0x5A, MHD_F, 0x01);
-  set_register(0x5A, NHD_F, 0x01);
-  set_register(0x5A, NCL_F, 0xFF);
-  set_register(0x5A, FDL_F, 0x02);
-  
-  // Section C - Sets touch and release thresholds for each electrode
-  set_register(0x5A, ELE0_T, TOU_THRESH);
-  set_register(0x5A, ELE0_R, REL_THRESH);
- 
-  set_register(0x5A, ELE1_T, TOU_THRESH);
-  set_register(0x5A, ELE1_R, REL_THRESH);
-  
-  set_register(0x5A, ELE2_T, TOU_THRESH);
-  set_register(0x5A, ELE2_R, REL_THRESH);
-  
-  set_register(0x5A, ELE3_T, TOU_THRESH);
-  set_register(0x5A, ELE3_R, REL_THRESH);
-  
-  set_register(0x5A, ELE4_T, TOU_THRESH);
-  set_register(0x5A, ELE4_R, REL_THRESH);
-  
-  set_register(0x5A, ELE5_T, TOU_THRESH);
-  set_register(0x5A, ELE5_R, REL_THRESH);
-  
-  set_register(0x5A, ELE6_T, TOU_THRESH);
-  set_register(0x5A, ELE6_R, REL_THRESH);
-  
-  set_register(0x5A, ELE7_T, TOU_THRESH);
-  set_register(0x5A, ELE7_R, REL_THRESH);
-  
-  set_register(0x5A, ELE8_T, TOU_THRESH);
-  set_register(0x5A, ELE8_R, REL_THRESH);
-  
-  set_register(0x5A, ELE9_T, TOU_THRESH);
-  set_register(0x5A, ELE9_R, REL_THRESH);
-  
-  set_register(0x5A, ELE10_T, TOU_THRESH);
-  set_register(0x5A, ELE10_R, REL_THRESH);
-  
-  set_register(0x5A, ELE11_T, TOU_THRESH);
-  set_register(0x5A, ELE11_R, REL_THRESH);
-  
-  // Section D
-  // Set the Filter Configuration
-  // Set ESI2
-  set_register(0x5A, FIL_CFG, 0x04);
-  
-  // Section E
-  // Electrode Configuration
-  // Set ELE_CFG to 0x00 to return to standby mode
-  set_register(0x5A, ELE_CFG, 0x0C);  // Enables all 12 Electrodes
-  
-  
-  // Section F
-  // Enable Auto Config and auto Reconfig
-  /*set_register(0x5A, ATO_CFG0, 0x0B);
-  set_register(0x5A, ATO_CFGU, 0xC9);  // USL = (Vdd-0.7)/vdd*256 = 0xC9 @3.3V   set_register(0x5A, ATO_CFGL, 0x82);  // LSL = 0.65*USL = 0x82 @3.3V
-  set_register(0x5A, ATO_CFGT, 0xB5);*/  // Target = 0.9*USL = 0xB5 @3.3V
-  
-  set_register(0x5A, ELE_CFG, 0x0C);
-  
-}
-
-
-boolean checkInterrupt(void){
-  return digitalRead(irqpin);
-}
-
-
-void set_register(int address, unsigned char r, unsigned char v){
-    Wire.beginTransmission(address);
-    Wire.write(r);
-    Wire.write(v);
-    Wire.endTransmission();
 }
