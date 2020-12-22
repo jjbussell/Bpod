@@ -16,7 +16,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.RewardDelay = 0.2;
     S.GUI.RewardAmount = 4; %uL
-    S.GUI.ITI = 0;
+    S.GUI.ITI = 2;
 end
 
 %% Initialize plots

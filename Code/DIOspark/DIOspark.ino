@@ -24,17 +24,16 @@
 // A 3-byte serial message from the state machine enables or disables input lines: ['E' Channel (2-7), State (0 = disabled, 1 = enabled)]
 
 #include "ArCOM.h" // Import serial communication wrapper
-#include <Servo.h>
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIOnewDOORLICKS"; // Name of module for manual override UI and state machine assembler
+char moduleName[] = "DIOsparkLICKS"; // Name of module for manual override UI and state machine assembler
 char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "CenterLick_Hi", "CenterLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
 #define OutputOffset 6
 #define nInputChannels 3
-#define nOutputChannels 15
+#define nOutputChannels 19
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
                                   // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
@@ -59,12 +58,6 @@ byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
 
 int buzzer = 5;
-int door = 0;
-
-Servo myservo;
-
-int motorPins[]= {6,7,8};
-int speed_delay = 30;
 
 void setup()
 {
@@ -97,30 +90,6 @@ void loop()
     } else if (opCode == 253){
       tone(buzzer,4500,50);
       state = Serial1COM.readByte();
-    } else if (opCode == 252){
-      door = 1;
-      speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
-    } else if (opCode == 251){
-      door = 1;
-      speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);
-    } else if (opCode == 250){
-      door = 2;
-      speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
-    } else if (opCode == 249){
-      door = 2;
-      speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);
-    } else if (opCode == 248){
-      door = 3;
-      speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
-    } else if (opCode == 247){
-      door = 3;
-      speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);            
     } else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
@@ -178,56 +147,4 @@ void returnModuleInfo() {
     }
   }
   Serial1COM.writeByte(0); // 1 if more info follows, 0 if not
-}
-
-void openDoor(int door,int speed_delay){
-  int motorPin = motorPins[door-1];
-  myservo.attach(motorPin);
-  int open_angle = 30;
-  int close_angle = 70;
-  switch (door){
-    case 1:
-      open_angle = 30;
-      close_angle = 80;
-      break;
-    case 2:
-      open_angle = 35;
-      close_angle = 85;    
-      break;
-    case 3:
-      open_angle = 30;
-      close_angle = 70;    
-      break;
-  }
-  for (int i = close_angle; i >= open_angle; i--) { 
-    myservo.write(i);  
-    delay(speed_delay);                 
-  }
-  myservo.detach();
-}
-
-void closeDoor(int door, int speed_delay){
-  int motorPin = motorPins[door-1];
-  myservo.attach(motorPin);
-  int open_angle = 30;
-  int close_angle = 80;  
-  switch (door){
-    case 1:
-      open_angle = 30;
-      close_angle = 70;
-      break;
-    case 2:
-      open_angle = 35;
-      close_angle = 85;    
-      break;
-    case 3:
-      open_angle = 30;
-      close_angle = 70;    
-      break;
-  }  
-  for (int i = open_angle; i <= close_angle; i++) { 
-    myservo.write(i);  
-    delay(speed_delay);                   
-  }
-  myservo.detach();
 }

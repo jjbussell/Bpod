@@ -28,7 +28,7 @@ MaxTrials = S.GUI.SessionTrials;
 %% SET ODOR SIDES (LATCH VALVES)
 
 modules = BpodSystem.Modules.Name;
-latchValves = [10 9 8 7 6 5 4 3]; % evens to left
+latchValves = [16 15 14 11 10 9 8 7]; % evens to left
 % latchValves = [3 5 7 9 4 6 8 10]; % 1:4 go to left, 5:8 go to right!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};

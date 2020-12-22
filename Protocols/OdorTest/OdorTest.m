@@ -33,7 +33,7 @@ MaxTrials = S.GUI.SessionTrials;
 port = S.GUI.Port;
 
 modules = BpodSystem.Modules.Name;
-latchValves = [10 9 8 7 6 5 4 3]; % evens to left!
+latchValves = [16 15 14 11 10 9 8 7]; % evens to left!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
 
