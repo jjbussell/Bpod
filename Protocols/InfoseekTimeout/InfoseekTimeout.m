@@ -95,11 +95,16 @@ TotalRewardDisplayInfo('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
-houseLight = 21;
+% lick inputs 2, 3, 4
+% buzzer 5
+% house light 6
+% latch valves 7-16
+% odor DIO 17-23
+houseLight = 6;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 openSpeed = 5;
-closeSpeed = 100;
+closeSpeed =100;
 doorOpen = [251 openSpeed];
 doorClose = [252 closeSpeed];
 
@@ -109,9 +114,9 @@ DIOmodule = DIOmodule{1};
 
 % Set serial messages for Teensy module to control box, communicate with
 % DAQ/miniscope
-LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, doorOpen, doorClose, ...
-    [11 1],[11,0],[12 1],[12 0],[13 1],[13 0],[14 1],[14 0],[15 1],[15 0],...
-    [16 1],[16 0],[17 1], [17 0],[houseLight 1],[houseLight 0]});
+LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, ...
+    [17 1],[17,0],[18 1],[18 0],[19 1],[19 0],[20 1],[20 0],[21 1],[21 0],...
+    [22 1],[22 0],[23 1], [23 0],[houseLight 1],[houseLight 0]});
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
@@ -227,31 +232,31 @@ switch nextTrialType
     case 1 % CHOICE
         ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'WaitForOdorRight';
         ThisCenterOdor = S.GUI.ChoiceOdor;
-        CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
+        CenterDIOmsg1 = 3; CenterDIOmsg2 = 4;
         if infoSide == 0 % INFO LEFT            
             RewardLeft = S.RewardTypes(TrialCounts(1)+1,1); RewardRight = S.RewardTypes(TrialCounts(2)+1,2);
             RightSideOdorFlag = S.RandOdorTypes((TrialCounts(2)+TrialCounts(4))+1,1);
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorStateRight = 'OdorCRight';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             else
                 RightSideOdor = S.GUI.OdorD;
                 SideOdorStateRight = 'OdorDRight';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             end
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
                 SideOdorStateLeft = 'OdorALeft';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 9; SideDIOmsg2 = 10;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
                 SideOdorStateLeft = 'OdorBLeft';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             end
             if RewardRight == 1
                 OutcomeStateRight = 'RightBigReward';
@@ -266,11 +271,11 @@ switch nextTrialType
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorStateLeft = 'OdorCLeft';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             else
                 LeftSideOdor = S.GUI.OdorD;
                 SideOdorStateLeft = 'OdorDLeft';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             end            
             if RewardLeft == 1
                 OutcomeStateLeft = 'LeftBigReward';
@@ -284,19 +289,19 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
                 SideOdorStateRight = 'OdorARight';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 9; SideDIOmsg2 = 10;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
                 SideOdorStateRight = 'OdorBRight';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             end            
         end
              
     case 2 % INFO FORCED
         ThisCenterOdor = S.GUI.InfoOdor;
-        CenterDIOmsg1 = 7; CenterDIOmsg2 = 8;
+        CenterDIOmsg1 = 5; CenterDIOmsg2 = 6;
         if infoSide == 0
             % info on left
             RewardLeft = S.RewardTypes(TrialCounts(3)+1,3); RewardRight = 0;
@@ -307,17 +312,17 @@ switch nextTrialType
                 LeftRewardDrops = S.GUI.InfoBigDrops;
                 LeftSideOdor = S.GUI.OdorA;
                 SideOdorStateLeft = 'OdorALeft';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 9; SideDIOmsg2 = 10;
             else
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
                 SideOdorStateLeft = 'OdorBLeft';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             end
             OutcomeStateRight = 'TimeoutOutcome';
+            RightRewardDrops = 0;
             SideOdorStateRight = 'TimeoutOdor';
-            RightRewardDrops = 0;            
         else
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(3)+1,3);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
@@ -327,21 +332,21 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.InfoBigDrops;
                 RightSideOdor = S.GUI.OdorA;
                 SideOdorStateRight = 'OdorARight';
-                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
+                SideDIOmsg1 = 9; SideDIOmsg2 = 10;
             else
                 OutcomeStateRight = 'RightSmallReward';
                 RightRewardDrops = S.GUI.InfoSmallDrops;
                 RightSideOdor = S.GUI.OdorB;
                 SideOdorStateRight = 'OdorBRight';
-                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
+                SideDIOmsg1 = 11; SideDIOmsg2 = 12;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
+            LeftRewardDrops = 0;
             SideOdorStateLeft = 'TimeoutOdor';
-            LeftRewardDrops = 0;            
         end
     case 3 % RAND FORCED
         ThisCenterOdor = S.GUI.RandOdor;
-        CenterDIOmsg1 = 9; CenterDIOmsg2 = 10;
+        CenterDIOmsg1 = 7; CenterDIOmsg2 = 8;
         if infoSide == 0 % INFO ON LEFT
             RewardLeft = 0; RewardRight = S.RewardTypes(TrialCounts(4)+1,4);
             ChooseLeft = 'Incorrect'; ChooseRight = 'WaitForOdorRight';
@@ -349,11 +354,11 @@ switch nextTrialType
             if RightSideOdorFlag == 0
                 RightSideOdor = S.GUI.OdorC;
                 SideOdorStateRight = 'OdorCRight';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             else
                 RightSideOdor = S.GUI.OdorD;
                 SideOdorStateRight = 'OdorDRight';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             end            
             LeftSideOdor = 0;
             if RewardRight == 1
@@ -364,8 +369,8 @@ switch nextTrialType
                 RightRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateLeft = 'TimeoutOutcome';
+            LeftRewardDrops = 0;
             SideOdorStateLeft = 'TimeoutOdor';
-            LeftRewardDrops = 0;            
         else
             RewardLeft = S.RewardTypes(TrialCounts(4)+1); RewardRight = 0;
             ChooseLeft = 'WaitForOdorLeft'; ChooseRight = 'Incorrect';
@@ -373,11 +378,11 @@ switch nextTrialType
             if LeftSideOdorFlag == 0
                 LeftSideOdor = S.GUI.OdorC;
                 SideOdorStateLeft = 'OdorCLeft';
-                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
+                SideDIOmsg1 = 13; SideDIOmsg2 = 14;
             else
                 LeftSideOdor = S.GUI.OdorD;
                 SideOdorStateLeft = 'OdorDLeft';
-                SideDIOmsg1 = 17; SideDIOmsg2 = 18;
+                SideDIOmsg1 = 15; SideDIOmsg2 = 16;
             end             
             RightSideOdor = 0;
             if RewardLeft == 1
@@ -388,8 +393,8 @@ switch nextTrialType
                 LeftRewardDrops = S.GUI.RandSmallDrops;
             end
             OutcomeStateRight = 'TimeoutOutcome';
+            RightRewardDrops = 0;
             SideOdorStateRight = 'TimeoutOdor';
-            RightRewardDrops = 0;            
         end
 end
 
@@ -952,7 +957,7 @@ function SetLatchValves(S)
     
     infoSide = S.GUI.InfoSide;
     modules = BpodSystem.Modules.Name;
-    latchValves = [10 9 8 7 6 5 4 3]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
+    latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
     latchModule = [modules(strncmp('DIO',modules,3))];
     latchModule = latchModule{1};
 

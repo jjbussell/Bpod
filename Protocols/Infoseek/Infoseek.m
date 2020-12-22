@@ -950,7 +950,7 @@ function SetLatchValves(S)
     
     infoSide = S.GUI.InfoSide;
     modules = BpodSystem.Modules.Name;
-    latchValves = [16 15 14 13 12 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
+    latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
     latchModule = [modules(strncmp('DIO',modules,3))];
     latchModule = latchModule{1};
 
