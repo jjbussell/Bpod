@@ -347,7 +347,7 @@ switch nextTrialType
                 OutcomeStateLeft = 'LeftSmallReward';
                 LeftRewardDrops = S.GUI.InfoSmallDrops;
                 LeftSideOdor = S.GUI.OdorB;
-                SideOdorStateLet = 'OdorBLeft';
+                SideOdorStateLeft = 'OdorBLeft';
                 SideDIOmsg1 = 17; SideDIOmsg2 = 18;
             end
             OutcomeStateRight = 'TimeoutOutcome';

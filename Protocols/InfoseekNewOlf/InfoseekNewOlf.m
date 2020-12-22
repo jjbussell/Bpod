@@ -34,8 +34,8 @@ addinput(dq, 'Dev1', 'ai1', 'Voltage');
 dq.Rate = 100;
 dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
 dq.ScansAvailableFcnCount = 500;
-
 start(dq,'continuous');
+
 
 end
 %% Define parameters
@@ -159,6 +159,9 @@ LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
+
+
+createDAQFileName();
 
 %% MAIN TRIAL LOOP
 
@@ -1291,14 +1294,21 @@ function state_colors = getStateColors(thisInfoSide)
     end
 end
 
-
-function recordDataAvailable(src,~)
+function createDAQFileName()
     global BpodSystem
-    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    global DataFolder
     DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
     DateInfo = datestr(now,30);
     DateInfo(DateInfo == 'T') = '_';
-    DAQFileName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv'];
-    dlmwrite((fullfile(DataFolder, DAQFileName)), [data,timestamps],'-append');
-
+    global DAQFileName
+    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
 end
+
+function recordDataAvailable(src,~)
+    global DataFolder
+    global DAQFileName
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
+end
+
+
