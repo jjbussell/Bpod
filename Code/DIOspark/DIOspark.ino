@@ -31,7 +31,7 @@ char moduleName[] = "DIOsparkLICKS"; // Name of module for manual override UI an
 char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "CenterLick_Hi", "CenterLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
-#define OutputOffset 6
+#define OutputOffset 5
 #define nInputChannels 3
 #define nOutputChannels 19
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
