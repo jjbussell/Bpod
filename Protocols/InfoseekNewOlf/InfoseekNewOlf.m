@@ -26,17 +26,17 @@ global BpodSystem
 TrialManager = TrialManagerObject;
 
 %% DAQ
+daqlist;
 DAQ=0;
 if DAQ==1
-dq = daq('ni'); 
-addinput(dq, 'Dev1', 'ai0', 'Voltage');
-addinput(dq, 'Dev1', 'ai1', 'Voltage');
-dq.Rate = 100;
-dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-dq.ScansAvailableFcnCount = 500;
-start(dq,'continuous');
-
-
+    dq = daq('ni'); 
+    addinput(dq, 'Dev1', 'ai0', 'Voltage');
+    addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    createDAQFileName();
+    dq.Rate = 100;
+    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+    dq.ScansAvailableFcnCount = 100;
+    start(dq,'continuous');
 end
 %% Define parameters
 
@@ -161,7 +161,6 @@ TrialManager.startTrial(sma); % Sends & starts running first trial's state machi
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 
-createDAQFileName();
 
 %% MAIN TRIAL LOOP
 
