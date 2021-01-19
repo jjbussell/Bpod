@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekNewOlf
+function InfoSeekDoors
 
 global BpodSystem vid
 
@@ -124,8 +124,8 @@ TotalRewardDisplay('init');
 %% INITIALIZE SERIAL MESSAGES / DIO
 
 % lick inputs 2, 3, 4
-% door outputs 5,6,7
-% buzzer output 8
+% door outputs 6,7,8
+% buzzer output 5
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 openSpeed = 5;
@@ -193,6 +193,9 @@ for currentTrial = 1:S.GUI.SessionTrials
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
+        if vidOn==1
+            shutdownVideo();
+        end
         openDoors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.

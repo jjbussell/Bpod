@@ -160,6 +160,9 @@ for currentTrial = 1:S.GUI.SessionTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();      
+        if vidOn==1
+            shutdownVideo();
+        end        
         return; end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
