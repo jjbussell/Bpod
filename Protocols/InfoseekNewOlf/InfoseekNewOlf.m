@@ -27,7 +27,7 @@ TrialManager = TrialManagerObject;
 
 %% DAQ
 daqlist;
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
     addinput(dq, 'Dev1', 'ai0', 'Voltage');
