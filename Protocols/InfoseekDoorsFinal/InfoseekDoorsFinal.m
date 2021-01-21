@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekDoorsFinal
+function InfoSeekDoors
 
 global BpodSystem vid
 

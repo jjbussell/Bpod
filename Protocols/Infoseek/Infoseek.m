@@ -120,10 +120,6 @@ TotalRewardDisplayInfo('init');
 houseLight = 6;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-openSpeed = 5;
-closeSpeed =100;
-doorOpen = [251 openSpeed];
-doorClose = [252 closeSpeed];
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
