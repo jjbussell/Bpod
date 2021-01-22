@@ -32,6 +32,9 @@ if DAQ==1
     dq = daq('ni'); 
     addinput(dq, 'Dev1', 'ai0', 'Voltage');
     addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    addinput(dq, 'Dev1', 'port0/line0:6', 'Digital');
+    addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
+    dq.Channels
     createDAQFileName();
     dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);

@@ -32,6 +32,18 @@ if DAQ==1
 dq = daq('ni'); 
 addinput(dq, 'Dev1', 'ai0', 'Voltage');
 addinput(dq, 'Dev1', 'ai1', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line0', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line1', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line2', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line3', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line4', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line5', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line6', 'Voltage');
+addinput(dq, 'Dev1', 'port0/line7', 'Voltage');
+addinput(dq, 'Dev1', 'port1/line0', 'Voltage');
+addinput(dq, 'Dev1', 'port1/line1', 'Voltage');
+addinput(dq, 'Dev1', 'port1/line2', 'Voltage');
+
 dq.Rate = 100;
 dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
 dq.ScansAvailableFcnCount = 500;

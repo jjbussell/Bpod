@@ -15,10 +15,10 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 0.2;
-    S.GUI.OdorInterval = 4;
+    S.GUI.OdorInterval = 10;
     S.GUI.OdorHeadstart = 0.500;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID =3; % 0 = odor 1
+    S.GUI.OdorID = 7; % 1 = odor 1
 end
 
 
