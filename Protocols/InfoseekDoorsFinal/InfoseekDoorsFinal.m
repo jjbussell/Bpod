@@ -427,7 +427,7 @@ switch nextTrialType
 end
 
 % DOORS
-if doorsOn == 1
+if S.GUI.DoorsOn == 1
     doorOpen = [{DIOmodule,3,DIOmodule,7}];
     doorClose = [{DIOmodule,4,DIOmodule,8}];
 else

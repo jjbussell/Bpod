@@ -427,6 +427,7 @@ switch nextTrialType
 end
 
 % DOORS
+doorsOn = 0;
 if doorsOn == 1
     doorOpen = [{DIOmodule,3,DIOmodule,7}];
     doorClose = [{DIOmodule,4,DIOmodule,8}];
@@ -434,7 +435,7 @@ else
     doorOpen = [];
     doorClose  = [];
 end
-doorOpenGrace = 0.3;
+doorOpenGrace = 0;
 
 % Water parameters
 R = GetValveTimes(4, [1 3]);
