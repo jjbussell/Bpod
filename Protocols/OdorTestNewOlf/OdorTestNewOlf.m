@@ -15,10 +15,10 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 0.2;
-    S.GUI.OdorInterval = 4;
+    S.GUI.OdorInterval = 10;
     S.GUI.OdorHeadstart = 0.500;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID =3; % 0 = odor 1
+    S.GUI.OdorID = 5; % 1 = odor 1
 end
 
 %% DAQ
@@ -32,9 +32,9 @@ if DAQ==1
 %     addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
     dq.Channels
     createDAQFileName();
-    dq.Rate = 1000;
+    dq.Rate = 2000;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 1000;
+    dq.ScansAvailableFcnCount = 2000;
     start(dq,'continuous');
 end
 %% LOAD SERIAL MESSAGES
