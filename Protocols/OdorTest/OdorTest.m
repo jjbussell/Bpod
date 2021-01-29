@@ -14,14 +14,13 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.OdorTime = 3;
-    S.GUI.OdorInterval = 4;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorTime = .2;
+    S.GUI.OdorInterval = 10;
+    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 3; % 0 = odor 1
 end
 
 %% DAQ
-daqlist;
 DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
@@ -31,9 +30,9 @@ if DAQ==1
 %     addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
     dq.Channels
     createDAQFileName();
-    dq.Rate = 1000;
+    dq.Rate = 2000;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 1000;
+    dq.ScansAvailableFcnCount = 2000;
     start(dq,'continuous');
 end
 
