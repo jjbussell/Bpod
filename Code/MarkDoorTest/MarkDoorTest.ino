@@ -18,7 +18,7 @@ monitor motor noise, may occur at certain angles (oscillating b/n)
 #include <Servo.h>
 
 Servo myservo[3];
-int motor_pin[3] = {3, 5, 6};
+int motor_pin[3] = {3, 5, 7};
 //int button_pin[3] = {2, 4, 7};
 int open_angle[3] = {20, 35, 30};
 int close_angle[3] = {70, 85, 80};
