@@ -64,9 +64,9 @@ end
 
 %% DAQ
 
-daqlist;
-DAQ=1;
-if DAQ==1
+DAQ=0;
+if DAQ==1    
+    daqlist;
     dq = daq('ni'); 
     addinput(dq, 'Dev1', 'ai0', 'Voltage');
     addinput(dq, 'Dev1', 'ai1', 'Voltage');
