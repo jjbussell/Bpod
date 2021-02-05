@@ -51,7 +51,9 @@ uint32_t currentTime = 0; // Current time in microseconds
 int buzzer = 5;
 int door = 0;
 
-Servo myservo;
+Servo servoLeft;
+Servo servoCenter;
+Servo servoRight;
 
 int motorPins[]= {2,3,4};
 int speed_delay = 30;
@@ -64,6 +66,7 @@ void setup()
   for (int i = OutputOffset; i < OutputChRangeHigh; i++) {
     pinMode(i, OUTPUT);
   }
+  
 }
 
 void loop()
@@ -80,29 +83,29 @@ void loop()
       tone(buzzer,4500,50);
       state = Serial1COM.readByte();
     } else if (opCode == 252){
-      door = 1;
       speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
+      closeLeftDoor(speed_delay);
     } else if (opCode == 251){
-      door = 1;
       speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);
+      openLeftDoor(speed_delay);
     } else if (opCode == 250){
-      door = 2;
       speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
+      closeCenterDoor(speed_delay);
     } else if (opCode == 249){
-      door = 2;
       speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);
+      openCenterDoor(speed_delay);
     } else if (opCode == 248){
-      door = 3;
       speed_delay = Serial1COM.readByte();
-      closeDoor(door, speed_delay);
+      closeRightDoor(speed_delay);
     } else if (opCode == 247){
-      door = 3;
       speed_delay = Serial1COM.readByte();
-      openDoor(door,speed_delay);            
+      openRightDoor(speed_delay);            
+    } else if (opCode == 246){
+      speed_delay = Serial1COM.readByte();
+      closeSideDoors(speed_delay);            
+    } else if (opCode == 245){
+      speed_delay = Serial1COM.readByte();
+      openSideDoors(speed_delay);            
     } else if ((opCode >= OutputOffset) && (opCode < OutputChRangeHigh)) {
         state = Serial1COM.readByte(); 
         digitalWrite(opCode,state); 
@@ -130,54 +133,126 @@ void returnModuleInfo() {
   Serial1COM.writeByte(0); // 1 if more info follows, 0 if not
 }
 
-void openDoor(int door,int speed_delay){
-  int motorPin = motorPins[door-1];
-  myservo.attach(motorPin);
+void openLeftDoor(int speed_delay){
   int open_angle = 15;
   int close_angle = 55;
-  switch (door){
-    case 1:
-      open_angle = 15;
-      close_angle = 55;
-      break;
-    case 2:
-      open_angle = 10;
-      close_angle = 55;    
-      break;
-    case 3:
-      open_angle = 10;
-      close_angle = 60;    
-      break;
-  }
+  servoLeft.attach(motorPins[0]);
   for (int i = close_angle; i >= open_angle; i--) { 
-    myservo.write(i);  
+    servoLeft.write(i);  
     delay(speed_delay);                 
   }
-  myservo.detach();
+  servoLeft.detach();
 }
 
-void closeDoor(int door, int speed_delay){
-  int motorPin = motorPins[door-1];
-  myservo.attach(motorPin);
-  int open_angle = 15;
-  int close_angle = 55;  
-  switch (door){
-    case 1:
-      open_angle = 15;
-      close_angle = 55;
-      break;
-    case 2:
-      open_angle = 10;
-      close_angle = 55;    
-      break;
-    case 3:
-      open_angle = 10;
-      close_angle = 60;    
-      break;
-  }  
-  for (int i = open_angle; i <= close_angle; i++) { 
-    myservo.write(i);  
-    delay(speed_delay);                   
+void openCenterDoor(int speed_delay){
+  int open_angle = 10;
+  int close_angle = 55;
+  servoCenter.attach(motorPins[1]);
+  for (int i = close_angle; i >= open_angle; i--) { 
+    servoCenter.write(i);  
+    delay(speed_delay);                 
   }
-  myservo.detach();
+  servoCenter.detach();
+}
+
+void openRightDoor(int speed_delay){
+  int open_angle = 10;
+  int close_angle = 60;
+  servoRight.attach(motorPins[2]);
+  for (int i = close_angle; i >= open_angle; i--) { 
+    servoRight.write(i);  
+    delay(speed_delay);                 
+  }
+  servoRight.detach();
+}
+
+void closeLeftDoor(int speed_delay){
+  int open_angle = 15;
+  int close_angle = 55;
+  servoLeft.attach(motorPins[0]);
+  for (int i = open_angle; i <= close_angle; i++) { 
+    servoLeft.write(i);  
+    delay(speed_delay);                 
+  }
+  servoLeft.detach();
+}
+
+void closeCenterDoor(int speed_delay){
+  int open_angle = 10;
+  int close_angle = 55;
+  servoCenter.attach(motorPins[1]);
+  for (int i = open_angle; i <= close_angle; i++) { 
+    servoLeft.write(i);  
+    delay(speed_delay);                 
+  }
+  servoCenter.detach();
+}
+
+void closeRightDoor(int speed_delay){
+  int open_angle = 10;
+  int close_angle = 60;
+  servoRight.attach(motorPins[2]);
+  for (int i = open_angle; i <= close_angle; i++) { 
+    servoLeft.write(i);  
+    delay(speed_delay);                 
+  }
+  servoRight.detach();
+}
+
+void openSideDoors(int speed_delay){
+  int open_angle =15;
+  int close_angle=55;
+  servoLeft.attach(motorPins[0]);
+  servoRight.attach(motorPins[2]);
+//  int max_angle = 50;
+//  switch (door){
+//    case 1:
+//      open_angle = 15;
+//      close_angle = 55;
+//      break;
+//    case 2:
+//      open_angle = 10;
+//      close_angle = 55;    
+//      break;
+//    case 3:
+//      open_angle = 10;
+//      close_angle = 60;    
+//      break;
+//  }
+  for (int i = close_angle; i >= open_angle; i--) {
+    servoLeft.write(i);
+    servoRight.write(i);
+    delay(speed_delay);                 
+  }
+  servoLeft.detach();
+  servoRight.detach();
+}
+
+void closeSideDoors(int speed_delay){
+  int open_angle =15;
+  int close_angle=55;
+  servoLeft.attach(motorPins[0]);
+  servoRight.attach(motorPins[2]);  
+//  int max_angle = 50;
+//  switch (door){
+//    case 1:
+//      open_angle = 15;
+//      close_angle = 55;
+//      break;
+//    case 2:
+//      open_angle = 10;
+//      close_angle = 55;    
+//      break;
+//    case 3:
+//      open_angle = 10;
+//      close_angle = 60;    
+//      break;
+//  }
+  for (int i = open_angle; i <= close_angle; i++) {
+    servoLeft.write(i);
+    servoRight.write(i);
+    delay(speed_delay);                 
+  }
+  servoLeft.detach();
+  servoRight.detach();  
 }
