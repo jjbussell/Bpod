@@ -134,8 +134,8 @@ void returnModuleInfo() {
 }
 
 void openLeftDoor(int speed_delay){
-  int open_angle = 15;
-  int close_angle = 55;
+  int open_angle = 10;
+  int close_angle = 60;
   servoLeft.attach(motorPins[0]);
   for (int i = close_angle; i >= open_angle; i--) { 
     servoLeft.write(i);  
@@ -156,7 +156,7 @@ void openCenterDoor(int speed_delay){
 }
 
 void openRightDoor(int speed_delay){
-  int open_angle = 10;
+  int open_angle = 15;
   int close_angle = 60;
   servoRight.attach(motorPins[2]);
   for (int i = close_angle; i >= open_angle; i--) { 
@@ -167,8 +167,8 @@ void openRightDoor(int speed_delay){
 }
 
 void closeLeftDoor(int speed_delay){
-  int open_angle = 15;
-  int close_angle = 55;
+  int open_angle = 10;
+  int close_angle = 60;
   servoLeft.attach(motorPins[0]);
   for (int i = open_angle; i <= close_angle; i++) { 
     servoLeft.write(i);  
@@ -189,7 +189,7 @@ void closeCenterDoor(int speed_delay){
 }
 
 void closeRightDoor(int speed_delay){
-  int open_angle = 10;
+  int open_angle = 15;
   int close_angle = 60;
   servoRight.attach(motorPins[2]);
   for (int i = open_angle; i <= close_angle; i++) { 
