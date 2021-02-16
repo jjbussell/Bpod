@@ -454,7 +454,7 @@ else
     GraceStateLeft = 'GraceLeft';
     GraceStateRight = 'GraceRight';    
 end
-doorOpenGrace = 0.3;
+doorOpenGrace = 3;
 % doorOpen = {DIOmodule,3,DIOmodule,7};
 % doorClose = [{DIOmodule,4,DIOmodule,8}];
 
