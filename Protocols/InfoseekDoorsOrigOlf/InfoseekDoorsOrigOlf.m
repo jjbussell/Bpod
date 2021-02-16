@@ -183,7 +183,7 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
-    currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
+    currentTrialEvents = TrialManager.getCurrentEvents({'LeftPortCheck','RightPortCheck','TimeoutRewardDelay'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();      
         if vidOn==1
@@ -213,7 +213,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
