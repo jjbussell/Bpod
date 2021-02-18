@@ -1050,14 +1050,16 @@ end
 
 %% CONTROL DOORS
 
-function closeSideDoors()
+function doorActions = closeSideDoors()
     global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
     if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
-    ModuleWrite(DIOmodule,[246 30]);
+%     ModuleWrite(DIOmodule,[246 30]);
+    doorActions = [{DIOmodule,24}];
     leftDoorOpenFlag = 0;
     rightDoorOpenFlag = 0;
     end
@@ -1069,9 +1071,11 @@ function openSideDoors()
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
     if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
-    ModuleWrite(DIOmodule,[245 10]);
+%     ModuleWrite(DIOmodule,[245 10]);
+    doorActions = [{DIOmodule,23}];
     leftDoorOpenFlag = 1;
     rightDoorOpenFlag = 1;
     end
