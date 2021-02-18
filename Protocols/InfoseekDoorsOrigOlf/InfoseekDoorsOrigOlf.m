@@ -20,7 +20,7 @@ a buzzer and lick sensor.
 %}
 function InfoSeekDoorsOrigOlf
 
-global BpodSystem vid
+global BpodSystem vid leftDoorOpen centerDoorOpen rightDoorOpen
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
@@ -166,6 +166,9 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 %% START WITH DOORS OPEN
 
 % openDoors();
+leftDoorOpen = 1;
+centerDoorOpen = 1;
+rightDoorOpen = 1;
 
 %% INITIALIZE STATE MACHINE
 
@@ -1045,6 +1048,14 @@ function SetLatchValves(S)
     
 %     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
 %     EventsPlot('init', getStateColors(infoSide));
+end
+
+%% CONTROL DOORS
+
+function CloseSideDoors()
+    global BpodSystem leftDoorOpen rightDoorOpen
+    leftDoorOpen = 0;
+    rightDoorOpen = 0;
 end
 
 %% OUTCOME
