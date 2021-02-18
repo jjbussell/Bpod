@@ -22,21 +22,27 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 %% DAQ
-daqlist;
+
 DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
-%     addinput(dq, 'Dev1', 'port0/line0:6', 'Digital');
-%     addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
-    dq.Channels
+    ch0 = addAnalogInputChannel(dq, 'Dev1', 0, 'Voltage');
+    ch0.TerminalConfig = 'Differential';
+    ch1 = addAnalogInputChannel(dq, 'Dev1', 1, 'Voltage');
+    ch1.TerminalConfig = 'SingleEnded';
+    ch2 = addAnalogInputChannel(dq, 'Dev1', 2, 'Voltage');
+    ch2.TerminalConfig = 'SingleEnded';
+    ch3 = addAnalogInputChannel(dq, 'Dev1', 3, 'Voltage');
+    ch3.TerminalConfig = 'SingleEnded';
+
+    
     createDAQFileName();
-    dq.Rate = 2000;
+    dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 2000;
+    dq.ScansAvailableFcnCount = 100;
     start(dq,'continuous');
 end
+
 %% LOAD SERIAL MESSAGES
 
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before

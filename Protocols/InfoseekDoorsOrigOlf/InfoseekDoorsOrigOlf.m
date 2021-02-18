@@ -66,12 +66,16 @@ end
 
 %% DAQ
 
-daqlist;
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
     addinput(dq, 'Dev1', 'ai0', 'Voltage');
     addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    addinput(dq, 'Dev1', 'ai2', 'Voltage');
+    addinput(dq, 'Dev1', 'ai3', 'Voltage');
+    addinput(dq, 'Dev1', 'ai4', 'Voltage');
+
+    
     createDAQFileName();
     dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
