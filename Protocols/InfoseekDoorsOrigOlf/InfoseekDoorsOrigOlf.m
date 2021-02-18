@@ -20,7 +20,7 @@ a buzzer and lick sensor.
 %}
 function InfoSeekDoorsOrigOlf
 
-global BpodSystem vid leftDoorOpen centerDoorOpen rightDoorOpen
+global BpodSystem vid leftDoorOpenFlag centerDoorOpenFlag rightDoorOpenFlag
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
@@ -166,9 +166,9 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 %% START WITH DOORS OPEN
 
 % openDoors();
-leftDoorOpen = 1;
-centerDoorOpen = 1;
-rightDoorOpen = 1;
+leftDoorOpenFlag = 1;
+centerDoorOpenFlag = 1;
+rightDoorOpenFlag = 1;
 
 %% INITIALIZE STATE MACHINE
 
@@ -606,7 +606,7 @@ sma = AddState(sma, 'Name', 'OdorDLeft', ...
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','DoorOpenCueLeft'},...
-    'OutputActions', [{DIOmodule,SideDIOmsg2,DIOmodule,24},RunOdor(LeftSideOdor,1)]);
+    'OutputActions', [{DIOmodule,SideDIOmsg2},closeSideDoors(),RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'DoorOpenCueLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup',GraceStateLeft},...
@@ -614,7 +614,7 @@ sma = AddState(sma, 'Name', 'DoorOpenCueLeft', ...
 sma = AddState(sma, 'Name', 'DoorOpenGraceLeft', ...
     'Timer',S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', {DIOmodule,23}); %doorOpen
+    'OutputActions', {openSideDoors()}); %doorOpen
 sma = AddState(sma, 'Name', 'GraceLeft', ...
     'Timer',S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
@@ -663,7 +663,7 @@ sma = AddState(sma, 'Name', 'OdorDRight', ...
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','DoorOpenCueRight'},...
-    'OutputActions', [{DIOmodule,SideDIOmsg2,DIOmodule,24},RunOdor(RightSideOdor,1)]);
+    'OutputActions', [{DIOmodule,SideDIOmsg2},closeSideDoors(),RunOdor(RightSideOdor,1)]);
 sma = AddState(sma, 'Name', 'DoorOpenCueRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup',GraceStateRight},...
@@ -671,7 +671,7 @@ sma = AddState(sma, 'Name', 'DoorOpenCueRight', ...
 sma = AddState(sma, 'Name', 'DoorOpenGraceRight', ...
     'Timer', S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', {DIOmodule,23});%doorOpen
+    'OutputActions', {openSideDoors()});%doorOpen
 sma = AddState(sma, 'Name', 'GraceRight', ...
     'Timer', S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
@@ -1052,10 +1052,60 @@ end
 
 %% CONTROL DOORS
 
-function CloseSideDoors()
-    global BpodSystem leftDoorOpen rightDoorOpen
-    leftDoorOpen = 0;
-    rightDoorOpen = 0;
+function closeSideDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
+    ModuleWrite(DIOmodule,[246 30]);
+    leftDoorOpenFlag = 0;
+    rightDoorOpenFlag = 0;
+    end
+end
+
+function openSideDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
+    ModuleWrite(DIOmodule,[245 10]);
+    leftDoorOpenFlag = 1;
+    rightDoorOpenFlag = 1;
+    end
+end
+
+function closeDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    if leftDoorOpenFlag == 1
+    ModuleWrite(DIOmodule,[252 30]);
+    end
+    if centerDoorOpenFlag == 1
+    ModuleWrite(DIOmodule,[250 30]);
+    end
+    if rightDoorOpenFlag == 1
+    ModuleWrite(DIOmodule,[248 30]);
+    end
+end
+
+function openDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    if leftDoorOpenFlag == 0
+    ModuleWrite(DIOmodule,[251 10]);
+    end
+    if centerDoorOpenFlag == 0
+    ModuleWrite(DIOmodule,[249 10]);
+    end
+    if rightDoorOpenFlag == 0
+    ModuleWrite(DIOmodule,[247 10]);
+    end
 end
 
 %% OUTCOME
@@ -1414,25 +1464,6 @@ function state_colors = getStateColors(thisInfoSide)
     end
 end
 
-function closeDoors()
-    global BpodSystem
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    ModuleWrite(DIOmodule,[252 30]);
-    ModuleWrite(DIOmodule,[250 30]);
-    ModuleWrite(DIOmodule,[248 30]);
-end
-
-function openDoors()
-    global BpodSystem
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    ModuleWrite(DIOmodule,[251 30]);
-    ModuleWrite(DIOmodule,[249 30]);
-    ModuleWrite(DIOmodule,[247 30]);
-end
 
 function setupVideo()
     global BpodSystem vid
