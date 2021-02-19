@@ -939,16 +939,16 @@ end
 
 function Actions = PreloadOdor(odorID,port)
     switch port
-        case 0            
+        case 0 % center          
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID}; 
             Actions = [cmd1,cmd2];
-        case 1
+        case 1 % left
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
             cmd3 = {'ValveModule4',1};
             Actions = [cmd1,cmd2,cmd3];
-        case 2
+        case 2 % right
             cmd1 = {'ValveModule1',odorID};
             cmd2 = {'ValveModule2',odorID};
             cmd3 = {'ValveModule4',2};
