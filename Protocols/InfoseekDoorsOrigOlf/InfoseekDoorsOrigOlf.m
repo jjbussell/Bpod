@@ -66,14 +66,15 @@ end
 
 %% DAQ
 
-DAQ=1;
+DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
-    addinput(dq, 'Dev1', 'ai2', 'Voltage');
-    addinput(dq, 'Dev1', 'ai3', 'Voltage');
-    addinput(dq, 'Dev1', 'ai4', 'Voltage');
+    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
+    ch(1).TerminalConfig = 'SingleEnded';
+    ch(2).TerminalConfig = 'SingleEnded';
+    ch(3).TerminalConfig = 'SingleEnded';
+    ch(4).TerminalConfig = 'SingleEnded';
+    ch(5).TerminalConfig = 'SingleEnded';
 
     
     createDAQFileName();
