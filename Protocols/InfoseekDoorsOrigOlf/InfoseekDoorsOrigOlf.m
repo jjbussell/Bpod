@@ -66,12 +66,17 @@ end
 
 %% DAQ
 
-daqlist;
 DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
+    ch(1).TerminalConfig = 'SingleEnded';
+    ch(2).TerminalConfig = 'SingleEnded';
+    ch(3).TerminalConfig = 'SingleEnded';
+    ch(4).TerminalConfig = 'SingleEnded';
+    ch(5).TerminalConfig = 'SingleEnded';
+
+    
     createDAQFileName();
     dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
