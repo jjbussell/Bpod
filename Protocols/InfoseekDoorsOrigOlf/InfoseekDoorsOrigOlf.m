@@ -616,7 +616,7 @@ sma = AddState(sma, 'Name', 'DoorOpenCueLeft', ...
 sma = AddState(sma, 'Name', 'DoorOpenGraceLeft', ...
     'Timer',S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','LeftPortCheck'},...
-    'OutputActions', {openSideDoors()}); %doorOpen
+    'OutputActions', openSideDoors()); %doorOpen
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
@@ -669,11 +669,7 @@ sma = AddState(sma, 'Name', 'DoorOpenCueRight', ...
 sma = AddState(sma, 'Name', 'DoorOpenGraceRight', ...
     'Timer', S.GUI.DoorOpenGrace,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', {openSideDoors()});%doorOpen
-sma = AddState(sma, 'Name', 'GraceRight', ...
-    'Timer', S.GUI.DoorOpenGrace,...
-    'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', {});
+    'OutputActions', openSideDoors());%doorOpen
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
@@ -1057,28 +1053,30 @@ function doorActions = closeSideDoors()
     DIOmodule = DIOmodule{1};
     S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
-    if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
-%     ModuleWrite(DIOmodule,[246 30]);
-    doorActions = [{DIOmodule,24}];
-    leftDoorOpenFlag = 0;
-    rightDoorOpenFlag = 0;
-    end
+        if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
+        %     ModuleWrite(DIOmodule,[246 30]);
+            doorActions = [{DIOmodule,24}];
+            leftDoorOpenFlag = 0;
+            rightDoorOpenFlag = 0;
+        end
+    else doorActions = [];
     end
 end
 
-function openSideDoors()
+function doorActions = openSideDoors()
     global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
     S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
-    if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
-%     ModuleWrite(DIOmodule,[245 10]);
-    doorActions = [{DIOmodule,23}];
-    leftDoorOpenFlag = 1;
-    rightDoorOpenFlag = 1;
-    end
+        if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
+        %     ModuleWrite(DIOmodule,[245 10]);
+            doorActions = {DIOmodule,23};
+            leftDoorOpenFlag = 1;
+            rightDoorOpenFlag = 1;
+        end
+    else doorActions = [];
     end
 end
 
@@ -1087,16 +1085,17 @@ function closeDoors()
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
-    if leftDoorOpenFlag == 1
-    ModuleWrite(DIOmodule,[252 30]);
-    end
-    if centerDoorOpenFlag == 1
-    ModuleWrite(DIOmodule,[250 30]);
-    end
-    if rightDoorOpenFlag == 1
-    ModuleWrite(DIOmodule,[248 30]);
-    end
+        if leftDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[252 30]);
+        end
+        if centerDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[250 30]);
+        end
+        if rightDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[248 30]);
+        end
     end
 end
 
@@ -1105,16 +1104,17 @@ function openDoors()
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
     if S.GUI.DoorsOn == 1
-    if leftDoorOpenFlag == 0
-    ModuleWrite(DIOmodule,[251 10]);
-    end
-    if centerDoorOpenFlag == 0
-    ModuleWrite(DIOmodule,[249 10]);
-    end
-    if rightDoorOpenFlag == 0
-    ModuleWrite(DIOmodule,[247 10]);
-    end
+        if leftDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[251 10]);
+        end
+        if centerDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[249 10]);
+        end
+        if rightDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[247 10]);
+        end
     end
 end
 
