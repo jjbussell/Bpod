@@ -75,7 +75,7 @@ if DAQ==1
     ch(3).TerminalConfig = 'SingleEnded';
     ch(4).TerminalConfig = 'SingleEnded';
     ch(5).TerminalConfig = 'SingleEnded';
-
+    
     
     createDAQFileName();
     dq.Rate = 100;
