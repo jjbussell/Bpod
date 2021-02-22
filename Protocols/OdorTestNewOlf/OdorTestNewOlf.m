@@ -21,6 +21,27 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorID = 7; % 1 = odor 1
 end
 
+%% DAQ
+
+DAQ=1;
+if DAQ==1
+    dq = daq('ni'); 
+    ch0 = addAnalogInputChannel(dq, 'Dev1', 0, 'Voltage');
+    ch0.TerminalConfig = 'Differential';
+    ch1 = addAnalogInputChannel(dq, 'Dev1', 1, 'Voltage');
+    ch1.TerminalConfig = 'SingleEnded';
+    ch2 = addAnalogInputChannel(dq, 'Dev1', 2, 'Voltage');
+    ch2.TerminalConfig = 'SingleEnded';
+    ch3 = addAnalogInputChannel(dq, 'Dev1', 3, 'Voltage');
+    ch3.TerminalConfig = 'SingleEnded';
+
+    
+    createDAQFileName();
+    dq.Rate = 100;
+    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+    dq.ScansAvailableFcnCount = 100;
+    start(dq,'continuous');
+end
 
 %% LOAD SERIAL MESSAGES
 
@@ -159,4 +180,23 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule4',['C' v]);
     end    
 end
+
+
+function createDAQFileName()
+    global BpodSystem
+    global DataFolder
+    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
+    DateInfo = datestr(now,30);
+    DateInfo(DateInfo == 'T') = '_';
+    global DAQFileName
+    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
+end
+
+function recordDataAvailable(src,~)
+    global DataFolder
+    global DAQFileName
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
+end
+
 

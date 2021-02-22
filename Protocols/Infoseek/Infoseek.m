@@ -62,6 +62,25 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
+%% DAQ
+
+DAQ=0;
+if DAQ==1
+    dq = daq('ni'); 
+    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
+    ch(1).TerminalConfig = 'SingleEnded';
+    ch(2).TerminalConfig = 'SingleEnded';
+    ch(3).TerminalConfig = 'SingleEnded';
+    ch(4).TerminalConfig = 'SingleEnded';
+    ch(5).TerminalConfig = 'SingleEnded';
+    
+    createDAQFileName();
+    dq.Rate = 100;
+    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+    dq.ScansAvailableFcnCount = 100;
+    start(dq,'continuous');
+end
+
 %% SETUP VIDEO
 
 vidOn = 0;
@@ -120,10 +139,6 @@ TotalRewardDisplayInfo('init');
 houseLight = 6;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-openSpeed = 5;
-closeSpeed =100;
-doorOpen = [251 openSpeed];
-doorClose = [252 closeSpeed];
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -1368,4 +1383,21 @@ function shutdownVideo()
         clear vid;
 
     %     setupVideo();
+end
+
+function createDAQFileName()
+    global BpodSystem
+    global DataFolder
+    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
+    DateInfo = datestr(now,30);
+    DateInfo(DateInfo == 'T') = '_';
+    global DAQFileName
+    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
+end
+
+function recordDataAvailable(src,~)
+    global DataFolder
+    global DAQFileName
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
 end

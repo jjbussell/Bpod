@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekDoorsFinal
+function InfoSeekDoors
 
 global BpodSystem vid
 
@@ -26,17 +26,18 @@ global BpodSystem vid
 TrialManager = TrialManagerObject;
 
 %% DAQ
-DAQ=0;
+
+daqlist;
+DAQ=1;
 if DAQ==1
-
-dq = daq('ni'); 
-addinput(dq, 'Dev1', 'ai0', 'Voltage');
-addinput(dq, 'Dev1', 'ai1', 'Voltage');
-dq.Rate = 100;
-dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-dq.ScansAvailableFcnCount = 500;
-
-start(dq,'continuous');
+    dq = daq('ni'); 
+    addinput(dq, 'Dev1', 'ai0', 'Voltage');
+    addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    createDAQFileName();
+    dq.Rate = 100;
+    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+    dq.ScansAvailableFcnCount = 100;
+    start(dq,'continuous');
 end
 
 %% SETUP VIDEO
@@ -426,7 +427,7 @@ switch nextTrialType
 end
 
 % DOORS
-if doorsOn == 1
+if S.GUI.DoorsOn == 1
     doorOpen = [{DIOmodule,3,DIOmodule,7}];
     doorClose = [{DIOmodule,4,DIOmodule,8}];
 else
@@ -1350,15 +1351,21 @@ function state_colors = getStateColors(thisInfoSide)
 end
 
 
-function recordDataAvailable(src,~)
+function createDAQFileName()
     global BpodSystem
-    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    global DataFolder
     DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
     DateInfo = datestr(now,30);
     DateInfo(DateInfo == 'T') = '_';
-    DAQFileName = [BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv'];
-    dlmwrite((fullfile(DataFolder, DAQFileName)), [data,timestamps],'-append');
+    global DAQFileName
+    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
+end
 
+function recordDataAvailable(src,~)
+    global DataFolder
+    global DAQFileName
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
 end
 
 function closeDoors()
