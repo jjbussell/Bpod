@@ -75,9 +75,9 @@ if DAQ==1
     ch(5).TerminalConfig = 'SingleEnded';
     
     createDAQFileName();
-    dq.Rate = 100;
+    dq.Rate = 10;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100;
+    dq.ScansAvailableFcnCount = 10;
     start(dq,'continuous');
 end
 
