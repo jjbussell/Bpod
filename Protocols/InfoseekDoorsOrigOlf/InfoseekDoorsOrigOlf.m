@@ -66,7 +66,7 @@ end
 
 %% DAQ
 
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
     ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
@@ -78,9 +78,9 @@ if DAQ==1
     
     
     createDAQFileName();
-    dq.Rate = 100;
+    dq.Rate = 10;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100;
+    dq.ScansAvailableFcnCount = 10;
     start(dq,'continuous');
 end
 
