@@ -54,5 +54,5 @@
 
 
 // Global Constants
-#define TOU_THRESH	0x32 //0x06
-#define	REL_THRESH	0x46 //0x0A
+#define TOU_THRESH	0x28 //0x06
+#define	REL_THRESH	0x50 //0x0A
