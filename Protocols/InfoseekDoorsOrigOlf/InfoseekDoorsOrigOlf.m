@@ -69,18 +69,16 @@ end
 DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
-    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
-    ch(1).TerminalConfig = 'SingleEnded';
+    ch = addinput(dq, 'Dev1', 0:3, 'Voltage');
+    ch(1).TerminalConfig = 'Differential';
     ch(2).TerminalConfig = 'SingleEnded';
     ch(3).TerminalConfig = 'SingleEnded';
     ch(4).TerminalConfig = 'SingleEnded';
-    ch(5).TerminalConfig = 'SingleEnded';
-    
-    
+    dq.Channels
     createDAQFileName();
-    dq.Rate = 10;
+    dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 10;
+    dq.ScansAvailableFcnCount = 100;
     start(dq,'continuous');
 end
 
@@ -664,11 +662,11 @@ sma = AddState(sma, 'Name', 'OdorDRight', ...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
     'OutputActions', [{DIOmodule,SideDIOmsg1}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
-    'Timer', 0,...
+    'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','DoorOpenCueRight'},...
     'OutputActions', [{DIOmodule,SideDIOmsg2},closeSideDoors(),RunOdor(RightSideOdor,1)]);
 sma = AddState(sma, 'Name', 'DoorOpenCueRight', ...
-    'Timer', S.GUI.RewardDelay,...
+    'Timer', 0,...
     'StateChangeConditions', {'Tup','DoorOpenGraceRight'},...
     'OutputActions', {DIOmodule,1});
 sma = AddState(sma, 'Name', 'DoorOpenGraceRight', ...

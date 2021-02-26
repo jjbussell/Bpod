@@ -21,18 +21,19 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 
 %% DAQ
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
-%     addinput(dq, 'Dev1', 'port0/line0:6', 'Digital');
-%     addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
+    ch = addinput(dq, 'Dev1', 0:3, 'Voltage');
+    ch(1).TerminalConfig = 'Differential';
+    ch(2).TerminalConfig = 'SingleEnded';
+    ch(3).TerminalConfig = 'SingleEnded';
+    ch(4).TerminalConfig = 'SingleEnded';
     dq.Channels
     createDAQFileName();
-    dq.Rate = 2000;
+    dq.Rate = 100;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 2000;
+    dq.ScansAvailableFcnCount = 100;
     start(dq,'continuous');
 end
 
