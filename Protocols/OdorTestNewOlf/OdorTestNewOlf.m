@@ -18,12 +18,12 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorInterval = 10;
     S.GUI.OdorHeadstart = 0.500;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 7; % 1 = odor 1
+    S.GUI.OdorID = 1; % 1 = odor 1
 end
 
 %% DAQ
 
-DAQ=1;
+DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
     ch0 = addAnalogInputChannel(dq, 'Dev1', 0, 'Voltage');
