@@ -17,7 +17,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorTime = 0.2;
     S.GUI.OdorInterval = 5;
     S.GUI.OdorHeadstart = 0.500;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 3; % 1 = odor 1
 end
 
@@ -47,8 +46,7 @@ end
 
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
-LoadSerialMessages('ValveModule3',{[1,2],[3,4],[5,6]}); % final valves switch control and odor, left, center, right
-LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
+LoadSerialMessages('ValveModule3',{[1,2]}); % final valves before animal
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -76,31 +74,21 @@ for currentTrial = 1:MaxTrials
 
     MaxTrials = S.GUI.SessionTrials;
     odor = S.GUI.OdorID; % logic here to cycle odors
-    port = S.GUI.Port;
 
     %--- Assemble state machine
     sma = NewStateMachine();
     sma = AddState(sma, 'Name', 'PreloadOdor', ...
         'Timer', S.GUI.OdorHeadstart,...
         'StateChangeConditions', {'Tup', 'OdorOn'},...
-        'OutputActions', PreloadOdor(odor,port));    
+        'OutputActions', PreloadOdor(odor));    
     sma = AddState(sma, 'Name', 'OdorOn', ...
         'Timer', S.GUI.OdorTime,...
         'StateChangeConditions', {'Tup', 'OdorOff'},...
-        'OutputActions', [PresentOdor(port), {DIOmodule,1}]);
+        'OutputActions', [PresentOdor(), {DIOmodule,1}]);
     sma = AddState(sma, 'Name', 'OdorOff', ...
         'Timer', S.GUI.OdorInterval,...
         'StateChangeConditions', {'Tup', '>exit'},...
-        'OutputActions', [PresentOdor(port),PreloadOdor(odor,port)]);
-
-%     sma = AddState(sma, 'Name', 'OdorOn', ...
-%         'Timer', S.GUI.OdorTime,...
-%         'StateChangeConditions', {'Tup', 'OdorOff'},...
-%         'OutputActions', OdorTest(1));%{'ValveModule2',1,'ValveModule1',1,'ValveModule1',2,'ValveModule2',2}
-%     sma = AddState(sma, 'Name', 'OdorOff', ...
-%         'Timer', S.GUI.OdorInterval,...
-%         'StateChangeConditions', {'Tup', '>exit'},...
-%         'OutputActions', OdorTest(1));     
+        'OutputActions', [PresentOdor(),PreloadOdor(odor)]);    
 
     SendStateMatrix(sma); % Send state machine to the Bpod state machine device
     RawEvents = RunStateMatrix; % Run the trial and return events
@@ -140,44 +128,23 @@ end
 %     actions = [cmd1,cmd2];
 % end
 
-function Actions = PreloadOdor(odorID,port)
-    switch port
-        case 0            
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID}; 
-            Actions = [cmd1,cmd2];
-        case 1
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID};
-            cmd3 = {'ValveModule4',1};
-            Actions = [cmd1,cmd2,cmd3];
-        case 2
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID};
-            cmd3 = {'ValveModule4',2};
-            Actions = [cmd1,cmd2,cmd3];            
-    end
+function Actions = PreloadOdor(odorID)          
+    cmd1 = {'ValveModule1',odorID};
+    cmd2 = {'ValveModule2',odorID}; 
+    Actions = [cmd1,cmd2];
 end
 
-function Actions = PresentOdor(port)
-    switch port
-        case 0 % center
-            Actions = {'ValveModule3',2};
-        case 1 % left
-            Actions = {'ValveModule3',1};
-        case 2 % right
-            Actions = {'ValveModule3',3};
-    end
+function Actions = PresentOdor()
+    Actions = {'ValveModule3',1};
 end
 
 function TurnOffAllOdors()
     for v = 1:8
         ModuleWrite('ValveModule1',['C' v]);
         ModuleWrite('ValveModule2',['C' v]);
-        ModuleWrite('ValveModule3',['C' v]);
     end
-    for v = 1:3
-        ModuleWrite('ValveModule4',['C' v]);
+    for v = 1:2
+        ModuleWrite('ValveModule3',['C' v]);
     end    
 end
 
