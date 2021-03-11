@@ -5,7 +5,7 @@
 
 ----------------------------------------------------------------------------
 %}
-function OdorTestNewOlf
+function OdorTestHeadfixed
 
 global BpodSystem
 
