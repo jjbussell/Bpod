@@ -16,12 +16,17 @@ daqlist;
 DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
+    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
+    ch(1).TerminalConfig = 'SingleEnded';
+    ch(2).TerminalConfig = 'SingleEnded';
+    ch(3).TerminalConfig = 'SingleEnded';
+    ch(4).TerminalConfig = 'SingleEnded';
+    ch(5).TerminalConfig = 'SingleEnded';
+    
     createDAQFileName();
-    dq.Rate = 100;
+    dq.Rate = 10;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100;
+    dq.ScansAvailableFcnCount = 10;
     start(dq,'continuous');
 end
 
@@ -79,21 +84,26 @@ TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+% 19-23 output, 2-7 input
+
 % lick inputs 2, 3
+
+% buzzer output = 20
 buzzer1 = [254 1];
 buzzer2 = [253 1];
+houseLight = 21;
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
-LoadSerialMessages(DIOmodule, {buzzer1, buzzer2});
+LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, [houseLight 1],[houseLight 0]});
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
-LoadSerialMessages('ValveModule3',{[1,2]}); % final valves switch control and odor
+LoadSerialMessages('ValveModule3',{[1,2]}); % final valves before animal
 
 %% INITIALIZE STATE MACHINE
 
@@ -867,44 +877,23 @@ end
 % to preload, turn off control and turn on other odor (still going to
 % exhaust)
 
-function Actions = PreloadOdor(odorID,port)
-    switch port
-        case 0 % center          
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID}; 
-            Actions = [cmd1,cmd2];
-        case 1 % left
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID};
-            cmd3 = {'ValveModule4',1};
-            Actions = [cmd1,cmd2,cmd3];
-        case 2 % right
-            cmd1 = {'ValveModule1',odorID};
-            cmd2 = {'ValveModule2',odorID};
-            cmd3 = {'ValveModule4',2};
-            Actions = [cmd1,cmd2,cmd3];            
-    end
+function Actions = PreloadOdor(odorID)          
+    cmd1 = {'ValveModule1',odorID};
+    cmd2 = {'ValveModule2',odorID}; 
+    Actions = [cmd1,cmd2];
 end
 
-function Actions = PresentOdor(port)
-    switch port
-        case 0 % center
-            Actions = {'ValveModule3',2};
-        case 1 % left
-            Actions = {'ValveModule3',1};
-        case 2 % right
-            Actions = {'ValveModule3',3};
-    end
+function Actions = PresentOdor()
+    Actions = {'ValveModule3',1};
 end
 
 function TurnOffAllOdors()
     for v = 1:8
         ModuleWrite('ValveModule1',['C' v]);
         ModuleWrite('ValveModule2',['C' v]);
-        ModuleWrite('ValveModule3',['C' v]);
     end
-    for v = 1:3
-        ModuleWrite('ValveModule4',['C' v]);
+    for v = 1:2
+        ModuleWrite('ValveModule3',['C' v]);
     end    
 end
 
