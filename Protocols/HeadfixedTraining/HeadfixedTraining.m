@@ -1,6 +1,11 @@
 %{
 ----------------------------------------------------------------------------
 
+trial types: 1,2,3 (alt, left, right)
+
+params: drop size, licks required, delay
+
+states: drop, waitforlicks, delay
 
 %}
 function HeadfixedTraining
