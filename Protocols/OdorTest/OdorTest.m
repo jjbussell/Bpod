@@ -17,7 +17,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorTime = 2;
     S.GUI.OdorInterval = 5;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 3; % 0 = odor 1
+    S.GUI.OdorID = 2; % 1 = odor 1
 end
 
 %% DAQ
@@ -68,6 +68,8 @@ if port ~= 0
         pause(100/1000);
     end
 end
+
+ResetSerialMessages();
 
 %% Main loop (runs once per trial)
 for currentTrial = 1:MaxTrials
@@ -150,48 +152,48 @@ function OdorOutputActions = RunOdor(odorID,port)
         case 0
             cmd1 = {'ValveModule1',1}; % center control  
             switch odorID
-                case 0
+                case 1
                     cmd2 = {'ValveModule2',1};
                     cmd3 = {'ValveModule3',1};
-                case 1
+                case 2
                     cmd2 = {'ValveModule2',2};
                     cmd3 = {'ValveModule3',2};
-                case 2
+                case 3
                     cmd2 = {'ValveModule2',3};
                     cmd3 = {'ValveModule3',3};                    
-                case 3
+                case 4
                     cmd2 = {'ValveModule2',4};
                     cmd3 = {'ValveModule3',4};                    
             end
         case 1
             cmd1 = {'ValveModule1',2}; % left control
             switch odorID
-                case 0
+                case 1
                     cmd2 = {'ValveModule2',5};
                     cmd3 = {'ValveModule3',5};
-                case 1
+                case 2
                     cmd2 = {'ValveModule2',6};
                     cmd3 = {'ValveModule3',6};
-                case 2
+                case 3
                     cmd2 = {'ValveModule2',7};
                     cmd3 = {'ValveModule3',7};                    
-                case 3
+                case 4
                     cmd2 = {'ValveModule2',8};
                     cmd3 = {'ValveModule3',8};                    
             end            
         case 2
             cmd1 = {'ValveModule1',3}; % right control
             switch odorID
-                case 0
+                case 1
                     cmd2 = {'ValveModule2',5};
                     cmd3 = {'ValveModule3',5};
-                case 1
+                case 2
                     cmd2 = {'ValveModule2',6};
                     cmd3 = {'ValveModule3',6};
-                case 2
+                case 3
                     cmd2 = {'ValveModule2',7};
                     cmd3 = {'ValveModule3',7};                    
-                case 3
+                case 4
                     cmd2 = {'ValveModule2',8};
                     cmd3 = {'ValveModule3',8};
             end
@@ -254,7 +256,7 @@ function OdorOutputActions = turnOnOdor(odorID,port)
                    cmd4 = {'ValveModule3',8};                    
             end            
     end
-    OdorOutputActions = cmd1;
+    OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];
 end
 
 function OdorOutputActions = turnOffOdor(odorID,port)
@@ -312,7 +314,7 @@ function OdorOutputActions = turnOffOdor(odorID,port)
                    cmd4 = {'ValveModule3',8};                    
             end            
     end
-    OdorOutputActions = cmd1;
+    OdorOutputActions = [cmd1,cmd2,cmd3,cmd4];
 end
 
 

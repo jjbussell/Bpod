@@ -132,6 +132,8 @@ TotalRewardDisplayInfo('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % door outputs 2, 3, 4
 % buzzer 5
 % house light 6 NOT CONNECTED
