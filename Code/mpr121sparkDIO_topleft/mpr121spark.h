@@ -31,7 +31,7 @@
 #define	ELE7_R	0x50
 #define	ELE8_T	0x51
 #define	ELE8_R	0x52
-#define	ELE9_T	0x53
+#define	ELE9_T	0x532
 #define	ELE9_R	0x54
 #define	ELE10_T	0x55
 #define	ELE10_R	0x56
