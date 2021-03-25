@@ -131,6 +131,8 @@ TotalRewardDisplayInfo('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % lick inputs 2, 3, 4
 % buzzer 5
 % house light 6

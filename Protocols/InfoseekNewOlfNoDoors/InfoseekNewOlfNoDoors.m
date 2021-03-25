@@ -125,6 +125,8 @@ TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % lick inputs 2, 3, 4
 % door outputs 5,6,7
 % buzzer output 8
