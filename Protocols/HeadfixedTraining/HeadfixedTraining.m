@@ -27,9 +27,9 @@ TrialManager = TrialManagerObject;
 
 %% DAQ
 
-daqlist;
-DAQ=0;
+DAQ = 0;
 if DAQ==1
+    daqlist;
     dq = daq('ni'); 
     ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
     ch(1).TerminalConfig = 'SingleEnded';
@@ -59,6 +59,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 10;%
     S.GUI.TrialTypes = 2;% % 1 both, 2 left, 3 right
     S.GUI.RewardAmount = 4;
+    S.GUI.OdorTime = 0.5;
     S.GUI.LeftOdor = 1;
     S.GUI.RightOdor = 2;
     S.GUI.LicksRequired = 2;
@@ -77,9 +78,9 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 
 %% Initialize plots
 
-BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .3 .89 .6]);
-TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',S.TrialTypes);
+% BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 540 1000 250],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+% BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .3 .89 .6]);
+% TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',S.TrialTypes);
 
 % BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 540 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 % BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
@@ -146,7 +147,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = S.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
-        UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
+%         UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
 %         TotalRewardDisplay('add',rewardAmount);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
     end
@@ -187,19 +188,19 @@ end
 OdorHeadstart = 0.500;
 
 % Water parameters
-R = GetValveTimes(S.GUI.RewardAmount, [1 2]);
+R = GetValveTimes(S.GUI.RewardAmount, [1 3]);
 % R = [0.100 0.100];
 LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 
 sma = NewStateMatrix(); % Assemble state matrix
 
-sma = SetGlobalCounter(sma,1,'LeftLick',S.GUI.LicksRequired);
-sma = SetGlobalCounter(sma,2,'RightLick',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,1,'DIO1_2_Hi',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,2,'DIO1_3_Hi',S.GUI.LicksRequired);
 
 
 % STATES
 sma = AddState(sma, 'Name', 'InterTrialInterval', ...
-    'Timer', S.GUI.Interval-OdorHeadstart,...
+    'Timer', S.GUI.ITI-OdorHeadstart,...
     'StateChangeConditions', {'Tup', 'StartTrial'},...
     'OutputActions', {DIOmodule,3});
 sma = AddState(sma, 'Name', 'OdorPreload',...
@@ -217,7 +218,7 @@ sma = AddState(sma, 'Name', 'Odor', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup',RewardState},...
-    'OutputActions', {DIOmodule,2,PresentOdor(),PreloadOdor(Odor)});
+    'OutputActions', [{DIOmodule,2},PresentOdor(),PreloadOdor(Odor)]);
 
 % REWARD AND LICKS
 sma = AddState(sma, 'Name', 'RewardLeft', ...
@@ -226,7 +227,7 @@ sma = AddState(sma, 'Name', 'RewardLeft', ...
     'OutputActions', {'ValveState', 1});
 sma = AddState(sma, 'Name', 'ResponseLeft', ...
     'Timer', 0,...
-    'StateChangeConditions', {GlobalCounter1,'Drinking'},...
+    'StateChangeConditions', {'GlobalCounter1_End','Drinking'},...
     'OutputActions', {});
 
 sma = AddState(sma, 'Name', 'RewardRight', ...
@@ -235,13 +236,13 @@ sma = AddState(sma, 'Name', 'RewardRight', ...
     'OutputActions', {'ValveState', 2});
 sma = AddState(sma, 'Name', 'ResponseRight', ...
     'Timer', 0,...
-    'StateChangeConditions', {GlobalCounter2,'Drinking'},...
+    'StateChangeConditions', {'GlobalCounter2_End','Drinking'},...
     'OutputActions', {});
 
 sma = AddState(sma, 'Name', 'Drinking',...
     'Timer', S.GUI.DrinkingDelay,...
     'StateChangeConditions', {'Tup','>exit'},...
-    'OutputActions', {'ResetGlobalCounter',1,'ResetGlobalCounter',2});    
+    'OutputActions', {'GlobalCounterReset',1,'GlobalCounterReset',2});    
 end
 
 %% TRIAL TYPES
@@ -365,3 +366,4 @@ for x = 1:Data.nTrials
     end
 end
 TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);
+end
