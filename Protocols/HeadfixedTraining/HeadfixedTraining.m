@@ -93,6 +93,8 @@ TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % 19-23 output, 2-7 input
 
 % lick inputs 2, 3
