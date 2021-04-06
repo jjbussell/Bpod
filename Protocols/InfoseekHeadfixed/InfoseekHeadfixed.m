@@ -415,7 +415,7 @@ sma = NewStateMatrix(); % Assemble state matrix
 % TIMERS
 sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
 
-% sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY + GO CUE
+% ODOR DELAY + GO CUE
 sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05,...
     'OnsetDelay', 0, 'Channel', 'SoftCode', 'OnMessage', 0, 'OffMessage', 0,...
     'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0,'OnsetTrigger','010000'); %also turn on timer 5
@@ -441,10 +441,6 @@ sma = SetCondition(sma, 8, 'GlobalTimer5', 0);
 sma = SetGlobalTimer(sma,'TimerID',6,'Duration',S.GUI.Interval-OdorHeadstart,'OnsetDelay',0,...
    'Channel','SoftCode','OnMessage', 0, 'OffMessage', 0);
 sma = SetCondition(sma, 9, 'GlobalTimer6', 0);
-
-% reward states all wait for timers to end
-% set multiple timers for each outcome--one for drops, one for blanks
-% get rid of reward states
 
 % Timers for delivering reward drops
 if LeftRewardDrops > 1
@@ -476,6 +472,11 @@ else
         'Channel', 'Valve3', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
+
+% LICK COUNTERS
+% NEED to automate lick event names??
+sma = SetGlobalCounter(sma,5,'DIO1_2_Hi',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,6,'DIO1_3_Hi',S.GUI.LicksRequired);
 
 
 % STATES
@@ -518,7 +519,7 @@ sma = AddState(sma, 'Name', 'GoCue', ...
     'StateChangeConditions', {'Tup','Response'},...
     'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2});
 
-% RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
+% RESPONSE (CHOICE)
 sma = AddState(sma, 'Name', 'Response', ...
     'Timer', S.GUI.OdorDelay,...
     'StateChangeConditions', {'Tup','GracePeriod','Port1In',ChooseLeft,'Port3In',ChooseRight},...
