@@ -64,7 +64,7 @@ end
 
 %% DAQ
 
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
     ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
@@ -73,7 +73,9 @@ if DAQ==1
     ch(3).TerminalConfig = 'SingleEnded';
     ch(4).TerminalConfig = 'SingleEnded';
     ch(5).TerminalConfig = 'SingleEnded';
+    addoutput(dq, 'Dev1','ao0','Voltage');
     
+    write(dq,5);
     createDAQFileName();
     dq.Rate = 10;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
@@ -528,7 +530,7 @@ sma = AddState(sma, 'Name', 'CenterDelay', ...
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{'BNC2',1,DIOmodule,CenterDIOmsg1,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions',[{DIOmodule,CenterDIOmsg1,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterOdorOff',...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','WaitForCenter'},...
@@ -898,6 +900,7 @@ function S = SetRewardTypes(S,currentTrial)
         S.RandOdorTypes = [S.RandOdorTypes(1:currentTrial); RandOdorTypes(1:end-currentTrial)];
         S.RewardTypes = [S.RewardTypes(1:currentTrial,:); RewardTypes(1:end-currentTrial,:)];
     end
+    write(dq,0);
 end
 
 %% ODOR CONTROL
