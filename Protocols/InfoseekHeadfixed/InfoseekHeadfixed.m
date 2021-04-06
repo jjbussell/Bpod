@@ -1,14 +1,7 @@
 %{
 ----------------------------------------------------------------------------
 
-This code runs a 2AFC Information Seeking assay. The mouuse initiatess a
-trial by poking the center port to receive an odor directing to right or
-left port or free choice between the two. The mouse chooses side port by
-poking there and there receives either informative or un-
-informative odor, then after a delay, reward outcome at the same side port.
 
-The mouse only receives water if he is present in the corret chosen port
-at the outcome tiime.
 ----------------------------------------------------------------------------
 
 Three valve control modules control airflow in the custom dilution
@@ -18,7 +11,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekNewOlfNoDoors
+function InfoSeekHeadfixed
 
 global BpodSystem vid
 
@@ -27,9 +20,9 @@ TrialManager = TrialManagerObject;
 
 %% DAQ
 
-daqlist;
-DAQ=1;
+DAQ=0;
 if DAQ==1
+    daqlist;
     dq = daq('ni'); 
     addinput(dq, 'Dev1', 'ai0', 'Voltage');
     addinput(dq, 'Dev1', 'ai1', 'Voltage');
@@ -75,7 +68,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RandRewardProb = 0;%
     S.GUI.GracePeriod = 100000000; 
     S.GUI.Interval = 1;
-    S.GUI.DoorsOn = 0;
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
@@ -125,19 +117,13 @@ TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % lick inputs 2, 3, 4
-% door outputs 5,6,7
 % buzzer output 8
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-openSpeed = 5;
-closeSpeed = 30;
-leftDoorOpen = [251 openSpeed]; %3
-leftDoorClose = [252 closeSpeed]; %4
-centerDoorOpen = [249 openSpeed]; %5
-centerDoorClose = [250 closeSpeed]; %6
-rightDoorOpen = [247 openSpeed]; %7
-rightDoorClose = [248 closeSpeed]; %8
+houseLight = 21;
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -149,21 +135,13 @@ DIOmodule = DIOmodule{1};
 % scope trig to Bpod OUT BNC 1
 % Bpod out BNC 2 at center odor start
 
-LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, leftDoorOpen, leftDoorClose,...
-    centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose,...
-    [9 1], [9 0], [10 1], [10 0], [11 1],[11,0],[14 1],[14 0],[15 1],[15 0],...
-    [16 1],[16 0],[17 1],[17 0]});
+LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, [houseLight 1],[houseLight 0]});
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
-LoadSerialMessages('ValveModule3',{[1,2],[3,4],[5,6]}); % final valves switch control and odor, left, center, right
-LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
-
-%% START WITH DOORS OPEN
-
-% openDoors();
+LoadSerialMessages('ValveModule3',{[1,2]}); % final valves before animal
 
 %% INITIALIZE STATE MACHINE
 
@@ -188,14 +166,12 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end        
-%         openDoors();
         return; end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;        
         TurnOffAllOdors();
-%         openDoors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -427,7 +403,7 @@ switch nextTrialType
 end
 
 % Water parameters
-R = GetValveTimes(4, [1 3]);
+R = GetValveTimes(4, [1 2]);
 % R = [0.100 0.100];
 LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 MaxValveTime = max(R);
@@ -436,17 +412,10 @@ RewardPauseTime = 0.05;
 
 sma = NewStateMatrix(); % Assemble state matrix
 
-sma = SetCondition(sma, 1, 'Port1', 1); % Condition 1: Port 1 high (is in) (left)
-sma = SetCondition(sma, 2, 'Port2', 1); % Condition 2: Port 2 high (is in) (center)
-sma = SetCondition(sma, 3, 'Port3', 1); % Condition 3: Port 3 high (is in) (right)
-sma = SetCondition(sma, 4, 'Port1', 0); % Condition 4: Port 1 low (is out) (left)
-sma = SetCondition(sma, 5, 'Port2', 0); % Condition 5: Port 2 low (is out) (center)
-sma = SetCondition(sma, 6, 'Port3', 0); % Condition 6: Port 3 low (is out) (right)
-
 % TIMERS
 sma = SetCondition(sma, 7, 'GlobalTimer1', 0);
 
-% sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05); % ODOR DELAY + GO CUE
+% ODOR DELAY + GO CUE
 sma = SetGlobalTimer(sma, 'TimerID', 1, 'Duration', S.GUI.OdorDelay+0.05,...
     'OnsetDelay', 0, 'Channel', 'SoftCode', 'OnMessage', 0, 'OffMessage', 0,...
     'Loop', 0, 'SendEvents', 1, 'LoopInterval', 0,'OnsetTrigger','010000'); %also turn on timer 5
@@ -472,10 +441,6 @@ sma = SetCondition(sma, 8, 'GlobalTimer5', 0);
 sma = SetGlobalTimer(sma,'TimerID',6,'Duration',S.GUI.Interval-OdorHeadstart,'OnsetDelay',0,...
    'Channel','SoftCode','OnMessage', 0, 'OffMessage', 0);
 sma = SetCondition(sma, 9, 'GlobalTimer6', 0);
-
-% reward states all wait for timers to end
-% set multiple timers for each outcome--one for drops, one for blanks
-% get rid of reward states
 
 % Timers for delivering reward drops
 if LeftRewardDrops > 1
@@ -507,6 +472,11 @@ else
         'Channel', 'Valve3', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
+
+% LICK COUNTERS
+% NEED to automate lick event names??
+sma = SetGlobalCounter(sma,5,'DIO1_2_Hi',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,6,'DIO1_3_Hi',S.GUI.LicksRequired);
 
 
 % STATES
@@ -549,7 +519,7 @@ sma = AddState(sma, 'Name', 'GoCue', ...
     'StateChangeConditions', {'Tup','Response'},...
     'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2});
 
-% RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
+% RESPONSE (CHOICE)
 sma = AddState(sma, 'Name', 'Response', ...
     'Timer', S.GUI.OdorDelay,...
     'StateChangeConditions', {'Tup','GracePeriod','Port1In',ChooseLeft,'Port3In',ChooseRight},...
