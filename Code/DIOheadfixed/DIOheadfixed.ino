@@ -27,8 +27,8 @@
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIO"; // Name of module for manual override UI and state machine assembler
-char* eventNames[] = {"2_Hi", "2_Lo", "3_Hi", "3_Lo", "4_Hi", "4_Lo", "5_Hi", "5_Lo", "6_Hi", "6_Lo", "7_Hi", "7_Lo"};
+char moduleName[] = "DIOhf"; // Name of module for manual override UI and state machine assembler
+char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
 #define OutputOffset 8
@@ -43,7 +43,7 @@ uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) aft
 
 byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 
-int buzzer = 22;
+int buzzer = 8;
 
 
 // Variables

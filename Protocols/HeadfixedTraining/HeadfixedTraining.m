@@ -20,37 +20,30 @@ responseleft(wait for licks, punished or not), side odor, delay, reward
 
 function HeadfixedTraining
 
-global BpodSystem vid
+global BpodSystem
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 
 %% DAQ
 
-DAQ = 0;
-if DAQ==1
-    daqlist;
-    dq = daq('ni'); 
-    ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
-    ch(1).TerminalConfig = 'SingleEnded';
-    ch(2).TerminalConfig = 'SingleEnded';
-    ch(3).TerminalConfig = 'SingleEnded';
-    ch(4).TerminalConfig = 'SingleEnded';
-    ch(5).TerminalConfig = 'SingleEnded';
-    
-    createDAQFileName();
-    dq.Rate = 10;
-    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 10;
-    start(dq,'continuous');
-end
-
-%% SETUP VIDEO
-
-vidOn = 0;
-if vidOn == 1
-    setupVideo();
-end
+% DAQ = 0;
+% if DAQ==1
+%     daqlist;
+%     dq = daq('ni'); 
+%     ch = addinput(dq, 'Dev1', 0:4, 'Voltage');
+%     ch(1).TerminalConfig = 'SingleEnded';
+%     ch(2).TerminalConfig = 'SingleEnded';
+%     ch(3).TerminalConfig = 'SingleEnded';
+%     ch(4).TerminalConfig = 'SingleEnded';
+%     ch(5).TerminalConfig = 'SingleEnded';
+%     
+%     createDAQFileName();
+%     dq.Rate = 10;
+%     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+%     dq.ScansAvailableFcnCount = 10;
+%     start(dq,'continuous');
+% end
 
 %% Define parameters
 
@@ -99,7 +92,7 @@ ResetSerialMessages();
 
 % lick inputs 2, 3
 
-% buzzer output = 20
+% buzzer output = 5
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 houseLight = 21;
@@ -121,11 +114,6 @@ BpodSystem.Data.EventNames = BpodSystem.StateMachineInfo.EventNames;
 %% INITIALIZE STATE MACHINE
 
 [sma,S] = PrepareStateMachine(S, 1); % Prepare state machine for trial 1 with empty "current events" variable
-
-if vidOn == 1
-    start(vid);
-    trigger(vid);
-end
 
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
@@ -190,14 +178,14 @@ end
 OdorHeadstart = 0.500;
 
 % Water parameters
-R = GetValveTimes(S.GUI.RewardAmount, [1 3]);
+R = GetValveTimes(S.GUI.RewardAmount, [1 2]);
 % R = [0.100 0.100];
 LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 
 sma = NewStateMatrix(); % Assemble state matrix
 
-sma = SetGlobalCounter(sma,1,'DIO1_2_Hi',S.GUI.LicksRequired);
-sma = SetGlobalCounter(sma,2,'DIO1_3_Hi',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,1,'DIOhf1_LeftLick_Hi',S.GUI.LicksRequired);
+sma = SetGlobalCounter(sma,2,'DIOhf1_RightLick_Hi',S.GUI.LicksRequired);
 
 
 % STATES
