@@ -64,7 +64,7 @@ end
 
 %% DAQ
 
-DAQ=1;
+DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
 
@@ -1419,6 +1419,8 @@ end
 function recordDataAvailable(src,~)
     global DataFolder
     global DAQFileName
+    
     [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
     dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
+    
 end
