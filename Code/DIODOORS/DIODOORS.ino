@@ -28,12 +28,13 @@
 
 // Module setup
 ArCOM Serial1COM(Serial1); // Wrap Serial1 (UART on Arduino M0, Due + Teensy 3.X)
-char moduleName[] = "DIODOOR"; // Name of module for manual override UI and state machine assembler
+char moduleName[] = "DIODOORS"; // Name of module for manual override UI and state machine assembler
 char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "CenterLick_Hi", "CenterLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
+#define InputOffset 2
 #define OutputOffset 2
-#define nOutputChannels 19
 #define nInputChannels 3
+#define nOutputChannels 19
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
                                   // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
@@ -55,7 +56,7 @@ Servo servoLeft;
 Servo servoCenter;
 Servo servoRight;
 
-int motorPins[]= {2,3,4};
+int motorPins[]= {5,6,7};
 int speed_delay = 30;
 
 void setup()
