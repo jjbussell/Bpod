@@ -120,28 +120,29 @@ TotalRewardDisplay('init');
 ResetSerialMessages();
 
 % lick inputs 2, 3, 4
-% buzzer output 8
+% buzzer output 5
+% houselight 6
+
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-houseLight = 21;
+houseLight = 6;
+
+centerOdorDAQDIO = 22;
+sideOdorDAQDIO = 23;
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC 1
-% Bpod out BNC 2 at center odor start
-
-LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, [houseLight 1],[houseLight 0]});
+LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, [houseLight 1],[houseLight 0],...
+    [centerOdorDAQDIO 1],[centerOdorDAQDIO 0],[sideOdorDAQDIO 1],[sideOdorDAQDIO 0]});
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves before
 LoadSerialMessages('ValveModule2',{[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8]}); % switch control and odor 1-7, valves after
 LoadSerialMessages('ValveModule3',{[1,2]}); % final valves before animal
+
 
 %% INITIALIZE STATE MACHINE
 

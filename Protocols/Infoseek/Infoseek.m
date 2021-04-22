@@ -64,25 +64,30 @@ end
 
 %% DAQ
 
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
-    ch = addinput(dq, 'Dev2', 0:4, 'Voltage');
-    ch(1).TerminalConfig = 'SingleEnded';
-    ch(2).TerminalConfig = 'SingleEnded';
-    ch(3).TerminalConfig = 'SingleEnded';
-    ch(4).TerminalConfig = 'SingleEnded';
-    ch(5).TerminalConfig = 'SingleEnded';
-    addoutput(dq, 'Dev2','ao0','Voltage');
+% 
+%     addoutput(dq,'Dev2','ao0','Voltage');
+%     write(dq,0);
+%     pause(.5);
+%     write(dq,5);
+%     removechannel(dq,1);
+%     dq.Channels
+% %     
+    ch1 = addinput(dq, 'Dev2', 'ai0', 'Voltage');
+    ch2 = addinput(dq, 'Dev2', 'ai1', 'Voltage');
+    ch1.TerminalConfig = 'Differential';
+    ch2.TerminalConfig = 'Differential';
+%     addoutput(dq, 'Dev2','ao0','Voltage');
     
-    
-    write(dq,0);
-    preload(dq,5);
+%     write(dq,0);
+%     preload(dq,5);
     createDAQFileName();
-    dq.Rate = 10;
+    dq.Rate = 10000;
     dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 10;
-    start(dq,'repeatoutput');
+    dq.ScansAvailableFcnCount = 100000;
+    start(dq,'continuous');
     
 end
 
@@ -180,27 +185,33 @@ RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
 for currentTrial = 1:S.GUI.SessionTrials
     currentS = S;
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
-    if BpodSystem.Status.BeingUsed == 0;        
+    if BpodSystem.Status.BeingUsed == 0;      
         TurnOffAllOdors();
-%         if DAQ==1
-%             write(dq,0);
-%         end
+        if DAQ==1
+            stop(dq);
+            addoutput(dq,"Dev2","ao0","Voltage");
+            write(dq,0);
+        end
         if vidOn==1
             shutdownVideo();
-        end        
+        end
     return; 
     end % If user hit console "stop" button, end session
+    tic
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
+    toc
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
-    if BpodSystem.Status.BeingUsed == 0;        
+    if BpodSystem.Status.BeingUsed == 0;
         TurnOffAllOdors();
         if vidOn==1
             shutdownVideo();
         end
-%         if DAQ==1
-%             write(dq,0);
-%         end
+        if DAQ==1
+            stop(dq);
+            addoutput(dq,"Dev2","ao0","Voltage");
+            write(dq,0);
+        end
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -217,7 +228,6 @@ for currentTrial = 1:S.GUI.SessionTrials
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
-
     end
 
 end
@@ -1405,16 +1415,18 @@ end
 function createDAQFileName()
     global BpodSystem
     global DataFolder
+    global DAQFileName
     DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
     DateInfo = datestr(now,30);
     DateInfo(DateInfo == 'T') = '_';
-    global DAQFileName
     DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
 end
 
 function recordDataAvailable(src,~)
     global DataFolder
     global DAQFileName
+    
     [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
     dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
+    
 end
