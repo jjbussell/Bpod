@@ -56,7 +56,7 @@ Servo servoLeft;
 Servo servoCenter;
 Servo servoRight;
 
-int motorPins[]= {5,6,7};
+int motorPins[]= {21, 22, 23};
 int speed_delay = 30;
 
 void setup()

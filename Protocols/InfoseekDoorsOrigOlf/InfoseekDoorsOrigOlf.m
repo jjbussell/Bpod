@@ -134,11 +134,13 @@ TotalRewardDisplayInfo('init');
 
 ResetSerialMessages();
 
-% door outputs 2, 3, 4
+% door outputs 21,22,23
 % buzzer 5
 % house light 6 NOT CONNECTED
 % latch valves 7-16
-% odor DIO 17-23
+% odor DIO ??
+% lick inputs 2 3 4
+
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 openSpeed = 10;
@@ -163,8 +165,8 @@ DIOmodule = DIOmodule{1};
 % use functions
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, leftDoorOpen, leftDoorClose,...
     centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose,...
-    [17 1],[17,0],[18 1],[18 0],[19 1],[19 0],[20 1],[20 0],[21 1],[21 0],...
-    [22 1],[22 0],[23 1], [23 0], sideDoorsOpen, sideDoorsClose});
+    [17 1],[17,0],[18 1],[18 0],[19 1],[19 0],[20 1],[20 0],[17 1],[17 0],...
+    [17 1],[17 0],[17 1], [17 0], sideDoorsOpen, sideDoorsClose});
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
