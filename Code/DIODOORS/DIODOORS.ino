@@ -32,13 +32,14 @@ char moduleName[] = "DIODOORS"; // Name of module for manual override UI and sta
 char* eventNames[] = {"LeftLick_Hi", "LeftLick_Lo", "CenterLick_Hi", "CenterLick_Lo", "RightLick_Hi", "RightLick_Lo"};
 #define FirmwareVersion 1
 #define InputOffset 2
-#define OutputOffset 2
+#define OutputOffset 5
 #define nInputChannels 3
 #define nOutputChannels 19
 uint32_t refractoryPeriod = 300; // Minimum amount of time (in microseconds) after a logic transition on a line, before its level is checked again.
                                   // This puts a hard limit on how fast each channel on the board can spam the state machine with events.
 
 // Constants
+#define InputChRangeHigh InputOffset+nInputChannels
 #define OutputChRangeHigh OutputOffset+nOutputChannels
 
 byte nEventNames = (sizeof(eventNames)/sizeof(char *));
@@ -47,6 +48,14 @@ byte nEventNames = (sizeof(eventNames)/sizeof(char *));
 byte opCode = 0;
 byte channel = 0;
 byte state = 0;
+byte thisEvent = 0;
+boolean readThisChannel = false; // For implementing refractory period (see variable above)
+byte inputChState[nInputChannels] = {0}; // Current state of each input channel
+byte lastInputChState[nInputChannels] = {0}; // Last known state of each input channel
+byte inputsEnabled[nInputChannels] = {0}; // For each input channel, enabled or disabled
+uint32_t inputChSwitchTime[nInputChannels] = {0}; // Time of last detected logic transition
+byte events[nInputChannels*2] = {0}; // List of high or low events captured this cycle
+byte nEvents = 0; // Number of events captured in the current cycle
 uint32_t currentTime = 0; // Current time in microseconds
 
 int buzzer = 5;
@@ -64,6 +73,13 @@ void setup()
   Serial1.begin(1312500);
   currentTime = micros();
   
+  for (int i = 0; i < nInputChannels; i++) {
+    pinMode(i+InputOffset, INPUT_PULLUP);
+    inputsEnabled[i] = 1;
+    inputChState[i] = 1;
+    lastInputChState[i] = 1;
+  }
+    
   for (int i = OutputOffset; i < OutputChRangeHigh; i++) {
     pinMode(i, OUTPUT);
   }
@@ -112,6 +128,37 @@ void loop()
         digitalWrite(opCode,state); 
     }
   }
+  thisEvent = 1;
+  for (int i = 0; i < nInputChannels; i++) {
+    if (inputsEnabled[i] == 1) {
+      inputChState[i] = digitalRead(i+InputOffset);
+      readThisChannel = false;
+      if (currentTime > inputChSwitchTime[i]) {
+        if ((currentTime - inputChSwitchTime[i]) > refractoryPeriod) {
+          readThisChannel = true;
+        }
+      } else if ((currentTime + 4294967296-inputChSwitchTime[i]) > refractoryPeriod) {
+        readThisChannel = true;
+      }
+      if (readThisChannel) {
+        if ((inputChState[i] == 1) && (lastInputChState[i] == 0)) {
+          events[nEvents] = thisEvent; nEvents++;
+          inputChSwitchTime[i] = currentTime;
+          lastInputChState[i] = inputChState[i];
+        }
+        if ((inputChState[i] == 0) && (lastInputChState[i] == 1)) {
+          events[nEvents] = thisEvent+1; nEvents++;
+          inputChSwitchTime[i] = currentTime;
+          lastInputChState[i] = inputChState[i];
+        }
+      }
+    }
+    thisEvent += 2;
+  }
+  if (nEvents > 0) {
+    Serial1COM.writeByteArray(events, nEvents);
+    nEvents = 0;
+  }  
 }
 
 void returnModuleInfo() {
