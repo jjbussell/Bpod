@@ -64,19 +64,21 @@ end
 
 %% DAQ
 
-DAQ=0;
+DAQ=1;
 if DAQ==1
     dq = daq('ni'); 
-
+% 
 %     addoutput(dq,'Dev2','ao0','Voltage');
-%     write(dq,5);
-%     pause(0.5);
 %     write(dq,0);
-%     removechannel(dq,0);
+%     pause(.5);
+%     write(dq,5);
+%     removechannel(dq,1);
 %     dq.Channels
-%     
-    ch = addinput(dq, 'Dev2', 'ai0', 'Voltage');
-    ch(1).TerminalConfig = 'Differential';
+% %     
+    ch1 = addinput(dq, 'Dev2', 'ai0', 'Voltage');
+    ch2 = addinput(dq, 'Dev2', 'ai1', 'Voltage');
+    ch1.TerminalConfig = 'Differential';
+    ch2.TerminalConfig = 'Differential';
 %     addoutput(dq, 'Dev2','ao0','Voltage');
     
 %     write(dq,0);
@@ -185,9 +187,11 @@ for currentTrial = 1:S.GUI.SessionTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;      
         TurnOffAllOdors();
-%         if DAQ==1
-%             write(dq,0);
-%         end
+        if DAQ==1
+            stop(dq);
+            addoutput(dq,"Dev2","ao0","Voltage");
+            write(dq,0);
+        end
         if vidOn==1
             shutdownVideo();
         end
@@ -203,9 +207,11 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
-%         if DAQ==1
-%             write(dq,0);
-%         end
+        if DAQ==1
+            stop(dq);
+            addoutput(dq,"Dev2","ao0","Voltage");
+            write(dq,0);
+        end
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
