@@ -66,7 +66,7 @@ end
 
 %% DAQ
 
-DAQ=1;
+DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
     ch = addinput(dq, 'Dev1', 0:3, 'Voltage');
