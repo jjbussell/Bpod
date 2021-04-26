@@ -35,13 +35,13 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;%
     S.GUI.TrialTypes = 2;%
     S.GUI.InfoSide = 0;%
-    S.GUI.InfoOdor = 2;
-    S.GUI.RandOdor = 0;
+    S.GUI.InfoOdor = 1;
+    S.GUI.RandOdor = 2;
     S.GUI.ChoiceOdor = 3;
     S.GUI.OdorA = 3;
-    S.GUI.OdorB = 2;
-    S.GUI.OdorC = 0;
-    S.GUI.OdorD = 1;
+    S.GUI.OdorB = 4;
+    S.GUI.OdorC = 5;
+    S.GUI.OdorD = 6;
     S.GUI.LicksRequired = 2;
     S.GUI.CenterDelay = 0;
     S.GUI.CenterOdorTime = 0.2;
@@ -49,6 +49,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OdorDelay = 1.2;
     S.GUI.OdorTime = 1;
     S.GUI.RewardDelay = 3;
+    S.GUI.DrinkingDelay = 2;
     S.GUI.InfoBigDrops = 1;
     S.GUI.InfoSmallDrops = 1;
     S.GUI.RandBigDrops = 1;
@@ -574,6 +575,10 @@ sma = AddState(sma, 'Name', 'RightSmallReward', ...
 % Waits for max drops time
 sma = AddState(sma, 'Name','OutcomeDelivery',...
     'Timer',0,...
+    'StateChangeConditions',{'Tup','Drinking'},...
+    'OutputActions',{});
+sma = AddState(sma, 'Name','Drinking',...
+    'Timer',S.GUI.DrinkingDelay,...
     'StateChangeConditions',{'GlobalCounter2_End','EndTrial'},...
     'OutputActions',{});
 
@@ -599,8 +604,12 @@ sma = AddState(sma, 'Name', 'TimeoutRewardDelay', ...
     'OutputActions', {});
 sma = AddState(sma, 'Name', 'TimeoutOutcome', ...
     'Timer', 0,...
-    'StateChangeConditions', {'GlobalCounter2_End','EndTrial'},...
+    'StateChangeConditions', {'GlobalCounter2_End','TimeoutDrinking'},...
     'OutputActions', {'GlobalTimerTrig', 2});
+sma = AddState(sma, 'Name', 'TimeoutDrinking', ...
+    'Timer', 0,...
+    'StateChangeConditions', {'Tup','EndTrial'},...
+    'OutputActions', {'GlobalTimerTrig', 2,'ValveModule3',2});
 
 sma = AddState(sma, 'Name', 'EndTrial', ...
     'Timer', 0,...
@@ -832,8 +841,6 @@ end
 
 % to preload, turn off control and turn on other odor (still going to
 % exhaust)
-
-% NEED TO FIX FOR CONTROL IN POSITION 1 (VALVE 1, then 7 odors after)
 
 function Actions = PreloadOdor(odorID)          
     cmd1 = {'ValveModule1',odorID};
