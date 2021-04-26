@@ -16,7 +16,10 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RightOdor = 2;
     S.GUI.LicksRequired = 2;
     S.GUI.ITI = 2;
-    S.GUI.DrinkingDelay = 2; 
+    S.GUI.DrinkingDelay = 2;
+    
+    BpodSystem.ProtocolSettings = S;
+    SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file     
 end
 
 %% DEFINE TRIAL TYPES
@@ -30,6 +33,9 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
+cam = webcam('HD');
+preview(cam);
+
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
@@ -80,12 +86,12 @@ for currentTrial = 1:MaxTrials
     % Set trialParams (reward and odor)
     % set rewardstate, rewardamount/valvetime,odor
     switch nextTrialType
-        case 0 % left
+        case 1 % left
             % response state
             Odor = S.GUI.LeftOdor;
             RewardState = 'RewardLeft';
 
-        case 1 % right
+        case 2 % right
             Odor = S.GUI.RightOdor;
             RewardState = 'RewardRight';
     end
@@ -97,8 +103,8 @@ for currentTrial = 1:MaxTrials
     % R = [0.100 0.100];
     LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 
-    sma = SetGlobalCounter(sma,1,'DIOhf1_LeftLick_Hi',S.GUI.LicksRequired);
-    sma = SetGlobalCounter(sma,2,'DIOhf1_RightLick_Hi',S.GUI.LicksRequired);
+    sma = SetGlobalCounter(sma,1,'DIO1_LeftLick_Hi',S.GUI.LicksRequired);
+    sma = SetGlobalCounter(sma,2,'DIO1_RightLick_Hi',S.GUI.LicksRequired);
 
 
     % STATES
@@ -171,7 +177,7 @@ for currentTrial = 1:MaxTrials
     end
 end
 
-
+closePreview(cam);
 end % end of protocol main function
 
 %% TRIAL TYPES
