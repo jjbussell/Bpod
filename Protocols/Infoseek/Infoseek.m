@@ -64,7 +64,7 @@ end
 
 %% DAQ
 
-DAQ=1;
+DAQ=0;
 if DAQ==1
     dq = daq('ni'); 
 % 
