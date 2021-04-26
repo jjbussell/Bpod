@@ -833,6 +833,8 @@ end
 % to preload, turn off control and turn on other odor (still going to
 % exhaust)
 
+% NEED TO FIX FOR CONTROL IN POSITION 1 (VALVE 1, then 7 odors after)
+
 function Actions = PreloadOdor(odorID)          
     cmd1 = {'ValveModule1',odorID};
     cmd2 = {'ValveModule2',odorID}; 
@@ -850,7 +852,8 @@ function TurnOffAllOdors()
     end
     for v = 1:2
         ModuleWrite('ValveModule3',['C' v]);
-    end    
+    end  
+    ModuleWrite('ValveModule3',['C' 8]);
 end
 
 
