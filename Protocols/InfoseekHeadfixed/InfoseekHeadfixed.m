@@ -428,16 +428,16 @@ end
 
 if RightRewardDrops > 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration', RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
+        'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
         RightRewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', RightRewardDrops);
 elseif RightRewardDrops == 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration',RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+        'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 else
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration',0,'OnsetDelay',0,...
-        'Channel', 'Valve3', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+        'Channel', 'Valve2', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
 
