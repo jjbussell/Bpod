@@ -66,6 +66,7 @@ end
 
 DAQ=0;
 if DAQ==1
+    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
     dq = daq('ni'); 
 % 
 %     addoutput(dq,'Dev2','ao0','Voltage');
@@ -189,17 +190,15 @@ for currentTrial = 1:S.GUI.SessionTrials
         TurnOffAllOdors();
         if DAQ==1
             stop(dq);
-            addoutput(dq,"Dev2","ao0","Voltage");
-            write(dq,0);
+%             addoutput(dq,"Dev2","ao0","Voltage");
+%             write(dq,0);
         end
         if vidOn==1
             shutdownVideo();
         end
     return; 
     end % If user hit console "stop" button, end session
-    tic
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
-    toc
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;
@@ -209,8 +208,8 @@ for currentTrial = 1:S.GUI.SessionTrials
         end
         if DAQ==1
             stop(dq);
-            addoutput(dq,"Dev2","ao0","Voltage");
-            write(dq,0);
+%             addoutput(dq,"Dev2","ao0","Voltage");
+%             write(dq,0);
         end
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
@@ -227,7 +226,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
-        SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
+        SaveBpodSessionData;
     end
 
 end
