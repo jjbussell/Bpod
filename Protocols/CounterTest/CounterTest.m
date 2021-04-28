@@ -104,8 +104,8 @@ for currentTrial = 1:MaxTrials
     LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 
     sma = NewStateMachine();
-%     sma = SetGlobalCounter(sma, 1, 'Port1In', 5); % Arguments: (sma, CounterNumber, TargetEvent, Threshold)
-    sma = SetGlobalCounter(sma,1,'DIO1_RightLick_Hi',2);
+    sma = SetGlobalCounter(sma, 1, 'Port1In', 2); % Arguments: (sma, CounterNumber, TargetEvent, Threshold)
+%     sma = SetGlobalCounter(sma,1,'DIO1_RightLick_Hi',2);
     
     sma = AddState(sma, 'Name', 'InitialDelay', ...
         'Timer', 2,...

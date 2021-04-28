@@ -33,8 +33,9 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
-% cam = webcam('HD');
-% preview(cam);
+
+cam = webcam('HD');
+preview(cam);
 
 
 %% INITIALIZE SERIAL MESSAGES / DIO
@@ -179,11 +180,12 @@ for currentTrial = 1:MaxTrials
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     if BpodSystem.Status.BeingUsed == 0
         TurnOffAllOdors();
+        closePreview(cam);
         return
     end
 end
 
-% closePreview(cam);
+
 end % end of protocol main function
 
 %% TRIAL TYPES

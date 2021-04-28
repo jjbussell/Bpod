@@ -99,6 +99,9 @@ if vidOn == 1
     setupVideo();
 end
 
+cam = webcam();
+preview(cam);
+
 %% Set Latch Valves
 SetLatchValves(S);
 
@@ -196,6 +199,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
+        closePreview(cam);
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -211,12 +215,13 @@ for currentTrial = 1:S.GUI.SessionTrials
 %             addoutput(dq,"Dev2","ao0","Voltage");
 %             write(dq,0);
         end
+        closePreview(cam);
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
+        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight);
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -226,7 +231,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
-        SaveBpodSessionData;
+        SaveBpodSessionData;       
     end
 
 end
