@@ -33,8 +33,8 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 BpodNotebook('init');
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 TotalRewardDisplay('init');
-% cam = webcam('HD');
-% preview(cam);
+cam = webcam('HD');
+preview(cam);
 
 
 %% INITIALIZE SERIAL MESSAGES / DIO
@@ -183,7 +183,7 @@ for currentTrial = 1:MaxTrials
     end
 end
 
-% closePreview(cam);
+closePreview(cam);
 end % end of protocol main function
 
 %% TRIAL TYPES
