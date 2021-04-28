@@ -185,7 +185,6 @@ for currentTrial = 1:MaxTrials
     end
 end
 
-
 end % end of protocol main function
 
 %% TRIAL TYPES
