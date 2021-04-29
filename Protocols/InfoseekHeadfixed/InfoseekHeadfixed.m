@@ -1227,25 +1227,6 @@ function state_colors = getStateColors(thisInfoSide)
     end
 end
 
-
-function createDAQFileName()
-    global BpodSystem
-    global DataFolder
-    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
-    DateInfo = datestr(now,30);
-    DateInfo(DateInfo == 'T') = '_';
-    global DAQFileName
-    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
-end
-
-function recordDataAvailable(src,~)
-    global DataFolder
-    global DAQFileName
-    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
-    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
-end
-
-
 function setupVideo()
     global BpodSystem vid
     vid = videoinput('winvideo',1,'MJPG_1920x1080');
