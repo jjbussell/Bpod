@@ -156,11 +156,10 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 %% START WITH DOORS CLOSED
 
-% openDoors();
-leftDoorOpenFlag = 0;
-centerDoorOpenFlag = 0;
-rightDoorOpenFlag = 0;
-
+leftDoorOpenFlag = 1;
+centerDoorOpenFlag = 1;
+rightDoorOpenFlag = 1;
+closeAllDoors();
 
 %% INITIALIZE STATE MACHINE
 
@@ -185,7 +184,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
-        closeDoors();
+        closeAllDoors();
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -196,7 +195,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
-        closeDoors();
+        closeAllDoors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -529,7 +528,7 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {openDoors(1)});
+    'OutputActions', openDoors(1));
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -572,7 +571,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
-    'OutputActions', {closeDoors(1)});
+    'OutputActions', closeDoors(1));
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
@@ -617,7 +616,7 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight},...
-    'OutputActions', {closeDoors(1)});
+    'OutputActions', closeDoors(1));
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
@@ -1022,19 +1021,22 @@ function doorActions = closeDoors(doorOp)
     if S.GUI.DoorsOn == 1
         switch doorOp
             case 1 % center door
-                if centerDoorOpenFlag = 1;
+                if centerDoorOpenFlag == 1;
                     doorActions = [{DIOmodule,10}];
                     centerDoorOpenFlag = 0;
+                else doorActions = [];
                 end
             case 2 % left door
-                if leftDoorOpenFlag = 1;
+                if leftDoorOpenFlag == 1;
                     doorActions = [{DIOmodule,8}];
                     leftDoorOpenFlag = 0;
+                else doorActions = [];
                 end                
             case 3 % right door
-                if rightDoorOpenFlag = 1;
+                if rightDoorOpenFlag == 1;
                     doorActions = [{DIOmodule,12}];
                     rightDoorOpenFlag = 0;
+                else doorActions = [];
                 end                
             case 4 % both sides
                 if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
@@ -1047,6 +1049,7 @@ function doorActions = closeDoors(doorOp)
                 elseif rightDoorOpenFlag == 1
                     doorActions = [{DIOmodule,12}];
                     rightDoorOpenFlag = 0;
+                else doorActions = [];
                 end               
         end
     else doorActions = [];
@@ -1062,19 +1065,22 @@ function doorActions = openDoors(doorOp)
     if S.GUI.DoorsOn == 1
         switch doorOp
             case 1 % center door
-                if centerDoorOpenFlag = 0;
+                if centerDoorOpenFlag == 0;
                     doorActions = [{DIOmodule,9}];
                     centerDoorOpenFlag = 1;
+                else doorActions = [];
                 end
             case 2 % left door
-                if leftDoorOpenFlag = 0;
+                if leftDoorOpenFlag == 0;
                     doorActions = [{DIOmodule,7}];
                     leftDoorOpenFlag = 1;
+                else doorActions = [];
                 end                
             case 3 % right door
-                if rightDoorOpenFlag = 0;
+                if rightDoorOpenFlag == 0;
                     doorActions = [{DIOmodule,11}];
                     rightDoorOpenFlag = 1;
+                else doorActions = [];
                 end                
             case 4 % both sides
                 if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
@@ -1087,32 +1093,36 @@ function doorActions = openDoors(doorOp)
                 elseif rightDoorOpenFlag == 0
                     doorActions = [{DIOmodule,11}];
                     rightDoorOpenFlag = 1;
+                else doorActions = [];
                 end              
         end
     else doorActions = [];
     end
 end
 
-function closeDoors()
+function closeAllDoors()
     global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;
-    if S.GUI.DoorsOn == 1
+%     S = BpodSystem.ProtocolSettings;
+%     if S.GUI.DoorsOn == 1
         if leftDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[252 30]);
+            leftDoorOpenFlag = 0;
         end
         if centerDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[250 30]);
+            centerDoorOpenFlag = 0;
         end
         if rightDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[248 30]);
+            rightDoorOpenFlag = 0;
         end
-    end
+%     end
 end
 
-function openDoors()
+function openAllDoors()
     global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -1121,12 +1131,15 @@ function openDoors()
     if S.GUI.DoorsOn == 1
         if leftDoorOpenFlag == 0
             ModuleWrite(DIOmodule,[251 10]);
+            leftDoorOpenFlag = 1;
         end
         if centerDoorOpenFlag == 0
             ModuleWrite(DIOmodule,[249 10]);
+            centerDoorOpenFlag =1;
         end
         if rightDoorOpenFlag == 0
             ModuleWrite(DIOmodule,[247 10]);
+            rightDoorOpenFlag =1;
         end
     end
 end
