@@ -276,23 +276,23 @@ TrialCounts = BpodSystem.Data.TrialCounts;
 
 switch S.GUI.TrialTypes
     case {1,4,5,6}
-        sideDoorOpenMsg = openSideDoors();
-        sideDoorCloseMsg = closeSideDoors();
+        sideDoorOpenMsg = 4;
+        sideDoorCloseMsg = 4;
     case {2,7}
         if infoSide == 0
-            sideDoorOpenMsg = {DIOmodule,7};
-            sideDoorCloseMsg = {DIOmodule,23};
+            sideDoorOpenMsg = 2;
+            sideDoorCloseMsg = 2;
         else
-            sideDoorOpenMsg = 11;
-            sideDoorCloseMsg = 12;            
+            sideDoorOpenMsg = 3;
+            sideDoorCloseMsg = 3;            
         end
     case {3,8}
         if infoSide == 0
-            sideDoorOpenMsg = 11;
-            sideDoorCloseMsg = 12;
+            sideDoorOpenMsg = 3;
+            sideDoorCloseMsg = 3;
         else
-            sideDoorOpenMsg = 7;
-            sideDoorCloseMsg = 8;            
+            sideDoorOpenMsg = 2;
+            sideDoorCloseMsg = 2;            
         end       
 end
 
@@ -529,7 +529,7 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {DIOmodule,9});
+    'OutputActions', {openDoors(1)});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -553,7 +553,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response'},...
-    'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2,DIOmodule,sideDoorOpenMsg});
+    'OutputActions', [{'GlobalTimerTrig', 1,DIOmodule,2,},openDoors(sideDoorOpenMsg)]);
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
@@ -572,7 +572,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
-    'OutputActions', {DIOmodule,10});
+    'OutputActions', {closeDoors(1)});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
@@ -617,7 +617,7 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight},...
-    'OutputActions', {DIOmodule,10});
+    'OutputActions', {closeDoors(1)});
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
@@ -637,7 +637,7 @@ sma = AddState(sma, 'Name', 'OdorDRight', ...
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
     'StateChangeConditions', {'Tup','RightPortCheck'},...
-    'OutputActions', [{DIOmodule,6},RunOdor(RightSideOdor,2)]);
+    'OutputActions', [{DIOmodule,6},RunOdor(RightSideOdor,2),closeDoors(sideDoorCloseMsg),openDoors(1)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
@@ -1013,35 +1013,81 @@ end
 
 %% CONTROL DOORS
 
-function doorActions = closeSideDoors()
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+function doorActions = closeDoors(doorOp)
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;
+    S = BpodSystem.ProtocolSettings;    
     if S.GUI.DoorsOn == 1
-        if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
-        %     ModuleWrite(DIOmodule,[246 30]);
-            doorActions = [{DIOmodule,24}];
-            leftDoorOpenFlag = 0;
-            rightDoorOpenFlag = 0;
+        switch doorOp
+            case 1 % center door
+                if centerDoorOpenFlag = 1;
+                    doorActions = [{DIOmodule,10}];
+                    centerDoorOpenFlag = 0;
+                end
+            case 2 % left door
+                if leftDoorOpenFlag = 1;
+                    doorActions = [{DIOmodule,8}];
+                    leftDoorOpenFlag = 0;
+                end                
+            case 3 % right door
+                if rightDoorOpenFlag = 1;
+                    doorActions = [{DIOmodule,12}];
+                    rightDoorOpenFlag = 0;
+                end                
+            case 4 % both sides
+                if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
+                    doorActions = [{DIOmodule,14}];
+                    leftDoorOpenFlag = 0;
+                    rightDoorOpenFlag = 0;
+                elseif leftDoorOpenFlag == 1
+                    doorActions = [{DIOmodule,8}];
+                    leftDoorOpenFlag = 0;
+                elseif rightDoorOpenFlag == 1
+                    doorActions = [{DIOmodule,12}];
+                    rightDoorOpenFlag = 0;
+                end               
         end
     else doorActions = [];
     end
 end
 
-function doorActions = openSideDoors()
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+function doorActions = openDoors(doorOp)
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
     modules = BpodSystem.Modules.Name;
     DIOmodule = [modules(strncmp('DIO',modules,3))];
     DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;
+    S = BpodSystem.ProtocolSettings;    
     if S.GUI.DoorsOn == 1
-        if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
-        %     ModuleWrite(DIOmodule,[245 10]);
-            doorActions = {DIOmodule,23};
-            leftDoorOpenFlag = 1;
-            rightDoorOpenFlag = 1;
+        switch doorOp
+            case 1 % center door
+                if centerDoorOpenFlag = 0;
+                    doorActions = [{DIOmodule,9}];
+                    centerDoorOpenFlag = 1;
+                end
+            case 2 % left door
+                if leftDoorOpenFlag = 0;
+                    doorActions = [{DIOmodule,7}];
+                    leftDoorOpenFlag = 1;
+                end                
+            case 3 % right door
+                if rightDoorOpenFlag = 0;
+                    doorActions = [{DIOmodule,11}];
+                    rightDoorOpenFlag = 1;
+                end                
+            case 4 % both sides
+                if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
+                    doorActions = [{DIOmodule,13}];
+                    leftDoorOpenFlag = 1;
+                    rightDoorOpenFlag = 1;
+                elseif leftDoorOpenFlag == 0
+                    doorActions = [{DIOmodule,7}];
+                    leftDoorOpenFlag = 1;
+                elseif rightDoorOpenFlag == 0
+                    doorActions = [{DIOmodule,11}];
+                    rightDoorOpenFlag = 1;
+                end              
         end
     else doorActions = [];
     end
