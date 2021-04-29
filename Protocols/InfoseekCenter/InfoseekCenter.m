@@ -160,6 +160,7 @@ leftDoorOpenFlag = 1;
 centerDoorOpenFlag = 1;
 rightDoorOpenFlag = 1;
 closeAllDoors();
+% ModuleWrite(DIOmodule,[250 30]);
 
 %% INITIALIZE STATE MACHINE
 
@@ -528,7 +529,7 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', openDoors(1));
+    'OutputActions', {DIOmodule,9});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -571,7 +572,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
-    'OutputActions', closeDoors(1));
+    'OutputActions', {DIOmodule,10});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
@@ -1107,18 +1108,18 @@ function closeAllDoors()
     DIOmodule = DIOmodule{1};
 %     S = BpodSystem.ProtocolSettings;
 %     if S.GUI.DoorsOn == 1
-        if leftDoorOpenFlag == 1
+%         if leftDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[252 30]);
             leftDoorOpenFlag = 0;
-        end
-        if centerDoorOpenFlag == 1
+%         end
+%         if centerDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[250 30]);
             centerDoorOpenFlag = 0;
-        end
-        if rightDoorOpenFlag == 1
+%         end
+%         if rightDoorOpenFlag == 1
             ModuleWrite(DIOmodule,[248 30]);
             rightDoorOpenFlag = 0;
-        end
+%         end
 %     end
 end
 
