@@ -55,7 +55,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.InfoRewardProb = 0.5;%
     S.GUI.RandRewardProb = 0.5;%
     S.GUI.GracePeriod = 100000000; 
-    S.GUI.Interval = 1; 
+    S.GUI.Interval = 1;
+    S.GUI.DoorsOn = 1;
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
@@ -126,6 +127,18 @@ houseLight = 6;
 buzzer1 = [254 1];
 buzzer2 = [253 1];
 
+% DOORS
+openSpeed = 10;
+closeSpeed = 30;
+leftDoorOpen = [251 openSpeed]; %7
+leftDoorClose = [252 closeSpeed]; %8
+centerDoorOpen = [249 openSpeed]; %9
+centerDoorClose = [250 closeSpeed]; %10
+rightDoorOpen = [247 openSpeed]; %11
+rightDoorClose = [248 closeSpeed]; %12
+sideDoorsOpen = [245 openSpeed]; %13
+sideDoorsClose = [246 closeSpeed]; %14
+
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
@@ -133,11 +146,20 @@ DIOmodule = DIOmodule{1};
 % Set serial messages for Teensy module to control box, communicate with
 % DAQ/miniscope
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2,...
-    [19 1],[19 0],[20 1], [20 0]});
+    [19 1],[19 0],[20 1], [20 0],leftDoorOpen, leftDoorClose,...
+    centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose,...
+    sideDoorsOpen, sideDoorsClose});
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
+
+%% START WITH DOORS CLOSED
+
+% openDoors();
+leftDoorOpenFlag = 0;
+centerDoorOpenFlag = 0;
+rightDoorOpenFlag = 0;
 
 
 %% INITIALIZE STATE MACHINE
@@ -163,6 +185,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
+        closeDoors();
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -173,6 +196,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
+        closeDoors();
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -247,6 +271,30 @@ nextTrialType = S.TrialTypes(nextTrial);
 
 infoSide = S.GUI.InfoSide;
 TrialCounts = BpodSystem.Data.TrialCounts;
+
+% DOORS
+
+switch S.GUI.TrialTypes
+    case {1,4,5,6}
+        sideDoorOpenMsg = openSideDoors();
+        sideDoorCloseMsg = closeSideDoors();
+    case {2,7}
+        if infoSide == 0
+            sideDoorOpenMsg = {DIOmodule,7};
+            sideDoorCloseMsg = {DIOmodule,23};
+        else
+            sideDoorOpenMsg = 11;
+            sideDoorCloseMsg = 12;            
+        end
+    case {3,8}
+        if infoSide == 0
+            sideDoorOpenMsg = 11;
+            sideDoorCloseMsg = 12;
+        else
+            sideDoorOpenMsg = 7;
+            sideDoorCloseMsg = 8;            
+        end       
+end
 
 % Determine trial-specific state matrix fields
 % Set trialParams (reward and odor)
@@ -481,7 +529,7 @@ sma = AddState(sma, 'Name', 'InterTrialInterval', ...
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', {});
+    'OutputActions', {DIOmodule,9});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
@@ -505,7 +553,7 @@ sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response'},...
-    'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2});
+    'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2,DIOmodule,sideDoorOpenMsg});
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
@@ -524,7 +572,7 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
-    'OutputActions', {});
+    'OutputActions', {DIOmodule,10});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayLeft'},...
@@ -569,7 +617,7 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight},...
-    'OutputActions', {});
+    'OutputActions', {DIOmodule,10});
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
     'StateChangeConditions', {'Tup','RewardDelayRight'},...
@@ -961,6 +1009,80 @@ function SetLatchValves(S)
         pause(500/1000);
     end
     
+end
+
+%% CONTROL DOORS
+
+function doorActions = closeSideDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
+    if S.GUI.DoorsOn == 1
+        if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
+        %     ModuleWrite(DIOmodule,[246 30]);
+            doorActions = [{DIOmodule,24}];
+            leftDoorOpenFlag = 0;
+            rightDoorOpenFlag = 0;
+        end
+    else doorActions = [];
+    end
+end
+
+function doorActions = openSideDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
+    if S.GUI.DoorsOn == 1
+        if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
+        %     ModuleWrite(DIOmodule,[245 10]);
+            doorActions = {DIOmodule,23};
+            leftDoorOpenFlag = 1;
+            rightDoorOpenFlag = 1;
+        end
+    else doorActions = [];
+    end
+end
+
+function closeDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
+    if S.GUI.DoorsOn == 1
+        if leftDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[252 30]);
+        end
+        if centerDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[250 30]);
+        end
+        if rightDoorOpenFlag == 1
+            ModuleWrite(DIOmodule,[248 30]);
+        end
+    end
+end
+
+function openDoors()
+    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
+    modules = BpodSystem.Modules.Name;
+    DIOmodule = [modules(strncmp('DIO',modules,3))];
+    DIOmodule = DIOmodule{1};
+    S = BpodSystem.ProtocolSettings;
+    if S.GUI.DoorsOn == 1
+        if leftDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[251 10]);
+        end
+        if centerDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[249 10]);
+        end
+        if rightDoorOpenFlag == 0
+            ModuleWrite(DIOmodule,[247 10]);
+        end
+    end
 end
 
 %% OUTCOME
