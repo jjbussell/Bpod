@@ -230,7 +230,7 @@ void closeCenterDoor(int speed_delay){
   int close_angle = 55;
   servoCenter.attach(motorPins[1]);
   for (int i = open_angle; i <= close_angle; i++) { 
-    servoLeft.write(i);  
+    servoCenter.write(i);  
     delay(speed_delay);                 
   }
   servoCenter.detach();
@@ -241,7 +241,7 @@ void closeRightDoor(int speed_delay){
   int close_angle = 60;
   servoRight.attach(motorPins[2]);
   for (int i = open_angle; i <= close_angle; i++) { 
-    servoLeft.write(i);  
+    servoRight.write(i);  
     delay(speed_delay);                 
   }
   servoRight.detach();
