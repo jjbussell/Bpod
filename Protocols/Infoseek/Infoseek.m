@@ -99,8 +99,8 @@ if vidOn == 1
     setupVideo();
 end
 
-cam = webcam();
-preview(cam);
+% cam = webcam();
+% preview(cam);
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -197,7 +197,7 @@ for currentTrial = 1:S.GUI.SessionTrials
         if vidOn==1
             shutdownVideo();
         end
-        closePreview(cam);
+%         closePreview(cam);
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -213,7 +213,7 @@ for currentTrial = 1:S.GUI.SessionTrials
 %             addoutput(dq,"Dev2","ao0","Voltage");
 %             write(dq,0);
         end
-        closePreview(cam);
+%         closePreview(cam);
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -429,6 +429,7 @@ switch nextTrialType
                 SideOdorStateLeft = 'OdorCLeft';
             else
                 LeftSideOdor = S.GUI.OdorD;
+                SideOdorStateLeft = 'OdorDLeft';
             end             
             RightSideOdor = 0;
             if RewardLeft == 1
