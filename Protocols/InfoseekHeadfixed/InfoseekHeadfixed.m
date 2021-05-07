@@ -131,7 +131,7 @@ LoadSerialMessages('ValveModule3',{[1,2],[8]}); % final valves before animal
 %% INITIALIZE STATE MACHINE
 
 [sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
-
+vidOn = 0;
 if vidOn == 1
     start(vid);
     trigger(vid);
@@ -614,7 +614,7 @@ sma = AddState(sma, 'Name', 'TimeoutDrinking', ...
     'OutputActions', {'GlobalTimerTrig', 2,'ValveModule3',2});
 
 sma = AddState(sma, 'Name', 'EndTrial', ...
-    'Timer', 0,...
+    'Timer', 2,...
     'StateChangeConditions', {'Tup', '>exit'},...
     'OutputActions', {});
 
