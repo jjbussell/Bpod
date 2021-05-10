@@ -220,7 +220,10 @@ for currentTrial = 1:S.GUI.SessionTrials
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
         tic
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
+        toc
+        tic
         [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight);
+        toc
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -228,8 +231,9 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
 %         EventsPlot('update');
+        tic
         SaveBpodSessionData;
         toc
     end
@@ -685,7 +689,7 @@ sma = AddState(sma, 'Name', 'TimeoutOutcome', ...
     'OutputActions', {'GlobalTimerTrig', 2});
 
 sma = AddState(sma, 'Name', 'EndTrial', ...
-    'Timer', 3,...
+    'Timer', 4,...
     'StateChangeConditions', {'Tup', '>exit'},...
     'OutputActions', {'GlobalTimerCancel', 2});
 
