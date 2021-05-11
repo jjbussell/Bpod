@@ -231,7 +231,9 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-%         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+        tic
+        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+        toc
 %         EventsPlot('update');
         tic
         SaveBpodSessionData;
@@ -523,7 +525,7 @@ end
 
 sma = SetGlobalTimer(sma, 'TimerID', 5,... 
     'Duration',0.001, 'OnsetDelay', 0,...
-    'Channel', BNC1, 'OnsetValue', 1,... 
+    'Channel', BNC2, 'OnsetValue', 1,... 
     'OffsetValue', 0, 'Loop', 1,...
     'GlobalTimerEvents', 1, 'LoopInterval', 0.001);
         
