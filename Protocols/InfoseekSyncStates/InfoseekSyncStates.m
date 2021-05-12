@@ -1,7 +1,4 @@
 %{
-
-DOORS
-
 ----------------------------------------------------------------------------
 
 This code runs a 2AFC Information Seeking assay. The mouuse initiatess a
@@ -21,9 +18,9 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekCenter
+function InfoSeekSyncStates
 
-global BpodSystem vid leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
+global BpodSystem vid
 
 %% Create trial manager object
 TrialManager = TrialManagerObject;
@@ -52,11 +49,10 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.InfoSmallDrops = 1;
     S.GUI.RandBigDrops = 1;
     S.GUI.RandSmallDrops = 1;
-    S.GUI.InfoRewardProb = 0.5;%
-    S.GUI.RandRewardProb = 0.5;%
+    S.GUI.InfoRewardProb = 1;%
+    S.GUI.RandRewardProb = 1;%
     S.GUI.GracePeriod = 100000000; 
-    S.GUI.Interval = 1;
-    S.GUI.DoorsOn = 1;
+    S.GUI.Interval = 1; 
     S.GUI.OptoFlag = 0;
     S.GUI.OptoType = 0;
     S.GUI.ImageFlag = 0;
@@ -66,6 +62,35 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
 
+%% DAQ
+
+DAQ=0;
+if DAQ==1
+    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
+    dq = daq('ni'); 
+% 
+%     addoutput(dq,'Dev2','ao0','Voltage');
+%     write(dq,0);
+%     pause(.5);
+%     write(dq,5);
+%     removechannel(dq,1);
+%     dq.Channels
+% %     
+    ch1 = addinput(dq, 'Dev2', 'ai0', 'Voltage');
+    ch2 = addinput(dq, 'Dev2', 'ai1', 'Voltage');
+    ch1.TerminalConfig = 'Differential';
+    ch2.TerminalConfig = 'Differential';
+%     addoutput(dq, 'Dev2','ao0','Voltage');
+    
+%     write(dq,0);
+%     preload(dq,5);
+    createDAQFileName();
+    dq.Rate = 10000;
+    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
+    dq.ScansAvailableFcnCount = 100000;
+    start(dq,'continuous');
+    
+end
 
 %% SETUP VIDEO
 
@@ -73,6 +98,9 @@ vidOn = 0;
 if vidOn == 1
     setupVideo();
 end
+
+% cam = webcam();
+% preview(cam);
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -105,6 +133,7 @@ SaveBpodSessionData;
 BpodSystem.ProtocolFigures.TrialTypePlotFig = figure('Position', [50 640 1000 250],'name','Trial Type','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.TrialTypePlot = axes('OuterPosition', [0 0 1 1]);
 TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'init',S.TrialTypes,min([S.GUI.SessionTrials 40])); % trial choice types  
+% EventsPlot('init', getStateColors(S.GUI.InfoSide)); % events within trial
 
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [50 100 600 400],'name','TrialOutcomes','numbertitle','off', 'MenuBar', 'none');
 BpodSystem.GUIHandles.OutcomePlot = axes('OuterPosition', [0 0 1 1]);
@@ -120,24 +149,11 @@ ResetSerialMessages();
 
 % lick inputs 2, 3, 4
 % buzzer 5
-% latch valves 7,8,9,10,11,14,15,16
-% doors 21,22,23
-
-houseLight = 6;
+% house light 6
+% latch valves 7-16
+% odor DIO 17-23
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-
-% DOORS
-openSpeed = 10;
-closeSpeed = 20;
-leftDoorOpen = [251 openSpeed]; %7
-leftDoorClose = [252 closeSpeed]; %8
-centerDoorOpen = [249 openSpeed]; %9
-centerDoorClose = [250 closeSpeed]; %10
-rightDoorOpen = [247 openSpeed]; %11
-rightDoorClose = [248 closeSpeed]; %12
-sideDoorsOpen = [245 openSpeed]; %13
-sideDoorsClose = [246 closeSpeed]; %14
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -146,20 +162,12 @@ DIOmodule = DIOmodule{1};
 % Set serial messages for Teensy module to control box, communicate with
 % DAQ/miniscope
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2,...
-    [19 1],[19 0],[20 1], [20 0],leftDoorOpen, leftDoorClose,...
-    centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose,...
-    sideDoorsOpen, sideDoorsClose});
+    [22 1],[22 0],[23 1], [23 0]});
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
 LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
-%% START WITH DOORS CLOSED
-
-leftDoorOpenFlag = 0;
-centerDoorOpenFlag = 0;
-rightDoorOpenFlag = 0;
-% closeAllDoors();
 
 %% INITIALIZE STATE MACHINE
 
@@ -181,27 +189,41 @@ for currentTrial = 1:S.GUI.SessionTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;      
         TurnOffAllOdors();
+        if DAQ==1
+            stop(dq);
+%             addoutput(dq,"Dev2","ao0","Voltage");
+%             write(dq,0);
+        end
         if vidOn==1
             shutdownVideo();
         end
-        closeAllDoors();
+%         closePreview(cam);
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     SendStateMachine(sma, 'RunASAP'); % send the next trial's state machine while the current trial is ongoing
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;
-        TurnOffAllOdors();
+        TurnOffAllOdors();fa
         if vidOn==1
             shutdownVideo();
         end
-        closeAllDoors();
+        if DAQ==1
+            stop(dq);
+%             addoutput(dq,"Dev2","ao0","Voltage");
+%             write(dq,0);
+        end
+%         closePreview(cam);
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
+        tic
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
+        toc
+        tic
+        [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight);
+        toc
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -209,8 +231,13 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
+        tic
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
-        SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
+        toc
+%         EventsPlot('update');
+        tic
+        SaveBpodSessionData;
+        toc
     end
 
 end
@@ -236,7 +263,7 @@ end % end of protocol main function
 
 function [sma, S, RewardLeft, RewardRight] = PrepareStateMachine(S, nextTrial, currentTrialEvents)
 
-global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag;
+global BpodSystem;
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
@@ -270,30 +297,6 @@ nextTrialType = S.TrialTypes(nextTrial);
 
 infoSide = S.GUI.InfoSide;
 TrialCounts = BpodSystem.Data.TrialCounts;
-
-% DOORS
-
-switch S.GUI.TrialTypes
-    case {1,4,5,6}
-        sideDoorOpenMsg = 4;
-        sideDoorCloseMsg = 4;
-    case {2,7}
-        if infoSide == 0
-            sideDoorOpenMsg = 2;
-            sideDoorCloseMsg = 2;
-        else
-            sideDoorOpenMsg = 3;
-            sideDoorCloseMsg = 3;            
-        end
-    case {3,8}
-        if infoSide == 0
-            sideDoorOpenMsg = 3;
-            sideDoorCloseMsg = 3;
-        else
-            sideDoorOpenMsg = 2;
-            sideDoorCloseMsg = 2;            
-        end       
-end
 
 % Determine trial-specific state matrix fields
 % Set trialParams (reward and odor)
@@ -449,9 +452,9 @@ switch nextTrialType
 end
 
 % Water parameters
-R = GetValveTimes(4, [2]);
+R = GetValveTimes(4, [1 3]);
 % R = [0.100 0.100];
-LeftValveTime = R(1); RightValveTime = R(1); % Update reward amounts
+LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
 MaxValveTime = max(R);
 maxDrops = max([S.GUI.InfoBigDrops,S.GUI.InfoSmallDrops,S.GUI.RandBigDrops,S.GUI.RandSmallDrops]);
 RewardPauseTime = 0.05;
@@ -492,73 +495,85 @@ sma = SetGlobalCounter(sma, 2, 'GlobalTimer2_End', maxDrops);
 % Timers for delivering reward drops
 if LeftRewardDrops > 1
    sma = SetGlobalTimer(sma,'TimerID',3,'Duration',LeftValveTime,'OnsetDelay',0,...
-       'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
+       'Channel', 'Valve1', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
        LeftRewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', LeftRewardDrops);
 elseif LeftRewardDrops == 1
    sma = SetGlobalTimer(sma,'TimerID',3,'Duration',LeftValveTime,'OnsetDelay',0,...
-       'Channel','Valve2','OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+       'Channel','Valve1','OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 else
    sma = SetGlobalTimer(sma,'TimerID',3,'Duration',0,'OnsetDelay',0,...
-       'Channel','Valve2','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+       'Channel','Valve1','OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
    sma = SetGlobalCounter(sma, 3, 'GlobalTimer3_End', 1);
 end
 
 if RightRewardDrops > 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration', RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
+        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop',...
         RightRewardDrops, 'SendEvents', 1, 'LoopInterval', RewardPauseTime,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', RightRewardDrops);
 elseif RightRewardDrops == 1
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration',RightValveTime,'OnsetDelay',0,...
-        'Channel', 'Valve2', 'OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+        'Channel', 'Valve3', 'OnMessage', 1, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 else
     sma = SetGlobalTimer(sma,'TimerID',4,'Duration',0,'OnsetDelay',0,...
-        'Channel', 'Valve2', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
+        'Channel', 'Valve3', 'OnMessage', 0, 'OffMessage', 0, 'Loop', 0, 'SendEvents', 1,'LoopInterval',0,'OnsetTrigger', '10');
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
 
+sma = SetGlobalTimer(sma, 'TimerID', 7,... 
+    'Duration',0.1, 'OnsetDelay', 0,...
+    'Channel', 'BNC1', 'OnMessage', 1,... 
+    'OffMessage', 0, 'Loop', 0,...
+    'SendEvents', 1);
+
+sma = SetGlobalTimer(sma, 'TimerID', 8,... 
+    'Duration',0.1, 'OnsetDelay', 0,...
+    'Channel', 'BNC2', 'OnMessage', 1,... 
+    'OffMessage', 0, 'Loop', 0,...
+    'SendEvents', 1);
+        
 % STATES
 sma = AddState(sma, 'Name', 'InterTrialInterval', ...
     'Timer', S.GUI.Interval,...
     'StateChangeConditions', {'Tup', 'StartTrial'},...
-    'OutputActions', {});
+    'OutputActions', {'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
-    'OutputActions', openDoors(1));
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'WaitForCenter', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port2In', 'CenterDelay','Condition2','CenterDelay'},... % test how these are different!
-    'OutputActions', {}); % port light on
+    'OutputActions', {'PWM2',50}); % port light on
 sma = AddState(sma, 'Name', 'CenterDelay', ...
     'Timer', S.GUI.CenterDelay,...
     'StateChangeConditions', {'Tup', 'CenterOdor','Port2Out','WaitForCenter'},...
-    'OutputActions', {});
+    'OutputActions', {'PWM2',50});
 sma = AddState(sma, 'Name', 'CenterOdor', ...
     'Timer', S.GUI.CenterOdorTime,...
     'StateChangeConditions', {'Port2Out', 'CenterOdorOff', 'Tup', 'CenterPostOdorDelay'},...
-    'OutputActions',[{DIOmodule,3},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions',[{DIOmodule,3,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterOdorOff',...
     'Timer', 0,...
     'StateChangeConditions', {'Tup','WaitForCenter'},...
-    'OutputActions', [{DIOmodule,4},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions', [{DIOmodule,4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'CenterPostOdorDelay', ...
     'Timer', S.GUI.StartDelay,...
     'StateChangeConditions', {'Port2Out','WaitForCenter','Tup','GoCue'},... % is that right?
-    'OutputActions', [{DIOmodule,4},RunOdor(ThisCenterOdor,0)]);
+    'OutputActions', [{DIOmodule,4,'PWM2',50},RunOdor(ThisCenterOdor,0)]);
 sma = AddState(sma, 'Name', 'GoCue', ...
     'Timer', 0.05,...
     'StateChangeConditions', {'Tup','Response'},...
-    'OutputActions', {'GlobalTimerTrig',1, DIOmodule,2});
+    'OutputActions', {'GlobalTimerTrig', 1,DIOmodule,2,'GlobalTimerTrig',8});
 
 % RESPONSE (CHOICE) --> MAKE SURE STAY IN SIDE FOR AT LEAST A SMALL TIME TO INDICATE CHOICE?
 sma = AddState(sma, 'Name', 'Response', ...
     'Timer', S.GUI.OdorDelay,...
     'StateChangeConditions', {'Tup','GracePeriod','Port1In',ChooseLeft,'Port3In',ChooseRight},...
-    'OutputActions', openDoors(sideDoorOpenMsg));
+    'OutputActions', {});
 
 sma = AddState(sma, 'Name', 'GracePeriod',...
     'Timer', S.GUI.GracePeriod,...
@@ -567,52 +582,44 @@ sma = AddState(sma, 'Name', 'GracePeriod',...
 
 % AFTER CHOICE
 
-% CHOOSE LEFT
+% LEFT
 sma = AddState(sma, 'Name', 'WaitForOdorLeft', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateLeft,'Condition7',SideOdorStateLeft},...
-    'OutputActions', closeDoors(1));
+    'OutputActions', {'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'OdorALeft', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterLeft'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(LeftSideOdor,1)]);
+    'StateChangeConditions', {'Tup','RewardDelayLeft'},...
+    'OutputActions', [{DIOmodule,5,'GlobalTimerTrig',8}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'OdorBLeft', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterLeft'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(LeftSideOdor,1)]);
+    'StateChangeConditions', {'Tup','RewardDelayLeft'},...
+    'OutputActions', [{DIOmodule,5,'GlobalTimerTrig',8}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'OdorCLeft', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterLeft'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(LeftSideOdor,1)]);
+    'StateChangeConditions', {'Tup','RewardDelayLeft'},...
+    'OutputActions', [{DIOmodule,5,'GlobalTimerTrig',8}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'OdorDLeft', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterLeft'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(LeftSideOdor,1)]);
-sma = AddState(sma, 'Name', 'OpenCenterLeft',...
-    'Timer',0,...
-    'StateChangeConditions',{'Tup','RewardDelayLeft'},...
-    'OutputActions',openDoors(1));
+    'StateChangeConditions', {'Tup','RewardDelayLeft'},...
+    'OutputActions', [{DIOmodule,5,'GlobalTimerTrig',8}, RunOdor(LeftSideOdor,1)]);
 sma = AddState(sma, 'Name', 'RewardDelayLeft', ...
     'Timer', S.GUI.RewardDelay,...
-    'StateChangeConditions', {'Tup','RewardGraceLeft'},...
-    'OutputActions', [{DIOmodule,6},RunOdor(LeftSideOdor,1),closeDoors(sideDoorCloseMsg)]);
-sma = AddState(sma,  'Name', 'RewardGraceLeft', ...
-    'Timer', S.GUI.GracePeriod,...
-    'StateChangeConditions', {'Tup','LeftPortCheck','Port2In','LeftPortCheck'},...
-    'OutputActions', {});
+    'StateChangeConditions', {'Tup','LeftPortCheck'},...
+    'OutputActions', [{DIOmodule,6},RunOdor(LeftSideOdor,1)]);
 
 % LEFT REWARD
 sma = AddState(sma, 'Name', 'LeftPortCheck',...
     'Timer',0,...
-    'StateChangeConditions',{'Condition5','LeftNotPresent','Condition2',OutcomeStateLeft},...
-    'OutputActions',{});
+    'StateChangeConditions',{'Condition4','LeftNotPresent','Condition1',OutcomeStateLeft},...
+    'OutputActions',{'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'LeftBigReward', ...
     'Timer', 0,...
-    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition5','LeftNotPresent'},...
+    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition4','LeftNotPresent'},...
     'OutputActions', {'GlobalTimerTrig', 3}); %, 'GlobalTimerTrig', 3
 sma = AddState(sma, 'Name', 'LeftSmallReward', ...
     'Timer', 0,...
-    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition5','LeftNotPresent'},...
+    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition4','LeftNotPresent'},...
     'OutputActions', {'GlobalTimerTrig', 3}); %, 'GlobalTimerTrig', 3
 sma = AddState(sma, 'Name', 'LeftNotPresent', ...
     'Timer', 0,...
@@ -624,48 +631,40 @@ sma = AddState(sma, 'Name', 'LeftNotPresent', ...
 sma = AddState(sma, 'Name', 'WaitForOdorRight', ...
     'Timer', 0,...
     'StateChangeConditions', {'GlobalTimer1_End',SideOdorStateRight,'Condition7',SideOdorStateRight},...
-    'OutputActions', closeDoors(1)); %closeDoors(1)
+    'OutputActions', {'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'OdorARight', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterRight'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(RightSideOdor,2)]);
+    'StateChangeConditions', {'Tup','RewardDelayRight'},...
+    'OutputActions', [{DIOmodule,5,'GlobalTimerTrig',8}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'OdorBRight', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterRight'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(RightSideOdor,2)]);
+    'StateChangeConditions', {'Tup','RewardDelayRight'},...
+    'OutputActions', [{DIOmodule,5'GlobalTimerTrig',8}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'OdorCRight', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterRight'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(RightSideOdor,2)]);
+    'StateChangeConditions', {'Tup','RewardDelayRight'},...
+    'OutputActions', [{DIOmodule,5'GlobalTimerTrig',8}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'OdorDRight', ...
     'Timer', S.GUI.OdorTime,...
-    'StateChangeConditions', {'Tup','OpenCenterRight'},...
-    'OutputActions', [{DIOmodule,5}, RunOdor(RightSideOdor,2)]);
-sma = AddState(sma, 'Name', 'OpenCenterRight',...
-    'Timer',0,...
-    'StateChangeConditions',{'Tup','RewardDelayRight'},...
-    'OutputActions',openDoors(1));
+    'StateChangeConditions', {'Tup','RewardDelayRight'},...
+    'OutputActions', [{DIOmodule,5'GlobalTimerTrig',8}, RunOdor(RightSideOdor,2)]);
 sma = AddState(sma, 'Name', 'RewardDelayRight', ...
     'Timer', S.GUI.RewardDelay,...
-    'StateChangeConditions', {'Tup','RewardGraceRight'},...
-    'OutputActions', [{DIOmodule,6},RunOdor(RightSideOdor,2),closeDoors(sideDoorCloseMsg)]);
-sma = AddState(sma,  'Name', 'RewardGraceRight', ...
-    'Timer', S.GUI.GracePeriod,...
-    'StateChangeConditions', {'Tup','RightPortCheck','Port2In','RightPortCheck'},...
-    'OutputActions', {});
+    'StateChangeConditions', {'Tup','RightPortCheck'},...
+    'OutputActions', [{DIOmodule,6},RunOdor(RightSideOdor,2)]);
 
 % RIGHT REWARD
 sma = AddState(sma, 'Name', 'RightPortCheck',...
     'Timer',0,...
-    'StateChangeConditions',{'Condition5','RightNotPresent','Condition2',OutcomeStateRight},...
-    'OutputActions',{});
+    'StateChangeConditions',{'Condition6','RightNotPresent','Condition3',OutcomeStateRight},...
+    'OutputActions',{'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'RightBigReward', ...
     'Timer', 0,...
-    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition5','RightNotPresent'},...
+    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition6','RightNotPresent'},...
     'OutputActions', {'GlobalTimerTrig', 4}); %, 'GlobalTimerTrig', 4
 sma = AddState(sma, 'Name', 'RightSmallReward', ...
     'Timer', 0,...
-    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition5','RightNotPresent'},...
+    'StateChangeConditions', {'Tup','OutcomeDelivery','Condition6','RightNotPresent'},...
     'OutputActions', {'GlobalTimerTrig', 4}); %, 'GlobalTimerTrig', 4
 sma = AddState(sma, 'Name', 'RightNotPresent', ...
     'Timer', 0,...
@@ -675,7 +674,7 @@ sma = AddState(sma, 'Name', 'RightNotPresent', ...
 % Waits for max drops time
 sma = AddState(sma, 'Name','OutcomeDelivery','Timer',0,...
     'StateChangeConditions',{'GlobalCounter2_End','EndTrial'},...
-    'OutputActions',{DIOmodule,2});
+    'OutputActions',{DIOmodule,1});
 
 % if no choice during response
 sma = AddState(sma, 'Name', 'NoChoice', ...
@@ -703,9 +702,9 @@ sma = AddState(sma, 'Name', 'TimeoutOutcome', ...
     'OutputActions', {'GlobalTimerTrig', 2});
 
 sma = AddState(sma, 'Name', 'EndTrial', ...
-    'Timer', 0,...
+    'Timer', 4,...
     'StateChangeConditions', {'Tup', '>exit'},...
-    'OutputActions', {'GlobalTimerCancel', 2});
+    'OutputActions', {'GlobalTimerCancel', 2,'GlobalTimerTrig',8});
 
 end
 
@@ -999,7 +998,6 @@ function SetLatchValves(S)
     infoSide = S.GUI.InfoSide;
     modules = BpodSystem.Modules.Name;
     latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
-%     latchValves = [21 20 19 18 17 16 15 14]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
     latchModule = [modules(strncmp('DIO',modules,3))];
     latchModule = latchModule{1};
 
@@ -1024,140 +1022,8 @@ function SetLatchValves(S)
         pause(500/1000);
     end
     
-end
-
-%% CONTROL DOORS
-
-function doorActions = closeDoors(doorOp)
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;    
-    if S.GUI.DoorsOn == 1
-        switch doorOp
-            case 1 % center door
-                if centerDoorOpenFlag == 1;
-                    doorActions = [{DIOmodule,10}];
-                    centerDoorOpenFlag = 0;
-                else doorActions = [];
-                end
-            case 2 % left door
-                if leftDoorOpenFlag == 1;
-                    doorActions = [{DIOmodule,8}];
-                    leftDoorOpenFlag = 0;
-                else doorActions = [];
-                end                
-            case 3 % right door
-                if rightDoorOpenFlag == 1;
-                    doorActions = [{DIOmodule,12}];
-                    rightDoorOpenFlag = 0;
-                else doorActions = [];
-                end                
-            case 4 % both sides
-                if and(leftDoorOpenFlag == 1,rightDoorOpenFlag == 1)
-                    doorActions = [{DIOmodule,14}];
-                    leftDoorOpenFlag = 0;
-                    rightDoorOpenFlag = 0;
-                elseif leftDoorOpenFlag == 1
-                    doorActions = [{DIOmodule,8}];
-                    leftDoorOpenFlag = 0;
-                elseif rightDoorOpenFlag == 1
-                    doorActions = [{DIOmodule,12}];
-                    rightDoorOpenFlag = 0;
-                else doorActions = [];
-                end               
-        end
-    else doorActions = [];
-    end
-end
-
-function doorActions = openDoors(doorOp)
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;    
-    if S.GUI.DoorsOn == 1
-        switch doorOp
-            case 1 % center door
-                if centerDoorOpenFlag == 0;
-                    doorActions = [{DIOmodule,9}];
-                    centerDoorOpenFlag = 1;
-                else doorActions = [];
-                end
-            case 2 % left door
-                if leftDoorOpenFlag == 0;
-                    doorActions = [{DIOmodule,7}];
-                    leftDoorOpenFlag = 1;
-                else doorActions = [];
-                end                
-            case 3 % right door
-                if rightDoorOpenFlag == 0;
-                    doorActions = [{DIOmodule,11}];
-                    rightDoorOpenFlag = 1;
-                else doorActions = [];
-                end                
-            case 4 % both sides
-                if and(leftDoorOpenFlag == 0,rightDoorOpenFlag == 0)
-                    doorActions = [{DIOmodule,13}];
-                    leftDoorOpenFlag = 1;
-                    rightDoorOpenFlag = 1;
-                elseif leftDoorOpenFlag == 0
-                    doorActions = [{DIOmodule,7}];
-                    leftDoorOpenFlag = 1;
-                elseif rightDoorOpenFlag == 0
-                    doorActions = [{DIOmodule,11}];
-                    rightDoorOpenFlag = 1;
-                else doorActions = [];
-                end              
-        end
-    else doorActions = [];
-    end
-end
-
-function closeAllDoors()
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;
-    if S.GUI.DoorsOn == 1
-        if leftDoorOpenFlag == 1
-            ModuleWrite(DIOmodule,[252 30]);
-            leftDoorOpenFlag = 0;
-        end
-        if centerDoorOpenFlag == 1
-            ModuleWrite(DIOmodule,[250 30]);
-            centerDoorOpenFlag = 0;
-        end
-        if rightDoorOpenFlag == 1
-            ModuleWrite(DIOmodule,[248 30]);
-            rightDoorOpenFlag = 0;
-        end
-    end
-end
-
-function openAllDoors()
-    global BpodSystem leftDoorOpenFlag rightDoorOpenFlag centerDoorOpenFlag
-    modules = BpodSystem.Modules.Name;
-    DIOmodule = [modules(strncmp('DIO',modules,3))];
-    DIOmodule = DIOmodule{1};
-    S = BpodSystem.ProtocolSettings;
-    if S.GUI.DoorsOn == 1
-        if leftDoorOpenFlag == 0
-            ModuleWrite(DIOmodule,[251 10]);
-            leftDoorOpenFlag = 1;
-        end
-        if centerDoorOpenFlag == 0
-            ModuleWrite(DIOmodule,[249 10]);
-            centerDoorOpenFlag =1;
-        end
-        if rightDoorOpenFlag == 0
-            ModuleWrite(DIOmodule,[247 10]);
-            rightDoorOpenFlag =1;
-        end
-    end
+%     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
+%     EventsPlot('init', getStateColors(infoSide));
 end
 
 %% OUTCOME
@@ -1420,7 +1286,89 @@ function [rewardAmount, Outcome] = UpdateOutcome(currentTrial,S,RewardLeft,Rewar
 end
 
         
+%% TRIAL EVENT PLOTTING COLORS
 
+function state_colors = getStateColors(thisInfoSide)
+    if thisInfoSide == 0
+        state_colors = struct( ...
+            'InterTrialInterval',[0.8 0.8 0.8],...
+            'StartTrial', [0 0 0],...
+            'WaitForCenter',[255 240 245]./255,...
+            'CenterDelay', [255	255 102]./255,...
+            'CenterOdor',[255 255 102]./255,...
+            'CenterOdorOff',[255 255 102]./255,...
+            'CenterPostOdorDelay',[255 255 102]./255,...
+            'GoCue',[0 1 0],...
+            'Response',[1 1 0.8],...
+            'GracePeriod',[1 1 0.8],...
+            'WaitForOdorLeft',[216 191 216]./255,...          
+            'OdorALeft',[128 0 128]./255,...
+            'OdorBLeft',[128 0 128]./255,...
+            'OdorCLeft',[128 0 128]./255,...
+            'OdorDLeft',[128 0 128]./255,...
+            'RewardDelayLeft',[216 191 216]./255,...
+            'LeftPortCheck',[216 191 216]./255,...
+            'LeftBigReward',[0 1 0],...
+            'LeftSmallReward',[1 0 1],...
+            'LeftNotPresent',[1 1 1],...
+            'WaitForOdorRight',[1 0.8 0],...
+            'OdorARight',[255 140 0]./255,...
+            'OdorBRight',[255 140 0]./255,...
+            'OdorCRight',[255 140 0]./255,...
+            'OdorDRight',[255 140 0]./255,...
+            'RewardDelayRight',[1 0.8 0],...
+            'RightPortCheck',[1 0.8 0],...
+            'RightBigReward',[0 1 0],...
+            'RightSmallReward',[1 0 1],...
+            'RightNotPresent',[1 1 1],...
+            'OutcomeDelivery',[0 0 1],...
+            'NoChoice',[0 1 1],...
+            'Incorrect',[1 0 0],...
+            'TimeoutOdor',[0.4 0.4 0.4],...
+            'TimeoutRewardDelay',[0.2 0.2 0.2],...
+            'TimeoutOutcome',[0.4 0.4 0.4],...
+            'EndTrial',[0 0 0]);
+    else
+        state_colors = struct( ...
+            'InterTrialInterval',[0.8 0.8 0.8],...          
+            'StartTrial', [0 0 0],...
+            'WaitForCenter',[255 240 245]./255,...
+            'CenterDelay', [255	255 102]./255,...
+            'CenterOdor',[255 255 102]./255,...
+            'CenterOdorOff',[255 255 102]./255,...
+            'CenterPostOdorDelay',[255 255 102]./255,...
+            'GoCue',[0 1 0],...
+            'Response',[1 1 0.8],...
+            'GracePeriod',[1 1 0.8],...
+            'WaitForOdorLeft',[1 0.8 0],...
+            'OdorALeft',[255 140 0]./255,...
+            'OdorBLeft',[255 140 0]./255,...
+            'OdorCLeft',[255 140 0]./255,...
+            'OdorDLeft',[255 140 0]./255,...
+            'RewardDelayLeft',[1 0.8 0],...
+            'LeftPortCheck',[1 0.8 0],...
+            'LeftBigReward',[0 1 0],...
+            'LeftSmallReward',[1 0 1],...
+            'LeftNotPresent',[1 1 1],...
+            'WaitForOdorRight',[216 191 216]./255,...         
+            'OdorARight',[128 0 128]./255,...
+            'OdorBRight',[128 0 128]./255,...
+            'OdorCRight',[128 0 128]./255,...
+            'OdorDRight',[128 0 128]./255,...
+            'RewardDelayRight',[216 191 216]./255,...
+            'RightPortCheck',[216 191 216]./255,...
+            'RightBigReward',[0 1 0],...
+            'RightSmallReward',[1 0 1],...   
+            'RightNotPresent',[1 1 1],...
+            'OutcomeDelivery',[0 0 1],...
+            'NoChoice',[0 1 1],...
+            'Incorrect',[1 0 0],...
+            'TimeoutOdor',[0.4 0.4 0.4],...
+            'TimeoutRewardDelay',[0.2 0.2 0.2],...
+            'TimeoutOutcome',[0.4 0.4 0.4],...
+            'EndTrial',[0 0 0]);        
+    end
+end
 
 
 function setupVideo()
@@ -1464,4 +1412,23 @@ function shutdownVideo()
         clear vid;
 
     %     setupVideo();
+end
+
+function createDAQFileName()
+    global BpodSystem
+    global DataFolder
+    global DAQFileName
+    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
+    DateInfo = datestr(now,30);
+    DateInfo(DateInfo == 'T') = '_';
+    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
+end
+
+function recordDataAvailable(src,~)
+    global DataFolder
+    global DAQFileName
+    
+    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
+    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
+    
 end
