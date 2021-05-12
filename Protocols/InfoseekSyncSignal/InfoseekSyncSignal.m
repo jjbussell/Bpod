@@ -218,12 +218,12 @@ for currentTrial = 1:S.GUI.SessionTrials
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
-        tic
+%         tic
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        toc
-        tic
+%         toc
+%         tic
         [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight);
-        toc
+%         toc
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -231,9 +231,9 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-        tic
+%         tic
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
-        toc
+%         toc
 %         EventsPlot('update');
         tic
         SaveBpodSessionData;
