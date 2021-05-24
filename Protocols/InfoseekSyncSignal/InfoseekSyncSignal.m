@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeek
+function InfoSeekSyncSignal
 
 global BpodSystem vid
 
@@ -218,12 +218,12 @@ for currentTrial = 1:S.GUI.SessionTrials
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
-        tic
+%         tic
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        toc
-        tic
+%         toc
+%         tic
         [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight);
-        toc
+%         toc
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.Outcomes(currentTrial) = outcome;
@@ -231,7 +231,9 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
-%         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         tic
+        InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+%         toc
 %         EventsPlot('update');
         tic
         SaveBpodSessionData;
@@ -521,12 +523,17 @@ else
     sma = SetGlobalCounter(sma, 4, 'GlobalTimer4_End', 1);
 end
 
-
+sma = SetGlobalTimer(sma, 'TimerID', 7,... 
+    'Duration',0.01, 'OnsetDelay', 0,...
+    'Channel', 'BNC2', 'OnMessage', 1,... 
+    'OffMessage', 0, 'Loop', 1,...
+    'SendEvents', 0, 'LoopInterval', 0.01);
+        
 % STATES
 sma = AddState(sma, 'Name', 'InterTrialInterval', ...
     'Timer', S.GUI.Interval,...
     'StateChangeConditions', {'Tup', 'StartTrial'},...
-    'OutputActions', {});
+    'OutputActions', {'GlobalTimerTrig',7});
 sma = AddState(sma, 'Name', 'StartTrial', ...
     'Timer', 0,...
     'StateChangeConditions', {'Tup', 'WaitForCenter'},...
