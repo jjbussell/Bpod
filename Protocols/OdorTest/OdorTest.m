@@ -16,7 +16,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 1;
     S.GUI.OdorInterval = 1;
-    S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
+    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 0; % 0 = odor 1
 end
 
