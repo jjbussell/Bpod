@@ -143,8 +143,7 @@ modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
-% Set serial messages for Teensy module to control box, communicate with
-% DAQ/miniscope
+
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2,...
     [19 1],[19 0],[20 1], [20 0],leftDoorOpen, leftDoorClose,...
     centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose,...
@@ -195,7 +194,10 @@ for currentTrial = 1:S.GUI.SessionTrials
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned from last trial, update plots and save data
+        tic
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
+        toc
+        tic
         [rewardAmount,outcome] = UpdateOutcome(currentTrial,currentS,RewardLeft,RewardRight); 
         BpodSystem.Data.TrialSettings(currentTrial) = currentS.GUI; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = currentS.TrialTypes(currentTrial); % Adds the trial type of the current trial to data
@@ -204,8 +206,13 @@ for currentTrial = 1:S.GUI.SessionTrials
         TotalRewardDisplayInfo('add',rewardAmount);
         RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
         TrialTypePlotInfo(BpodSystem.GUIHandles.TrialTypePlot,'update',currentTrial,S.TrialTypes);
+        toc
+        tic
         InfoOutcomesPlot(BpodSystem.GUIHandles.OutcomePlot,'update');
+        toc
+        tic
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file --> POSSIBLY MOVE THIS TO SAVE TIME??
+        toc
     end
 
 end
