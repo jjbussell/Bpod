@@ -70,6 +70,11 @@ S.RandOdorTypes = [];
 S = SetTrialTypes(S,1); % Sets S.TrialTypes from trial 1 to maxTrials
 S = SetRewardTypes(S,1); % Sets S.RewardTypes, S.RandOdorTypes from trial 1 to maxTrials
 
+rng('shuffle');
+lowbound = 3;
+highbound = 8;
+S.Timeouts = (highbound-lowbound).*rand(1000,1) + lowbound;
+
 %% SET INITIAL TYPE COUNTS
 
 BpodSystem.Data.TrialCounts = [0,0,0,0];
@@ -213,6 +218,8 @@ nextTrialType = S.TrialTypes(nextTrial);
 
 infoSide = S.GUI.InfoSide;
 TrialCounts = BpodSystem.Data.TrialCounts;
+
+timeoutTime = S.Timeouts(nextTrial);
 
 % Determine trial-specific state matrix fields
 % Set trialParams (reward and odor)
@@ -609,7 +616,7 @@ sma = AddState(sma, 'Name', 'TimeoutOutcome', ...
     'StateChangeConditions', {'GlobalCounter2_End','TimeoutDrinking'},...
     'OutputActions', {'GlobalTimerTrig', 2});
 sma = AddState(sma, 'Name', 'TimeoutDrinking', ...
-    'Timer', 0,...
+    'Timer', S.GUI.DrinkingDelay + timeoutTime,...
     'StateChangeConditions', {'Tup','EndTrial'},...
     'OutputActions', {'GlobalTimerTrig', 2});
 
