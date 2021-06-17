@@ -16,7 +16,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 1;
     S.GUI.OdorInterval = 1;
-    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
+    S.GUI.Port = 2; %0 = center, 1 = left, 2 = right
     S.GUI.OdorID = 0; % 0 = odor 1
 end
 
@@ -63,13 +63,14 @@ end
 if port ~= 0
     for i = 1:4
         ModuleWrite(latchModule,[pins(i) 1]);
-        pause(100/1000);
+        pause(500/1000);
         ModuleWrite(latchModule,[pins(i) 0]);
-        pause(100/1000);
+        pause(500/1000);
     end
 end
 
 ResetSerialMessages();
+pause(1);
 
 %% Main loop (runs once per trial)
 for currentTrial = 1:MaxTrials
