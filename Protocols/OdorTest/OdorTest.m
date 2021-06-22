@@ -16,8 +16,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SessionTrials = 1000;
     S.GUI.OdorTime = 1;
     S.GUI.OdorInterval = 1;
-    S.GUI.Port = 2; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 0; % 0 = odor 1
+    S.GUI.Port = 1; %0 = center, 1 = left, 2 = right
+    S.GUI.OdorID = 2; % 0 = odor 1
 end
 
 %% DAQ
@@ -50,9 +50,12 @@ MaxTrials = S.GUI.SessionTrials;
 port = S.GUI.Port;
 
 modules = BpodSystem.Modules.Name;
-latchValves = [16 15 14 11 10 9 8 7]; % evens to left!
+% latchValves = [16 15 14 11 10 9 8 7]; % evens to left!
 latchModule = [modules(strncmp('DIO',modules,3))];
 latchModule = latchModule{1};
+
+% now, latch odds to the left. for 0, 1, 2, 3
+latchValves = [7 8 9 10 11 14 15 16]; % evens to left! odor 0 left, odor 0 right, odor 1 left,
 
 if port == 1 % SEND ALL ODORS TO LEFT (A,B)
     pins = latchValves(1:2:end);    
@@ -90,9 +93,9 @@ for currentTrial = 1:MaxTrials
         if port ~= 0
         for i = 1:4
             ModuleWrite(latchModule,[pins(i) 1]);
-            pause(100/1000);
+            pause(500/1000);
             ModuleWrite(latchModule,[pins(i) 0]);
-            pause(100/1000);
+            pause(500/1000);
         end
         end
    end

@@ -282,7 +282,7 @@ if (S.GUI.InfoRewardProb ~= lastS.GUI.InfoRewardProb | S.GUI.RandRewardProb ~= l
 end
 
 if (S.GUI.InfoSide ~= lastS.GUI.InfoSide)
-   SetLatchValves(S) 
+   SetLatchValves(S)
 end
 
 % DETERMINE TRIAL TYPE
@@ -994,30 +994,39 @@ end
 %% SET ODOR SIDES (LATCH VALVES)
 function SetLatchValves(S)
     global BpodSystem
-    
-    infoSide = S.GUI.InfoSide;
+%     S = InfoParameterGUI('sync', S);
+    infoSide = S.GUI.InfoSide
+    odorA = S.GUI.OdorA
+    odorB = S.GUI.OdorB
+    odorC = S.GUI.OdorC
+    odorD = S.GUI.OdorD
     modules = BpodSystem.Modules.Name;
-    latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
+%     latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
+    
+    % now, latch odds to the left. for 0, 1, 2, 3
+    latchValves = [7 8 9 10 11 14 15 16]; % evens to left! odor 0 left, odor 0 right, odor 1 left,
+
     latchModule = [modules(strncmp('DIO',modules,3))];
     latchModule = latchModule{1};
 
     if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
-        odorApin = latchValves((S.GUI.OdorA+1)*2-1);
-        odorBpin = latchValves((S.GUI.OdorB+1)*2-1);
-        odorCpin = latchValves((S.GUI.OdorC+1)*2);
-        odorDpin = latchValves((S.GUI.OdorD+1)*2);
+        odorApin = latchValves((S.GUI.OdorA+1)*2-1) % info odor to left
+        odorBpin = latchValves((S.GUI.OdorB+1)*2-1)
+        odorCpin = latchValves((S.GUI.OdorC+1)*2)
+        odorDpin = latchValves((S.GUI.OdorD+1)*2)
     else
-        odorApin = latchValves((S.GUI.OdorA+1)*2);
-        odorBpin = latchValves((S.GUI.OdorB+1)*2);
-        odorCpin = latchValves((S.GUI.OdorC+1)*2-1);
-        odorDpin = latchValves((S.GUI.OdorD+1)*2-1);    
+        odorApin = latchValves((S.GUI.OdorA+1)*2)
+        odorBpin = latchValves((S.GUI.OdorB+1)*2)
+        odorCpin = latchValves((S.GUI.OdorC+1)*2-1)
+        odorDpin = latchValves((S.GUI.OdorD+1)*2-1) 
     end
 
-    pins = [odorApin odorBpin odorCpin odorDpin];
+    pins = [odorApin odorBpin odorCpin odorDpin]
 
     for i = 1:4
         ModuleWrite(latchModule,[pins(i) 1]);
-        pause(200/1000);
+        pins(i)
+        pause(500/1000);
         ModuleWrite(latchModule,[pins(i) 0]);
         pause(500/1000);
     end
