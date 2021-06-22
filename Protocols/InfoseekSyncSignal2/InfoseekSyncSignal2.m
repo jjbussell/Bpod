@@ -996,10 +996,13 @@ function SetLatchValves(S)
     global BpodSystem
     
     infoSide = S.GUI.InfoSide;
-    modules = BpodSystem.Modules.Name;
-    latchValves = [16 15 14 11 10 9 8 7]; % evens to left! odor 0 left, odor 0 right, odor 1 left, 
-    latchModule = [modules(strncmp('DIO',modules,3))];
-    latchModule = latchModule{1};
+modules = BpodSystem.Modules.Name;
+% latchValves = [16 15 14 11 10 9 8 7]; % evens to left!
+latchModule = [modules(strncmp('DIO',modules,3))];
+latchModule = latchModule{1};
+
+% now, latch odds to the left. for 0, 1, 2, 3
+latchValves = [7 8 9 10 11 14 15 16]; % evens to left! odor 0 left, odor 0 right, odor 1 left,
 
     if infoSide == 0 % SEND INFO ODORS TO LEFT (A,B)    
         odorApin = latchValves((S.GUI.OdorA+1)*2-1);
@@ -1017,9 +1020,9 @@ function SetLatchValves(S)
 
     for i = 1:4
         ModuleWrite(latchModule,[pins(i) 1]);
-        pause(200/1000);
+        pause(100/1000);
         ModuleWrite(latchModule,[pins(i) 0]);
-        pause(500/1000);
+        pause(100/1000);
     end
     
 %     BpodSystem.GUIHandles.EventsPlot.StateColors = getStateColors(infoSide);
