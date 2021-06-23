@@ -25,22 +25,6 @@ global BpodSystem
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 
-%% DAQ
-daqlist;
-DAQ=1;
-if DAQ==1
-    dq = daq('ni'); 
-    addinput(dq, 'Dev1', 'ai0', 'Voltage');
-    addinput(dq, 'Dev1', 'ai1', 'Voltage');
-    addinput(dq, 'Dev1', 'port0/line0:6', 'Digital');
-    addinput(dq, 'Dev1', 'port1/line0:2', 'Digital');
-    dq.Channels
-    createDAQFileName();
-    dq.Rate = 100;
-    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100;
-    start(dq,'continuous');
-end
 %% Define parameters
 
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
@@ -118,34 +102,21 @@ TotalRewardDisplay('init');
 
 %% INITIALIZE SERIAL MESSAGES / DIO
 
+ResetSerialMessages();
+
 % lick inputs 2, 3, 4
-% door outputs 5,6,7
-% buzzer output 8
+% buzzer 5
 buzzer1 = [254 1];
 buzzer2 = [253 1];
-openSpeed = 5;
-closeSpeed =100;
-leftDoorOpen = [251 openSpeed]; %3
-leftDoorClose = [252 closeSpeed]; %4
-centerDoorOpen = [249 openSpeed]; %5
-centerDoorClose = [250 closeSpeed]; %6
-rightDoorOpen = [247 openSpeed]; %7
-rightDoorClose = [248 closeSpeed]; %8
 
 modules = BpodSystem.Modules.Name;
 DIOmodule = [modules(strncmp('DIO',modules,3))];
 DIOmodule = DIOmodule{1};
 
-% MINISCOPE
-% miniscope has 4 I/O BNC Pins, and scope sync and trig
-% scope sync connects to Bpod IN BNC
-% scope trig to Bpod OUT BNC 1
-% Bpod out BNC 2 at center odor start
-
-LoadSerialMessages(DIOmodule, {buzzer1, buzzer2, leftDoorOpen, leftDoorClose, ...
-    centerDoorOpen, centerDoorClose, rightDoorOpen, rightDoorClose, ...
-    [9 1], [9 0], [10 1], [10 0], [11 1],[11,0],[14 1],[14 0],[15 1],[15 0],...
-    [16 1],[16 0],[17 1],[17 0]});
+% Set serial messages for Teensy module to control box, communicate with
+% DAQ/miniscope
+LoadSerialMessages(DIOmodule, {buzzer1, buzzer2,...
+    [22 1],[22 0],[23 1], [23 0]});
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ODOR CONTROL SERIAL MESSAGES
@@ -162,8 +133,6 @@ LoadSerialMessages('ValveModule4',{[1,2],[3,2]}); % turn on right, turn on left
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
-
-
 
 %% MAIN TRIAL LOOP
 

@@ -18,7 +18,7 @@ One Teensy 3.2 connected as a module with the Bpod Teensy Shield controls
 a buzzer and lick sensor.
 
 %}
-function InfoSeekSyncStates
+function InfoSeekSyncSignal2
 
 global BpodSystem vid
 
@@ -61,46 +61,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     BpodSystem.ProtocolSettings = S;
     SaveProtocolSettings(BpodSystem.ProtocolSettings); % if no loaded settings, save defaults as a settings file   
 end
-
-%% DAQ
-
-DAQ=0;
-if DAQ==1
-    warning('off','MATLAB:subscripting:noSubscriptsSpecified');
-    dq = daq('ni'); 
-% 
-%     addoutput(dq,'Dev2','ao0','Voltage');
-%     write(dq,0);
-%     pause(.5);
-%     write(dq,5);
-%     removechannel(dq,1);
-%     dq.Channels
-% %     
-    ch1 = addinput(dq, 'Dev2', 'ai0', 'Voltage');
-    ch2 = addinput(dq, 'Dev2', 'ai1', 'Voltage');
-    ch1.TerminalConfig = 'Differential';
-    ch2.TerminalConfig = 'Differential';
-%     addoutput(dq, 'Dev2','ao0','Voltage');
-    
-%     write(dq,0);
-%     preload(dq,5);
-    createDAQFileName();
-    dq.Rate = 10000;
-    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100000;
-    start(dq,'continuous');
-    
-end
-
-%% SETUP VIDEO
-
-vidOn = 0;
-if vidOn == 1
-    setupVideo();
-end
-
-% cam = webcam();
-% preview(cam);
 
 %% Set Latch Valves
 SetLatchValves(S);
@@ -173,11 +133,6 @@ LoadSerialMessages('ValveModule1',{[1 2],[3 4],[5 6]}); % control by port
 
 [sma,S,nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 
-if vidOn == 1
-    start(vid);
-    trigger(vid);
-end
-
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 RewardLeft = nextRewardLeft; RewardRight = nextRewardRight;
@@ -189,15 +144,6 @@ for currentTrial = 1:S.GUI.SessionTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForOdorLeft','WaitForOdorRight','NoChoice','Incorrect'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point                       
     if BpodSystem.Status.BeingUsed == 0;      
         TurnOffAllOdors();
-        if DAQ==1
-            stop(dq);
-%             addoutput(dq,"Dev2","ao0","Voltage");
-%             write(dq,0);
-        end
-        if vidOn==1
-            shutdownVideo();
-        end
-%         closePreview(cam);
     return; 
     end % If user hit console "stop" button, end session
     [sma, S, nextRewardLeft,nextRewardRight] = PrepareStateMachine(S, currentTrial+1, currentTrialEvents); % Prepare next state machine.
@@ -205,15 +151,6 @@ for currentTrial = 1:S.GUI.SessionTrials
     RawEvents = TrialManager.getTrialData; % Hangs here until trial is over, then retrieves full trial's raw data
     if BpodSystem.Status.BeingUsed == 0;
         TurnOffAllOdors();
-        if vidOn==1
-            shutdownVideo();
-        end
-        if DAQ==1
-            stop(dq);
-%             addoutput(dq,"Dev2","ao0","Voltage");
-%             write(dq,0);
-        end
-%         closePreview(cam);
         return; end % If user hit console "stop" button, end session 
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
     TrialManager.startTrial(); % Start processing the next trial's events
@@ -241,20 +178,6 @@ for currentTrial = 1:S.GUI.SessionTrials
     end
 
 end
-
-%% SHUT DOWN VIDEO
-if vidOn == 1
-    stoppreview(vid);
-    closepreview();
-    stop(vid);
-    while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
-        pause(.1)
-    end
-    % flushdata(vid);
-    delete(vid);
-    clear vid;
-end
-
 
 end % end of protocol main function
 
@@ -1371,67 +1294,4 @@ function state_colors = getStateColors(thisInfoSide)
             'TimeoutOutcome',[0.4 0.4 0.4],...
             'EndTrial',[0 0 0]);        
     end
-end
-
-
-function setupVideo()
-    global BpodSystem vid
-    vid = videoinput('winvideo',1,'MJPG_1920x1080');
-    src = getselectedsource(vid);
-    vid.FramesPerTrigger = Inf;
-    triggerconfig(vid, 'manual');
-    DataFolder = fullfile(BpodSystem.Path.DataFolder,BpodSystem.GUIData.SubjectName,BpodSystem.Status.CurrentProtocolName,'Session Data');
-    DateInfo = datestr(now, 30); 
-    DateInfo(DateInfo == 'T') = '_';
-    VidName = [BpodSystem.GUIData.SubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo];
-    logfile = VideoWriter(fullfile(DataFolder,VidName),'Motion JPEG AVI');
-    set(logfile,'FrameRate',30);
-    vid.DiskLogger = logfile;
-    set(vid,'LoggingMode','disk');
-    figure('Toolbar','none',...
-       'Menubar', 'none',...
-       'NumberTitle','Off',...
-       'Name','Live Feed');
-    vidRes = get(vid, 'VideoResolution');
-    imWidth = vidRes(1);
-    imHeight = vidRes(2);
-    nBands = get(vid, 'NumberOfBands');
-    hImage = image( zeros(imHeight, imWidth, nBands) );    
-    preview(vid,hImage);
-end
-
-function shutdownVideo()
-    global vid
-%         stoppreview();
-%         closepreview();
-        hf=findobj('Name','Live Feed');
-        close(hf);
-        stop(vid);
-    %     while (vid.FramesAcquired ~= vid.DiskLoggerFrameCount) 
-    %         pause(.1)
-    %     end
-        flushdata(vid);
-        delete(vid);
-        clear vid;
-
-    %     setupVideo();
-end
-
-function createDAQFileName()
-    global BpodSystem
-    global DataFolder
-    global DAQFileName
-    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
-    DateInfo = datestr(now,30);
-    DateInfo(DateInfo == 'T') = '_';
-    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
-end
-
-function recordDataAvailable(src,~)
-    global DataFolder
-    global DAQFileName
-    
-    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
-    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
-    
 end
