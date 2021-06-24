@@ -14,33 +14,11 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.SessionTrials = 1000;
-    S.GUI.OdorTime = 0.2;
+    S.GUI.OdorTime = 1;
     S.GUI.OdorInterval = 5;
     S.GUI.OdorHeadstart = 0.500;
     S.GUI.Port = 0; %0 = center, 1 = left, 2 = right
-    S.GUI.OdorID = 3; % 1 = odor 1
-end
-
-%% DAQ
-
-DAQ=0;
-if DAQ==1
-    dq = daq('ni'); 
-    ch0 = addAnalogInputChannel(dq, 'Dev1', 0, 'Voltage');
-    ch0.TerminalConfig = 'Differential';
-    ch1 = addAnalogInputChannel(dq, 'Dev1', 1, 'Voltage');
-    ch1.TerminalConfig = 'SingleEnded';
-    ch2 = addAnalogInputChannel(dq, 'Dev1', 2, 'Voltage');
-    ch2.TerminalConfig = 'SingleEnded';
-    ch3 = addAnalogInputChannel(dq, 'Dev1', 3, 'Voltage');
-    ch3.TerminalConfig = 'SingleEnded';
-
-    
-    createDAQFileName();
-    dq.Rate = 100;
-    dq.ScansAvailableFcn = @(src,evt) recordDataAvailable(src,evt);
-    dq.ScansAvailableFcnCount = 100;
-    start(dq,'continuous');
+    S.GUI.OdorID = 1; % 1 = odor 1
 end
 
 %% LOAD SERIAL MESSAGES
@@ -60,6 +38,7 @@ buzzer1 = [254 1];
 buzzer2 = [253 1];
 LoadSerialMessages(DIOmodule, {buzzer1, buzzer2,...
     [11 1], [11 0], [12 1], [12 0], [13 1], [13 0]});
+
 %% Initialize plots
 
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin
@@ -182,23 +161,3 @@ function TurnOffAllOdors()
         ModuleWrite('ValveModule4',['C' v]);
     end    
 end
-
-
-function createDAQFileName()
-    global BpodSystem
-    global DataFolder
-    DataFolder = string(fullfile(BpodSystem.Path.DataFolder,BpodSystem.Status.CurrentSubjectName,BpodSystem.Status.CurrentProtocolName));
-    DateInfo = datestr(now,30);
-    DateInfo(DateInfo == 'T') = '_';
-    global DAQFileName
-    DAQFileName = string([BpodSystem.Status.CurrentSubjectName '_' BpodSystem.Status.CurrentProtocolName '_' DateInfo 'DAQout.csv']);
-end
-
-function recordDataAvailable(src,~)
-    global DataFolder
-    global DAQFileName
-    [data,timestamps,~] = read(src, src.ScansAvailableFcnCount, 'OutputFormat','Matrix');
-    dlmwrite(strcat(DataFolder, DAQFileName), [data,timestamps],'-append');
-end
-
-
